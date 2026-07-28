@@ -1,0 +1,20 @@
+---
+import type { Car } from "../types/car";
+import CarCard from "./CarCard.astro";
+
+interface Props {
+  cars: Car[];
+}
+
+const { cars } = Astro.props;
+---
+
+<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+
+  {
+    cars.map((car) => (
+      <CarCard car={car} />
+    ))
+  }
+
+</div>

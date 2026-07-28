@@ -1,17 +1,45 @@
 ---
+import MainLayout from "../layouts/MainLayout.astro";
+import Navbar from "../components/Navbar.astro";
+import Hero from "../components/Hero.astro";
+import Footer from "../components/Footer.astro";
+import CarGrid from "../components/CarGrid.astro";
 
+import { getCars } from "../services/cars.service";
+
+const cars = await getCars();
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<MainLayout title="Garage88">
+
+  <Navbar />
+
+  <Hero />
+
+  <main>
+
+    <section id="stock" class="container py-16">
+
+      <div class="flex items-center justify-between mb-10">
+
+        <div>
+          <h2 class="text-4xl font-bold">
+            Stock Mobil
+          </h2>
+
+          <p class="text-slate-500 mt-2">
+            {cars.length} Unit Tersedia
+          </p>
+        </div>
+
+      </div>
+
+      <CarGrid cars={cars} />
+
+    </section>
+
+  </main>
+
+  <Footer />
+
+</MainLayout>
