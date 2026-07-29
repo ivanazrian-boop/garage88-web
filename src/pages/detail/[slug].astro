@@ -1,0 +1,547 @@
+---
+import MainLayout from "../../layouts/MainLayout.astro";
+import CarGallery from "../../components/cars/CarGallery.astro";
+
+import {
+  getCars,
+  getCarBySlug,
+} from "../../services/cars.service";
+
+import type { Car } from "../../types/car";
+import type { CarImage } from "../../types/car-image";
+
+import { supabase } from "../../lib/supabase";
+
+export async function getStaticPaths() {
+  const cars = await getCars();
+
+  return cars.map((car) => ({
+    params: {
+      slug: car.slug,
+    },
+  }));
+}
+
+const { slug } = Astro.params;
+
+if (!slug) {
+  return Astro.redirect("/stock");
+}
+
+const car = await getCarBySlug(slug);
+
+if (!car) {
+  return Astro.redirect("/stock");
+}
+
+const { data: images } = await supabase
+  .from("car_images")
+  .select("*")
+  .eq("car_id", car.id)
+  .order("sort_order", { ascending: true });
+
+const carImages: CarImage[] = images ?? [];
+
+const allCars = await getCars();
+
+const similarCars = allCars
+  .filter(
+    (item) =>
+      item.id !== car.id &&
+      item.brand === car.brand
+  )
+  .slice(0, 4);
+
+const formatPrice = (
+  value: number | null
+) => {
+  if (!value) return "-";
+
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(value);
+};
+
+const formatNumber = (
+  value: number | null
+) => {
+  if (!value) return "-";
+
+  return new Intl.NumberFormat("id-ID").format(value);
+};
+
+const whatsappMessage = encodeURIComponent(
+`Halo Garage88,
+
+Saya tertarik dengan unit berikut.
+
+${car.brand} ${car.model}${car.variant ? ` ${car.variant}` : ""}
+Tahun : ${car.year}
+
+Mohon info ketersediaan unitnya.
+
+Terima kasih.`
+);
+
+const whatsappUrl =
+  `https://wa.me/6281385226049?text=${whatsappMessage}`;
+
+const pageTitle =
+`${car.brand} ${car.model}${car.variant ? ` ${car.variant}` : ""} ${car.year} | Garage88`;
+
+const pageDescription =
+car.description ??
+`${car.brand} ${car.model} ${car.year} bekas berkualitas di Garage88.`;
+---
+
+<MainLayout title={pageTitle}>
+
+<section class="mx-auto max-w-7xl px-4 py-10">
+
+<div class="mb-8">
+
+<a
+href="/stock"
+class="text-sm text-blue-600 hover:underline"
+>
+← Kembali ke Stock
+</a>
+
+<h1 class="mt-4 text-3xl font-bold">
+{car.brand}
+{" "}
+{car.model}
+{" "}
+{car.variant}
+</h1>
+
+<p class="mt-2 text-slate-500">
+Tahun {car.year}
+</p>
+
+</div>
+
+<div class="grid gap-10 lg:grid-cols-2">
+
+<div>
+
+<CarGallery
+images={carImages}
+/>
+
+</div>
+
+<div class="space-y-6">
+
+  <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+
+<div class="flex items-start justify-between">
+
+<div>
+
+<h2 class="text-2xl font-bold">
+{formatPrice(car.credit_price)}
+</h2>
+
+<p class="mt-1 text-slate-500">
+Harga Kredit
+</p>
+
+</div>
+
+<span
+class="rounded-full bg-green-100 px-4 py-2 text-sm font-semibold text-green-700"
+>
+READY
+</span>
+
+</div>
+
+<div class="mt-6 space-y-4">
+
+<div class="flex justify-between border-b pb-3">
+
+<span class="text-slate-500">
+Harga Cash
+</span>
+
+<span class="font-semibold">
+{formatPrice(car.cash_price)}
+</span>
+
+</div>
+
+<div class="flex justify-between border-b pb-3">
+
+<span class="text-slate-500">
+DP Mulai
+</span>
+
+<span class="font-semibold">
+{formatPrice(car.dp)}
+</span>
+
+</div>
+
+<div class="flex justify-between border-b pb-3">
+
+<span class="text-slate-500">
+Odometer
+</span>
+
+<span class="font-semibold">
+{formatNumber(car.odometer)} KM
+</span>
+
+</div>
+
+<div class="flex justify-between border-b pb-3">
+
+<span class="text-slate-500">
+Transmisi
+</span>
+
+<span class="font-semibold">
+{car.transmission ?? "-"}
+</span>
+
+</div>
+
+<div class="flex justify-between border-b pb-3">
+
+<span class="text-slate-500">
+Bahan Bakar
+</span>
+
+<span class="font-semibold">
+{car.fuel ?? "-"}
+</span>
+
+</div>
+
+<div class="flex justify-between border-b pb-3">
+
+<span class="text-slate-500">
+Warna
+</span>
+
+<span class="font-semibold">
+{car.color ?? "-"}
+</span>
+
+</div>
+
+<div class="flex justify-between border-b pb-3">
+
+<span class="text-slate-500">
+Plat Nomor
+</span>
+
+<span class="font-semibold">
+{car.plate_number ?? "-"}
+</span>
+
+</div>
+
+<div class="flex justify-between">
+
+<span class="text-slate-500">
+Pajak
+</span>
+
+<span class="font-semibold">
+{car.tax_valid_until ?? "-"}
+</span>
+
+</div>
+
+</div>
+
+<a
+href={whatsappUrl}
+target="_blank"
+rel="noopener noreferrer"
+class="mt-8 flex w-full items-center justify-center rounded-xl bg-green-600 px-6 py-4 text-lg font-semibold text-white transition hover:bg-green-700"
+>
+Chat via WhatsApp
+</a>
+
+</div>
+</div>
+
+</div>
+
+<div class="mt-10 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+
+<h2 class="mb-6 text-2xl font-bold">
+Spesifikasi Kendaraan
+</h2>
+
+<div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+
+<div class="rounded-xl border p-5">
+<p class="text-sm text-slate-500">
+Merk
+</p>
+
+<p class="mt-2 font-semibold">
+{car.brand}
+</p>
+</div>
+
+<div class="rounded-xl border p-5">
+<p class="text-sm text-slate-500">
+Model
+</p>
+
+<p class="mt-2 font-semibold">
+{car.model}
+</p>
+</div>
+
+<div class="rounded-xl border p-5">
+<p class="text-sm text-slate-500">
+Varian
+</p>
+
+<p class="mt-2 font-semibold">
+{car.variant ?? "-"}
+</p>
+</div>
+
+<div class="rounded-xl border p-5">
+<p class="text-sm text-slate-500">
+Tahun
+</p>
+
+<p class="mt-2 font-semibold">
+{car.year}
+</p>
+</div>
+
+<div class="rounded-xl border p-5">
+<p class="text-sm text-slate-500">
+Transmisi
+</p>
+
+<p class="mt-2 font-semibold">
+{car.transmission ?? "-"}
+</p>
+</div>
+
+<div class="rounded-xl border p-5">
+<p class="text-sm text-slate-500">
+Bahan Bakar
+</p>
+
+<p class="mt-2 font-semibold">
+{car.fuel ?? "-"}
+</p>
+</div>
+
+<div class="rounded-xl border p-5">
+<p class="text-sm text-slate-500">
+Warna
+</p>
+
+<p class="mt-2 font-semibold">
+{car.color ?? "-"}
+</p>
+</div>
+
+<div class="rounded-xl border p-5">
+<p class="text-sm text-slate-500">
+Odometer
+</p>
+
+<p class="mt-2 font-semibold">
+{formatNumber(car.odometer)} KM
+</p>
+</div>
+
+<div class="rounded-xl border p-5">
+<p class="text-sm text-slate-500">
+Status
+</p>
+
+<p class="mt-2 font-semibold text-green-600">
+READY
+</p>
+</div>
+
+</div>
+
+</div>
+
+<div class="mt-10 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+
+<h2 class="mb-5 text-2xl font-bold">
+Deskripsi
+</h2>
+
+{
+car.description ? (
+
+<p class="whitespace-pre-line leading-8 text-slate-600">
+{car.description}
+</p>
+
+) : (
+
+<p class="text-slate-500">
+Belum ada deskripsi untuk kendaraan ini.
+</p>
+
+)
+}
+
+</div>
+<div class="mt-10">
+
+<h2 class="mb-6 text-2xl font-bold">
+Mobil Serupa
+</h2>
+
+{
+similarCars.length > 0 ? (
+
+<div class="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+
+{
+similarCars.map((item) => (
+
+<a
+href={`/detail/${item.slug}`}
+class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+>
+
+<div class="aspect-[4/3] bg-slate-100">
+
+<img
+src={`https://placehold.co/600x450?text=${encodeURIComponent(
+`${item.brand} ${item.model}`
+)}`}
+alt={`${item.brand} ${item.model}`}
+class="h-full w-full object-cover"
+/>
+
+</div>
+
+<div class="p-5">
+
+<h3 class="line-clamp-2 text-lg font-bold">
+
+{item.brand}
+
+{" "}
+
+{item.model}
+
+{" "}
+
+{item.variant}
+
+</h3>
+
+<p class="mt-2 text-sm text-slate-500">
+
+Tahun {item.year}
+
+</p>
+
+<p class="mt-4 text-xl font-bold text-blue-600">
+
+{formatPrice(item.credit_price)}
+
+</p>
+
+<p class="mt-1 text-sm text-slate-500">
+
+Harga Kredit
+
+</p>
+
+<div class="mt-5">
+
+<span
+class="rounded-lg bg-slate-100 px-3 py-2 text-sm font-medium"
+>
+
+{formatNumber(item.odometer)} KM
+
+</span>
+
+</div>
+
+</div>
+
+</a>
+
+))
+}
+
+</div>
+
+) : (
+
+<div class="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
+
+Belum ada mobil serupa.
+
+</div>
+
+)
+
+}
+</div>
+
+<section class="mt-16 rounded-2xl bg-slate-900 px-8 py-12 text-center text-white">
+
+<h2 class="text-3xl font-bold">
+
+Masih punya pertanyaan?
+
+</h2>
+
+<p class="mx-auto mt-4 max-w-2xl text-slate-300">
+
+Hubungi tim Garage88 sekarang juga.
+Kami siap membantu simulasi kredit,
+trade in, maupun pembelian secara cash.
+
+</p>
+
+<a
+href={whatsappUrl}
+target="_blank"
+rel="noopener noreferrer"
+class="mt-8 inline-flex rounded-xl bg-green-500 px-8 py-4 font-semibold text-white transition hover:bg-green-600"
+>
+
+Chat WhatsApp
+
+</a>
+
+</section>
+
+</section>
+
+<style>
+
+:global(body){
+
+background:#f8fafc;
+
+}
+
+.line-clamp-2{
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+</style>
+
+</MainLayout>

@@ -1,0 +1,353 @@
+---
+import MainLayout from "../../../layouts/MainLayout.astro";
+import { supabase } from "../../../lib/supabase";
+
+const key = Astro.url.searchParams.get("key");
+
+const ADMIN_KEY = "garage88";
+
+if (key !== ADMIN_KEY) {
+  return Astro.redirect("/");
+}
+
+let message = "";
+
+if (Astro.request.method === "POST") {
+
+  const formData = await Astro.request.formData();
+
+
+  const brand =
+    formData.get("brand")?.toString().trim() || "";
+
+  const model =
+    formData.get("model")?.toString().trim() || "";
+
+  const variant =
+    formData.get("variant")?.toString().trim() || null;
+
+
+  const year =
+    Number(formData.get("year")) || null;
+
+
+  const slug =
+    `${brand}-${model}-${year}`
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+
+
+
+  const car = {
+
+    slug,
+
+    brand,
+
+    model,
+
+    variant,
+
+    year,
+
+    color:
+      formData.get("color")?.toString() || null,
+
+
+    fuel:
+      formData.get("fuel")?.toString() || null,
+
+
+    transmission:
+      formData.get("transmission")?.toString() || null,
+
+
+    odometer:
+      Number(formData.get("odometer")) || 0,
+
+
+    credit_price:
+      Number(formData.get("credit_price")) || null,
+
+
+    cash_price:
+      Number(formData.get("cash_price")) || null,
+
+
+    dp:
+      Number(formData.get("dp")) || null,
+
+
+    plate_number:
+      formData.get("plate_number")?.toString() || null,
+
+
+    tax_valid_until:
+      formData.get("tax_valid_until")?.toString() || null,
+
+
+    description:
+      formData.get("description")?.toString() || null,
+
+
+    status:
+      "READY",
+
+
+    featured:
+      formData.get("featured") === "on"
+
+  };
+
+
+  const { data, error } = await supabase
+    .from("cars")
+    .insert(car)
+    .select()
+    .single();
+
+
+
+  if (error) {
+
+    console.error(
+      "INSERT CAR ERROR:",
+      error
+    );
+
+
+    message =
+      error.message;
+
+
+  } else {
+
+
+    return Astro.redirect(
+      `/admin/cars/upload?id=${data.id}&key=${ADMIN_KEY}`
+    );
+
+
+  }
+
+}
+
+---
+
+<MainLayout title="Tambah Mobil | Garage88 Admin">
+
+
+<section class="min-h-screen bg-slate-100 py-12">
+
+<div class="mx-auto max-w-5xl px-6">
+
+
+<h1 class="text-3xl font-bold">
+Tambah Mobil
+</h1>
+
+
+{
+message && (
+
+<div class="mt-5 rounded-xl bg-red-100 p-4 text-red-700">
+{message}
+</div>
+
+)
+}
+
+
+
+<form
+method="POST"
+class="mt-8 grid gap-6 rounded-2xl bg-white p-8 shadow"
+>
+
+
+<div class="grid gap-5 md:grid-cols-2">
+
+
+<input
+name="brand"
+placeholder="Brand"
+required
+class="rounded-xl border p-4"
+/>
+
+
+<input
+name="model"
+placeholder="Model"
+required
+class="rounded-xl border p-4"
+/>
+
+
+<input
+name="variant"
+placeholder="Variant"
+class="rounded-xl border p-4"
+/>
+
+
+<input
+name="year"
+type="number"
+placeholder="Tahun"
+class="rounded-xl border p-4"
+/>
+
+
+<input
+name="color"
+placeholder="Warna"
+class="rounded-xl border p-4"
+/>
+
+
+
+<select
+name="fuel"
+class="rounded-xl border p-4"
+>
+
+<option value="">
+Fuel
+</option>
+
+<option value="Bensin">
+Bensin
+</option>
+
+<option value="Diesel">
+Diesel
+</option>
+
+<option value="Hybrid">
+Hybrid
+</option>
+
+</select>
+
+
+
+<select
+name="transmission"
+class="rounded-xl border p-4"
+>
+
+<option value="">
+Transmisi
+</option>
+
+<option value="AT">
+AT
+</option>
+
+<option value="MT">
+MT
+</option>
+
+</select>
+
+
+
+<input
+name="odometer"
+type="number"
+placeholder="KM"
+class="rounded-xl border p-4"
+/>
+
+
+
+<input
+name="credit_price"
+type="number"
+placeholder="Harga Kredit"
+class="rounded-xl border p-4"
+/>
+
+
+
+<input
+name="cash_price"
+type="number"
+placeholder="Harga Cash"
+class="rounded-xl border p-4"
+/>
+
+
+
+<input
+name="dp"
+type="number"
+placeholder="DP"
+class="rounded-xl border p-4"
+/>
+
+
+
+<input
+name="plate_number"
+placeholder="Plat Nomor"
+class="rounded-xl border p-4"
+/>
+
+
+
+<input
+name="tax_valid_until"
+placeholder="Pajak (contoh: 8/27)"
+class="rounded-xl border p-4"
+/>
+
+
+
+</div>
+
+
+
+<textarea
+name="description"
+placeholder="Deskripsi mobil"
+rows="5"
+class="rounded-xl border p-4"
+></textarea>
+
+
+
+<label class="flex items-center gap-3">
+
+<input
+type="checkbox"
+name="featured"
+/>
+
+<span>
+Featured
+</span>
+
+</label>
+
+
+
+<button
+class="rounded-xl bg-red-600 px-8 py-4 font-semibold text-white hover:bg-red-700"
+>
+Simpan Mobil
+</button>
+
+
+
+</form>
+
+
+</div>
+
+</section>
+
+
+</MainLayout>

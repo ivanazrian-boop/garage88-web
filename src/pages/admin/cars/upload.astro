@@ -1,0 +1,299 @@
+---
+import MainLayout from "../../../layouts/MainLayout.astro";
+import { supabase } from "../../../lib/supabase";
+
+const key = Astro.url.searchParams.get("key");
+const carId = Astro.url.searchParams.get("id");
+
+const ADMIN_KEY = "garage88";
+
+if (key !== ADMIN_KEY || !carId) {
+  return Astro.redirect("/");
+}
+
+
+let message = "";
+let success = false;
+
+
+if (Astro.request.method === "POST") {
+
+  const formData = await Astro.request.formData();
+
+const files =
+  (formData.getAll("images") as File[]).reverse();
+
+
+  console.log(
+    "TOTAL FILE:",
+    files.length
+  );
+
+
+  if (files.length === 0) {
+
+    message =
+      "Tidak ada file yang dipilih";
+
+  } else {
+
+
+    let sortOrder = 1;
+
+    let uploaded = 0;
+
+
+
+    for (const file of files) {
+
+
+      if (!file.size) {
+        continue;
+      }
+
+
+      console.log(
+        "UPLOAD:",
+        file.name
+      );
+
+
+
+      const extension =
+        file.name.split(".").pop();
+
+
+
+      const fileName =
+        `${crypto.randomUUID()}.${extension}`;
+
+
+
+      const filePath =
+        `${carId}/${fileName}`;
+
+
+
+      /*
+       * Upload Storage
+       */
+
+      const {
+        error: uploadError
+      } =
+        await supabase.storage
+          .from("cars")
+          .upload(
+            filePath,
+            file,
+            {
+              contentType:file.type
+            }
+          );
+
+
+
+      if (uploadError) {
+
+        console.error(
+          "STORAGE ERROR:",
+          uploadError
+        );
+
+        message =
+          uploadError.message;
+
+        break;
+
+      }
+
+
+
+      /*
+       * Public URL
+       */
+
+      const {
+        data:urlData
+      } =
+      supabase.storage
+        .from("cars")
+        .getPublicUrl(filePath);
+
+
+
+      console.log(
+        "URL:",
+        urlData.publicUrl
+      );
+
+
+
+      /*
+       * Insert car_images
+       */
+
+      const {
+        error:imageError
+      } =
+      await supabase
+        .from("car_images")
+        .insert({
+
+          car_id: carId,
+
+          image_url:
+            urlData.publicUrl,
+
+          sort_order:
+            sortOrder
+
+        });
+
+
+
+      if (imageError) {
+
+        console.error(
+          "CAR IMAGE ERROR:",
+          imageError
+        );
+
+
+        message =
+          imageError.message;
+
+        break;
+
+      }
+
+
+
+      uploaded++;
+
+      sortOrder++;
+
+    }
+
+
+
+    if (uploaded > 0) {
+
+      success = true;
+
+      message =
+        `${uploaded} foto berhasil diupload`;
+
+    }
+
+  }
+
+}
+
+---
+
+<MainLayout title="Upload Foto | Garage88 Admin">
+
+
+<section class="min-h-screen bg-slate-100 py-12">
+
+
+<div class="mx-auto max-w-4xl px-6">
+
+
+<h1 class="text-3xl font-bold">
+Upload Foto Mobil
+</h1>
+
+
+<p class="mt-2 text-slate-500">
+ID Mobil:
+{carId}
+</p>
+
+
+
+{
+message && (
+
+<div
+class:list={[
+"mt-5 rounded-xl p-4",
+success
+? "bg-green-100 text-green-700"
+: "bg-red-100 text-red-700"
+]}
+>
+{message}
+</div>
+
+)
+
+}
+
+
+
+<form
+method="POST"
+enctype="multipart/form-data"
+class="mt-8 rounded-2xl bg-white p-8 shadow"
+>
+
+
+<label class="block text-sm font-semibold mb-3">
+Pilih Foto
+</label>
+
+
+<input
+type="file"
+name="images"
+multiple
+accept="image/*"
+required
+class="w-full rounded-xl border p-4"
+/>
+
+
+
+<button
+type="submit"
+class="mt-6 rounded-xl bg-red-600 px-8 py-4 font-semibold text-white hover:bg-red-700"
+>
+Upload Foto
+</button>
+
+
+</form>
+
+
+
+<div class="mt-8 flex gap-5">
+
+
+<a
+href={`/detail/${carId}`}
+class="text-red-600"
+>
+Lihat Detail
+</a>
+
+
+<a
+href={`/admin?key=${ADMIN_KEY}`}
+class="text-slate-600"
+>
+Kembali Admin
+</a>
+
+
+</div>
+
+
+</div>
+
+
+</section>
+
+
+</MainLayout>

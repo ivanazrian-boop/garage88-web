@@ -1,0 +1,221 @@
+---
+import MainLayout from "../../../layouts/MainLayout.astro";
+import { getCars } from "../../../services/cars.service";
+
+const key = Astro.url.searchParams.get("key");
+
+const ADMIN_KEY = "garage88";
+
+if (key !== ADMIN_KEY) {
+  return Astro.redirect("/");
+}
+
+const cars = await getCars();
+
+---
+
+<MainLayout title="Stock Admin | Garage88">
+
+
+<section class="min-h-screen bg-slate-100 py-12">
+
+<div class="mx-auto max-w-7xl px-6">
+
+
+<div class="flex items-center justify-between">
+
+
+<div>
+
+<h1 class="text-3xl font-bold">
+Garage88 Stock Management
+</h1>
+
+<p class="mt-2 text-slate-500">
+{cars.length} Unit Mobil
+</p>
+
+</div>
+
+
+<a
+href={`/admin/cars/new?key=${ADMIN_KEY}`}
+class="rounded-xl bg-red-600 px-6 py-3 font-semibold text-white hover:bg-red-700"
+>
++ Tambah Mobil
+</a>
+
+
+</div>
+
+
+
+<div class="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+
+
+{
+cars.map((car)=>{
+
+
+const image =
+car.images?.length
+?
+[...car.images]
+.sort(
+(a,b)=>a.sort_order-b.sort_order
+)[0].image_url
+:
+"https://placehold.co/800x450?text=Garage88";
+
+
+
+return (
+
+<div class="overflow-hidden rounded-2xl bg-white shadow">
+
+
+<img
+src={image}
+alt={`${car.brand} ${car.model}`}
+class="aspect-video w-full object-cover"
+/>
+
+
+
+<div class="p-5">
+
+
+<div class="flex items-start justify-between">
+
+
+<div>
+
+<h2 class="text-xl font-bold">
+{car.brand} {car.model}
+</h2>
+
+
+<p class="text-sm text-slate-500">
+{car.variant}
+</p>
+
+
+</div>
+
+
+
+<span
+class:list={[
+"rounded-full px-3 py-1 text-xs font-semibold",
+car.status === "READY"
+? "bg-green-100 text-green-700"
+: "bg-red-100 text-red-700"
+]}
+>
+{car.status}
+</span>
+
+
+</div>
+
+
+
+<div class="mt-4 space-y-1 text-sm">
+
+
+<p>
+Tahun:
+<b>{car.year}</b>
+</p>
+
+
+<p>
+KM:
+<b>
+{car.odometer?.toLocaleString("id-ID")} KM
+</b>
+</p>
+
+
+<p>
+Harga Kredit:
+<b>
+Rp {car.credit_price?.toLocaleString("id-ID")}
+</b>
+</p>
+
+
+<p>
+Foto:
+<b>
+{car.images?.length ?? 0} pcs
+</b>
+</p>
+
+
+</div>
+
+
+
+
+<div class="mt-6 grid grid-cols-3 gap-3">
+
+
+<!-- Kelola Foto -->
+
+<a
+href={`/admin/cars/photos?id=${car.id}&key=${ADMIN_KEY}`}
+class="rounded-xl border py-3 text-center text-sm font-semibold hover:bg-slate-50"
+>
+Foto
+</a>
+
+
+
+<!-- Edit -->
+
+<a
+href={`/admin/cars/edit?id=${car.id}&key=${ADMIN_KEY}`}
+class="rounded-xl bg-slate-900 py-3 text-center text-sm font-semibold text-white"
+>
+Edit
+</a>
+
+
+
+<!-- Hapus -->
+
+<a
+href={`/admin/cars/delete?id=${car.id}&key=${ADMIN_KEY}`}
+onclick="return confirm('Hapus mobil ini?')"
+class="rounded-xl bg-red-600 py-3 text-center text-sm font-semibold text-white hover:bg-red-700"
+>
+Hapus
+</a>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+)
+
+})
+
+}
+
+
+</div>
+
+
+</div>
+
+</section>
+
+
+</MainLayout>

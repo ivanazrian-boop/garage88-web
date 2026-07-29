@@ -1,0 +1,486 @@
+---
+import type { CarImage } from "../../types/car-image";
+
+interface Props {
+  images: CarImage[];
+}
+
+const { images } = Astro.props;
+
+const placeholder =
+  "https://placehold.co/1200x800?text=Garage88";
+
+const gallery =
+  images.length > 0
+    ? images
+    : [
+        {
+          id: "placeholder",
+          car_id: "",
+          image_url: placeholder,
+          sort_order: 0,
+          created_at: "",
+        },
+      ];
+
+
+---
+
+<div
+  class="gallery-wrapper"
+  data-gallery
+>
+
+  <div class="viewer">
+
+    <button
+      class="nav prev"
+      type="button"
+    >
+      ❮
+    </button>
+
+    <div class="gallery">
+
+      {
+        gallery.map((image, index) => (
+
+          <div class="slide">
+
+            <img
+              src={image.image_url}
+              alt={`Car Image ${index + 1}`}
+              loading="lazy"
+            />
+
+          </div>
+
+        ))
+      }
+
+    </div>
+
+    <button
+      class="nav next"
+      type="button"
+    >
+      ❯
+    </button>
+
+    {
+      gallery.length > 1 && (
+
+        <div class="counter">
+
+          <span class="current">
+            1
+          </span>
+
+          /
+
+          <span>
+            {gallery.length}
+          </span>
+
+        </div>
+
+      )
+    }
+
+  </div>
+
+  {
+    gallery.length > 1 && (
+
+      <div class="thumbnails">
+
+        {
+          gallery.map((image, index)=>(
+
+            <img
+              src={image.image_url}
+              loading="lazy"
+              alt={`Thumbnail ${index+1}`}
+              class={`thumb ${index===0?"active":""}`}
+              data-index={index}
+            />
+
+          ))
+        }
+
+      </div>
+
+    )
+  }
+
+</div>
+<script is:inline>
+
+document.querySelectorAll("[data-gallery]").forEach((wrapper)=>{
+
+const gallery =
+wrapper.querySelector(".gallery");
+
+if(!gallery) return;
+
+const slides =
+gallery.querySelectorAll(".slide");
+
+const thumbs =
+wrapper.querySelectorAll(".thumb");
+
+const current =
+wrapper.querySelector(".current");
+
+const prev =
+wrapper.querySelector(".prev");
+
+const next =
+wrapper.querySelector(".next");
+
+let index = 0;
+
+function update(){
+
+gallery.scrollTo({
+
+left:index * gallery.clientWidth,
+
+behavior:"smooth"
+
+});
+
+thumbs.forEach((thumb,i)=>{
+
+thumb.classList.toggle(
+"active",
+i===index
+);
+
+});
+
+if(current){
+
+current.textContent =
+String(index+1);
+
+}
+
+}
+
+next?.addEventListener("click",()=>{
+
+if(index>=slides.length-1) return;
+
+index++;
+
+update();
+
+});
+
+prev?.addEventListener("click",()=>{
+
+if(index<=0) return;
+
+index--;
+
+update();
+
+});
+
+thumbs.forEach((thumb)=>{
+
+thumb.addEventListener("click",()=>{
+
+index =
+Number(
+thumb.dataset.index
+);
+
+update();
+
+});
+
+});
+
+gallery.addEventListener("scroll",()=>{
+
+const newIndex =
+Math.round(
+gallery.scrollLeft /
+gallery.clientWidth
+);
+
+if(newIndex===index) return;
+
+index=newIndex;
+
+thumbs.forEach((thumb,i)=>{
+
+thumb.classList.toggle(
+"active",
+i===index
+);
+
+});
+
+if(current){
+
+current.textContent =
+String(index+1);
+
+}
+
+});
+
+window.addEventListener("resize",()=>{
+
+update();
+
+});
+
+});
+
+</script>
+
+<style>
+
+.gallery-wrapper{
+
+width:100%;
+
+}
+
+.viewer{
+
+position:relative;
+
+overflow:hidden;
+
+border-radius:18px;
+
+}
+
+.gallery{
+
+display:flex;
+
+overflow-x:auto;
+
+scroll-snap-type:x mandatory;
+
+scroll-behavior:smooth;
+
+-ms-overflow-style:none;
+
+scrollbar-width:none;
+
+}
+
+.gallery::-webkit-scrollbar{
+
+display:none;
+
+}
+
+.slide{
+
+flex:0 0 100%;
+
+scroll-snap-align:start;
+
+}
+
+.slide img{
+
+width:100%;
+
+height:auto;
+
+max-height:700px;
+
+object-fit:contain;
+
+display:block;
+
+border-radius:18px;
+
+background:#f3f4f6;
+
+}
+
+.nav{
+
+position:absolute;
+
+top:50%;
+
+transform:translateY(-50%);
+
+width:46px;
+
+height:46px;
+
+border:none;
+
+border-radius:9999px;
+
+background:rgba(255,255,255,.88);
+
+backdrop-filter:blur(8px);
+
+font-size:22px;
+
+font-weight:700;
+
+cursor:pointer;
+
+transition:.25s;
+
+z-index:20;
+
+box-shadow:0 4px 12px rgba(0,0,0,.15);
+
+}
+
+.nav:hover{
+
+background:white;
+
+transform:translateY(-50%) scale(1.08);
+
+}
+
+.prev{
+
+left:16px;
+
+}
+
+.next{
+
+right:16px;
+
+}
+
+.counter{
+
+position:absolute;
+
+right:16px;
+
+bottom:16px;
+
+background:rgba(0,0,0,.65);
+
+color:#fff;
+
+padding:6px 12px;
+
+border-radius:999px;
+
+font-size:14px;
+
+font-weight:600;
+
+backdrop-filter:blur(6px);
+
+}
+
+.thumbnails{
+
+display:flex;
+
+gap:10px;
+
+margin-top:16px;
+
+overflow-x:auto;
+
+padding-bottom:4px;
+
+scrollbar-width:thin;
+
+}
+
+.thumbnails::-webkit-scrollbar{
+
+height:6px;
+
+}
+
+.thumbnails::-webkit-scrollbar-thumb{
+
+background:#cbd5e1;
+
+border-radius:999px;
+
+}
+
+.thumb{
+
+width:90px;
+
+height:70px;
+
+flex-shrink:0;
+
+border-radius:10px;
+
+object-fit:cover;
+
+cursor:pointer;
+
+opacity:.65;
+
+border:2px solid transparent;
+
+transition:.25s;
+
+}
+
+.thumb:hover{
+
+opacity:1;
+
+}
+
+.thumb.active{
+
+opacity:1;
+
+border-color:#dc2626;
+
+}
+
+@media(max-width:768px){
+
+.nav{
+
+width:40px;
+
+height:40px;
+
+font-size:18px;
+
+}
+
+.thumb{
+
+width:72px;
+
+height:56px;
+
+}
+
+.counter{
+
+font-size:12px;
+
+padding:5px 10px;
+
+}
+
+}
+
+</style>

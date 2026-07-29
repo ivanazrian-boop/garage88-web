@@ -1,0 +1,84 @@
+---
+import { supabase } from "../../../lib/supabase";
+
+const key = Astro.url.searchParams.get("key");
+const id = Astro.url.searchParams.get("id");
+
+const ADMIN_KEY = "garage88";
+
+
+if (key !== ADMIN_KEY || !id) {
+  return Astro.redirect("/");
+}
+
+
+// Ambil foto dulu
+
+const { data: images } =
+await supabase
+  .from("car_images")
+  .select("*")
+  .eq("car_id", id);
+
+
+
+if(images){
+
+
+  for(const image of images){
+
+
+    const path =
+      image.image_url
+      .split("/cars/")
+      .pop();
+
+
+    if(path){
+
+      await supabase.storage
+        .from("cars")
+        .remove([
+          path
+        ]);
+
+    }
+
+
+  }
+
+
+}
+
+
+// hapus car_images
+
+await supabase
+.from("car_images")
+.delete()
+.eq("car_id", id);
+
+
+
+// hapus mobil
+
+const { error } =
+await supabase
+.from("cars")
+.delete()
+.eq("id", id);
+
+
+
+if(error){
+
+ console.error(error);
+
+}
+
+
+
+return Astro.redirect(
+ `/admin/cars?key=${ADMIN_KEY}`
+);
+---

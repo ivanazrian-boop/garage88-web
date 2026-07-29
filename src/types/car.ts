@@ -1,3 +1,5 @@
+import type { CarImage } from "./car-image";
+
 export interface Car {
   id: string;
 
@@ -17,7 +19,7 @@ export interface Car {
 
   transmission: string | null;
 
-  odometer: number;
+  odometer: number | null;
 
   credit_price: number | null;
 
@@ -38,4 +40,6 @@ export interface Car {
   created_at: string;
 
   updated_at: string;
+
+  images: CarImage[];
 }
