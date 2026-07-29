@@ -16,7 +16,6 @@ if (Astro.request.method === "POST") {
 
   const formData = await Astro.request.formData();
 
-
   const brand =
     formData.get("brand")?.toString().trim() || "";
 
@@ -51,6 +50,7 @@ if (Astro.request.method === "POST") {
 
     year,
 
+
     color:
       formData.get("color")?.toString() || null,
 
@@ -84,7 +84,7 @@ if (Astro.request.method === "POST") {
 
 
     tax_valid_until:
-      formData.get("tax_valid_until")?.toString() || null,
+      null,
 
 
     description:
@@ -101,33 +101,28 @@ if (Astro.request.method === "POST") {
   };
 
 
-  const { data, error } = await supabase
-    .from("cars")
-    .insert(car)
-    .select()
-    .single();
+
+  const { data, error } =
+    await supabase
+      .from("cars")
+      .insert(car)
+      .select()
+      .single();
 
 
 
-  if (error) {
+  if(error){
 
-    console.error(
-      "INSERT CAR ERROR:",
-      error
-    );
+    console.error(error);
 
+    message = error.message;
 
-    message =
-      error.message;
-
-
-  } else {
-
+  }
+  else {
 
     return Astro.redirect(
       `/admin/cars/upload?id=${data.id}&key=${ADMIN_KEY}`
     );
-
 
   }
 
@@ -156,7 +151,37 @@ message && (
 </div>
 
 )
+
 }
+
+
+<!-- TELEGRAM PARSER -->
+
+<div class="mt-8 rounded-2xl bg-white p-6 shadow">
+
+<h2 class="text-xl font-bold">
+📋 Paste Deskripsi Telegram
+</h2>
+
+
+<textarea
+id="telegramInput"
+rows="10"
+placeholder="Paste deskripsi mobil dari Telegram..."
+class="mt-4 w-full rounded-xl border p-4"
+></textarea>
+
+
+<button
+type="button"
+onclick="parseTelegram()"
+class="mt-4 rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white"
+>
+🚀 Convert Data
+</button>
+
+
+</div>
 
 
 
@@ -170,6 +195,7 @@ class="mt-8 grid gap-6 rounded-2xl bg-white p-8 shadow"
 
 
 <input
+id="brand"
 name="brand"
 placeholder="Brand"
 required
@@ -178,6 +204,7 @@ class="rounded-xl border p-4"
 
 
 <input
+id="model"
 name="model"
 placeholder="Model"
 required
@@ -186,6 +213,7 @@ class="rounded-xl border p-4"
 
 
 <input
+id="variant"
 name="variant"
 placeholder="Variant"
 class="rounded-xl border p-4"
@@ -193,6 +221,7 @@ class="rounded-xl border p-4"
 
 
 <input
+id="year"
 name="year"
 type="number"
 placeholder="Tahun"
@@ -201,14 +230,15 @@ class="rounded-xl border p-4"
 
 
 <input
+id="color"
 name="color"
 placeholder="Warna"
 class="rounded-xl border p-4"
 />
 
 
-
 <select
+id="fuel"
 name="fuel"
 class="rounded-xl border p-4"
 >
@@ -232,8 +262,8 @@ Hybrid
 </select>
 
 
-
 <select
+id="transmission"
 name="transmission"
 class="rounded-xl border p-4"
 >
@@ -251,10 +281,8 @@ MT
 </option>
 
 </select>
-
-
-
 <input
+id="odometer"
 name="odometer"
 type="number"
 placeholder="KM"
@@ -262,8 +290,8 @@ class="rounded-xl border p-4"
 />
 
 
-
 <input
+id="credit_price"
 name="credit_price"
 type="number"
 placeholder="Harga Kredit"
@@ -271,8 +299,8 @@ class="rounded-xl border p-4"
 />
 
 
-
 <input
+id="cash_price"
 name="cash_price"
 type="number"
 placeholder="Harga Cash"
@@ -280,14 +308,13 @@ class="rounded-xl border p-4"
 />
 
 
-
 <input
+id="dp"
 name="dp"
 type="number"
 placeholder="DP"
 class="rounded-xl border p-4"
 />
-
 
 
 <input
@@ -297,23 +324,14 @@ class="rounded-xl border p-4"
 />
 
 
-
-<input
-name="tax_valid_until"
-placeholder="Pajak (contoh: 8/27)"
-class="rounded-xl border p-4"
-/>
-
-
-
 </div>
 
 
-
 <textarea
+id="description"
 name="description"
 placeholder="Deskripsi mobil"
-rows="5"
+rows="8"
 class="rounded-xl border p-4"
 ></textarea>
 
@@ -348,6 +366,407 @@ Simpan Mobil
 </div>
 
 </section>
+
+
+<script is:inline>
+
+function cleanMoney(value){
+
+  if(!value) return null;
+
+  let number =
+    Number(
+      value
+      .replace(/\./g,"")
+      .replace(/,/g,"")
+    );
+
+  return number;
+
+}
+
+
+
+function jtToNumber(value){
+
+  if(!value) return null;
+
+  return Number(value) * 1000000;
+
+}
+
+
+
+function parseTelegram(){
+
+
+const text =
+document
+.getElementById("telegramInput")
+.value;
+
+
+
+if(!text){
+
+alert("Paste deskripsi Telegram dulu");
+
+return;
+
+}
+
+
+
+const firstLine =
+text
+.split("\n")
+[0]
+.trim();
+
+
+// =================
+// YEAR
+// =================
+
+const year =
+firstLine.match(/\b20\d{2}\b/);
+
+
+if(year){
+
+document.getElementById("year").value =
+year[0];
+
+}
+
+
+
+// =================
+// BRAND
+// =================
+
+const brands = [
+"Toyota",
+"Honda",
+"Hyundai",
+"Mazda",
+"BMW",
+"Mercedes",
+"Audi",
+"Wuling",
+"Mitsubishi",
+"Nissan",
+"BYD",
+"Volkswagen"
+];
+
+
+let brandFound = "";
+
+
+brands.forEach(b=>{
+
+if(
+firstLine
+.toLowerCase()
+.includes(
+b.toLowerCase()
+)
+){
+
+brandFound=b;
+
+}
+
+});
+
+
+document.getElementById("brand").value =
+brandFound;
+
+
+
+// =================
+// COLOR
+// =================
+
+const colors=[
+"Putih",
+"Hitam",
+"Silver",
+"Grey",
+"Abu",
+"Merah",
+"Biru",
+"Hijau",
+"Coklat"
+];
+
+
+colors.forEach(c=>{
+
+if(
+firstLine
+.toLowerCase()
+.includes(
+c.toLowerCase()
+)
+){
+
+document.getElementById("color").value=c;
+
+}
+
+});
+
+
+
+// =================
+// FUEL
+// =================
+
+if(text.toLowerCase().includes("hybrid")){
+
+document.getElementById("fuel").value="Hybrid";
+
+}
+else if(text.toLowerCase().includes("diesel")){
+
+document.getElementById("fuel").value="Diesel";
+
+}
+else{
+
+document.getElementById("fuel").value="Bensin";
+
+}
+
+
+
+// =================
+// TRANSMISSION
+// =================
+
+if(
+firstLine.match(/\bAT\b/i)
+){
+
+document.getElementById("transmission").value="AT";
+
+}
+
+else if(
+firstLine.match(/\bMT\b/i)
+){
+
+document.getElementById("transmission").value="MT";
+
+}
+
+
+
+// =================
+// MODEL + VARIANT
+// =================
+
+
+let title =
+firstLine
+.replace(year?.[0] || "", "")
+.replace(/\(.*?\)/g,"")
+.trim();
+
+
+
+if(brandFound){
+
+title =
+title
+.replace(
+new RegExp(brandFound,"i"),
+""
+)
+.trim();
+
+}
+
+
+
+const words =
+title.split(" ");
+
+
+
+if(words.length){
+
+document.getElementById("model").value =
+words[0];
+
+}
+
+
+
+if(words.length > 1){
+
+document.getElementById("variant").value =
+words
+.slice(1)
+.join(" ");
+
+}
+
+
+
+// =================
+// KM
+// PRIORITY ODOMETER
+// =================
+
+
+let km =
+text.match(
+/(?:odometer|km)\s*[:\-]?\s*(\d+)\s*rb/i
+);
+
+
+
+if(!km){
+
+km =
+text.match(
+/low km\s*(\d+)\s*rb/i
+);
+
+}
+
+
+
+if(km){
+
+document.getElementById("odometer").value =
+Number(km[1]) * 1000;
+
+}
+
+
+
+// =================
+// CASH
+// =================
+
+
+let cash =
+text.match(
+/cash\s+(\d+)\s*(jt|juta)/i
+);
+
+
+
+if(cash){
+
+document.getElementById("cash_price").value =
+jtToNumber(cash[1]);
+
+}
+
+
+
+// =================
+// CREDIT / OTR
+// =================
+
+
+let otr =
+text.match(
+/(?:otr|harga kredit)\s+(\d+)\s*(jt|juta)/i
+);
+
+
+
+if(otr){
+
+document.getElementById("credit_price").value =
+jtToNumber(otr[1]);
+
+}
+
+
+
+// =================
+// DP TERKECIL
+// =================
+
+
+const dpMatches =
+[
+...text.matchAll(
+/(?:tdp|dp)\s*(\d+)\s*(jt|juta)/gi
+)
+];
+
+
+let dpList=[];
+
+
+
+dpMatches.forEach(item=>{
+
+dpList.push(
+jtToNumber(item[1])
+);
+
+});
+
+
+
+if(dpList.length){
+
+document.getElementById("dp").value =
+Math.min(...dpList);
+
+}
+
+
+
+// =================
+// DESCRIPTION
+// =================
+
+
+let description =
+text
+.split("\n")
+.filter(line=>{
+
+let lower =
+line.toLowerCase();
+
+
+return !(
+lower.includes("cash") ||
+lower.includes("otr") ||
+lower.includes("tdp") ||
+lower.includes("cicilan") ||
+lower.includes("paket")
+);
+
+})
+.join("\n")
+.trim();
+
+
+
+document.getElementById("description").value =
+description;
+
+
+
+alert("Data Telegram berhasil dikonversi");
+
+
+}
+
+</script>
 
 
 </MainLayout>
