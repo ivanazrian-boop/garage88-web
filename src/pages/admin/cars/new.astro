@@ -36,11 +36,10 @@ if (Astro.request.method === "POST") {
 
 
   const slug =
-    `${brand}-${model}-${year}`
+    `${brand}-${model}-${variant || ""}-${year}`
     .toLowerCase()
     .replace(/[^a-z0-9]+/g,"-")
     .replace(/^-|-$/g,"");
-
 
 
   const car = {
