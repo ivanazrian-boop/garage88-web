@@ -15,25 +15,19 @@ let message = "";
 
 if (Astro.request.method === "POST") {
 
-
-  const formData =
-    await Astro.request.formData();
-
+  const formData = await Astro.request.formData();
 
 
   const brand =
     formData.get("brand")?.toString().trim() || "";
 
 
-
   const model =
     formData.get("model")?.toString().trim() || "";
 
 
-
   const variant =
-    formData.get("variant")?.toString().trim() || "";
-
+    formData.get("variant")?.toString().trim() || null;
 
 
   const year =
@@ -42,134 +36,102 @@ if (Astro.request.method === "POST") {
 
 
   const slug =
-    `${brand}-${model}-${variant}-${year}`
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
-
+    `${brand}-${model}-${year}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g,"-")
+    .replace(/^-|-$/g,"");
 
 
 
   const car = {
 
-
     slug,
-
 
     brand,
 
-
     model,
 
-
-    variant: variant || null,
-
+    variant,
 
     year,
-
 
 
     color:
       formData.get("color")?.toString() || null,
 
 
-
     fuel:
       formData.get("fuel")?.toString() || null,
-
 
 
     transmission:
       formData.get("transmission")?.toString() || null,
 
 
-
     odometer:
       Number(formData.get("odometer")) || 0,
-
 
 
     credit_price:
       Number(formData.get("credit_price")) || null,
 
 
-
     cash_price:
       Number(formData.get("cash_price")) || null,
-
 
 
     dp:
       Number(formData.get("dp")) || null,
 
 
-
     plate_number:
       formData.get("plate_number")?.toString() || null,
 
 
-
     tax_valid_until:
-      formData.get("tax_valid_until")?.toString() || null,
-
+      null,
 
 
     description:
       formData.get("description")?.toString() || null,
 
 
-
     status:
       "READY",
-
 
 
     featured:
       formData.get("featured") === "on"
 
-
   };
 
 
 
-  const { data, error } =
+  const {data,error} =
     await supabase
-      .from("cars")
-      .insert(car)
-      .select()
-      .single();
+    .from("cars")
+    .insert(car)
+    .select()
+    .single();
 
 
 
+  if(error){
 
-  if (error) {
+    console.error(error);
 
+    message = error.message;
 
-    console.error(
-      "INSERT CAR ERROR:",
-      error
-    );
-
-
-    message =
-      error.message;
-
-
-
-  } else {
-
-
+  }
+  else{
 
     return Astro.redirect(
       `/admin/cars/upload?id=${data.id}&key=${ADMIN_KEY}`
     );
 
-
   }
 
-
 }
-
 
 ---
 
@@ -201,6 +163,38 @@ message && (
 
 
 
+<div class="mt-8 rounded-2xl bg-white p-6 shadow">
+
+
+<h2 class="text-xl font-bold">
+📋 Paste Deskripsi Telegram
+</h2>
+
+
+
+<textarea
+id="telegramInput"
+rows="10"
+placeholder="Paste deskripsi mobil dari Telegram..."
+class="mt-4 w-full rounded-xl border p-4"
+></textarea>
+
+
+
+<button
+type="button"
+onclick="parseTelegram()"
+class="mt-4 rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white"
+>
+🚀 Convert Data
+</button>
+
+
+</div>
+
+
+
+
 
 <form
 method="POST"
@@ -212,7 +206,9 @@ class="mt-8 grid gap-6 rounded-2xl bg-white p-8 shadow"
 <div class="grid gap-5 md:grid-cols-2">
 
 
+
 <input
+id="brand"
 name="brand"
 placeholder="Brand"
 required
@@ -222,6 +218,7 @@ class="rounded-xl border p-4"
 
 
 <input
+id="model"
 name="model"
 placeholder="Model"
 required
@@ -231,6 +228,7 @@ class="rounded-xl border p-4"
 
 
 <input
+id="variant"
 name="variant"
 placeholder="Variant"
 class="rounded-xl border p-4"
@@ -239,6 +237,7 @@ class="rounded-xl border p-4"
 
 
 <input
+id="year"
 name="year"
 type="number"
 placeholder="Tahun"
@@ -248,6 +247,7 @@ class="rounded-xl border p-4"
 
 
 <input
+id="color"
 name="color"
 placeholder="Warna"
 class="rounded-xl border p-4"
@@ -256,6 +256,7 @@ class="rounded-xl border p-4"
 
 
 <select
+id="fuel"
 name="fuel"
 class="rounded-xl border p-4"
 >
@@ -280,8 +281,8 @@ Hybrid
 
 
 
-
 <select
+id="transmission"
 name="transmission"
 class="rounded-xl border p-4"
 >
@@ -300,10 +301,8 @@ MT
 
 </select>
 
-
-
-
 <input
+id="odometer"
 name="odometer"
 type="number"
 placeholder="KM"
@@ -312,8 +311,8 @@ class="rounded-xl border p-4"
 
 
 
-
 <input
+id="credit_price"
 name="credit_price"
 type="number"
 placeholder="Harga Kredit"
@@ -323,6 +322,7 @@ class="rounded-xl border p-4"
 
 
 <input
+id="cash_price"
 name="cash_price"
 type="number"
 placeholder="Harga Cash"
@@ -332,6 +332,7 @@ class="rounded-xl border p-4"
 
 
 <input
+id="dp"
 name="dp"
 type="number"
 placeholder="DP"
@@ -348,27 +349,18 @@ class="rounded-xl border p-4"
 
 
 
-<input
-name="tax_valid_until"
-placeholder="Pajak"
-class="rounded-xl border p-4"
-/>
-
-
-
 </div>
 
 
 
 
-
 <textarea
+id="description"
 name="description"
 placeholder="Deskripsi mobil"
-rows="5"
+rows="10"
 class="rounded-xl border p-4"
 ></textarea>
-
 
 
 
@@ -389,7 +381,6 @@ Featured
 
 
 
-
 <button
 class="rounded-xl bg-red-600 px-8 py-4 font-semibold text-white hover:bg-red-700"
 >
@@ -401,10 +392,442 @@ Simpan Mobil
 </form>
 
 
+
 </div>
 
-
 </section>
+
+
+
+
+<script is:inline>
+
+
+function jtToNumber(value){
+
+return Number(value) * 1000000;
+
+}
+
+
+
+
+function parseTelegram(){
+
+
+const text =
+document
+.getElementById("telegramInput")
+.value
+.trim();
+
+
+
+if(!text){
+
+alert("Paste Telegram dulu");
+
+return;
+
+}
+
+
+
+const firstLine =
+text
+.split("\n")[0]
+.trim();
+
+
+
+// =================
+// YEAR
+// =================
+
+const year =
+firstLine.match(/\b20\d{2}\b/);
+
+
+if(year){
+
+document
+.getElementById("year")
+.value = year[0];
+
+}
+
+
+
+// =================
+// BRAND
+// =================
+
+
+const brands = [
+
+"Toyota",
+"Honda",
+"Hyundai",
+"Mazda",
+"BMW",
+"Mercedes",
+"Audi",
+"Wuling",
+"Mitsubishi",
+"Nissan",
+"BYD"
+
+];
+
+
+let brand = "";
+
+
+
+for(const b of brands){
+
+if(
+firstLine
+.toLowerCase()
+.includes(
+b.toLowerCase()
+)
+){
+
+brand=b;
+break;
+
+}
+
+}
+
+
+
+document
+.getElementById("brand")
+.value = brand;
+
+
+
+// =================
+// COLOR
+// =================
+
+
+const colors = [
+
+"Putih",
+"Hitam",
+"Silver",
+"Grey",
+"Abu",
+"Merah",
+"Biru",
+"Hijau",
+"Coklat",
+"Metallic"
+
+];
+
+
+
+for(const c of colors){
+
+if(
+firstLine
+.toLowerCase()
+.includes(
+c.toLowerCase()
+)
+){
+
+document
+.getElementById("color")
+.value=c;
+
+break;
+
+}
+
+}
+
+
+
+
+// =================
+// FUEL
+// =================
+
+
+if(
+text
+.toLowerCase()
+.includes("hybrid")
+){
+
+document
+.getElementById("fuel")
+.value="Hybrid";
+
+}
+else if(
+text
+.toLowerCase()
+.includes("diesel")
+){
+
+document
+.getElementById("fuel")
+.value="Diesel";
+
+}
+else{
+
+document
+.getElementById("fuel")
+.value="Bensin";
+
+}
+
+
+
+
+// =================
+// TRANSMISSION
+// =================
+
+
+if(
+firstLine.match(/\bAT\b/i)
+){
+
+document
+.getElementById("transmission")
+.value="AT";
+
+}
+
+else if(
+firstLine.match(/\bMT\b/i)
+){
+
+document
+.getElementById("transmission")
+.value="MT";
+
+}
+
+
+
+
+
+// =================
+// MODEL + VARIANT
+// =================
+
+
+let cleanTitle =
+firstLine
+.replace(/\(.*?\)/g,"")
+.replace(year?.[0] || "","")
+.trim();
+
+
+
+if(brand){
+
+cleanTitle =
+cleanTitle
+.replace(
+new RegExp(brand,"i"),
+""
+)
+.trim();
+
+}
+
+
+
+
+const words =
+cleanTitle.split(" ");
+
+
+
+if(words.length){
+
+document
+.getElementById("model")
+.value =
+words[0];
+
+}
+
+
+
+if(words.length > 1){
+
+document
+.getElementById("variant")
+.value =
+words
+.slice(1)
+.join(" ");
+
+}
+
+
+
+
+
+// =================
+// KM
+// PRIORITAS
+// =================
+
+
+let km =
+text.match(
+/(?:odometer|km)\s*[:\-]?\s*(\d+)\s*rb/i
+);
+
+
+
+if(!km){
+
+km =
+text.match(
+/low km\s*(\d+)\s*rb/i
+);
+
+}
+
+
+
+if(km){
+
+document
+.getElementById("odometer")
+.value =
+Number(km[1]) * 1000;
+
+}
+
+
+
+
+
+// =================
+// CASH
+// =================
+
+
+const cash =
+text.match(
+/cash\s+(\d+)\s*(jt|juta)/i
+);
+
+
+
+if(cash){
+
+document
+.getElementById("cash_price")
+.value =
+jtToNumber(cash[1]);
+
+}
+
+
+
+
+
+// =================
+// OTR CREDIT
+// =================
+
+
+const otr =
+text.match(
+/(?:otr|harga kredit)\s+(\d+)\s*(jt|juta)/i
+);
+
+
+
+if(otr){
+
+document
+.getElementById("credit_price")
+.value =
+jtToNumber(otr[1]);
+
+}
+
+
+
+
+// =================
+// DP TERKECIL
+// =================
+
+
+const dpMatches =
+[
+...text.matchAll(
+/(?:tdp|dp)\s*(\d+)\s*(jt|juta)/gi
+)
+];
+
+
+
+let dpValues=[];
+
+
+
+dpMatches.forEach(item=>{
+
+dpValues.push(
+jtToNumber(item[1])
+);
+
+});
+
+
+
+if(dpValues.length){
+
+document
+.getElementById("dp")
+.value =
+Math.min(...dpValues);
+
+}
+
+
+
+
+
+// =================
+// DESCRIPTION
+// FULL TEXT
+// =================
+
+
+document
+.getElementById("description")
+.value =
+text;
+
+
+
+alert("Data berhasil dikonversi");
+
+
+}
+
+
+
+</script>
 
 
 </MainLayout>
