@@ -77,14 +77,22 @@ Menu
 </h2>
 
 
-<div class="mt-6 grid gap-4 md:grid-cols-3">
+<div class="mt-6 grid gap-4 md:grid-cols-4">
 
 
 <a
-href="/admin/cars/new?key=garage88"
+href={`/admin/cars/new?key=${ADMIN_KEY}`}
 class="rounded-xl bg-red-600 px-6 py-4 text-center font-semibold text-white hover:bg-red-700"
 >
 Tambah Mobil
+</a>
+
+
+<a
+href={`/admin/cars?key=${ADMIN_KEY}`}
+class="rounded-xl border px-6 py-4 text-center font-semibold hover:bg-slate-50"
+>
+Kelola Mobil
 </a>
 
 
