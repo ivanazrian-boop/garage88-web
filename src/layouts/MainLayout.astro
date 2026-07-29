@@ -12,18 +12,97 @@ const {
 
 <!doctype html>
 <html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{title}</title>
 
-    <meta
-      name="description"
-      content="Garage88 - Mobil Bekas Berkualitas"
+<head>
+
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+
+  <title>
+    {title}
+  </title>
+
+
+
+  <meta
+    name="description"
+    content="Garage88 - Mobil Bekas Berkualitas dengan pilihan unit terbaik, harga kredit dan cash."
+  />
+
+
+
+  <!-- Open Graph -->
+
+  <meta
+    property="og:title"
+    content={title}
+  />
+
+
+  <meta
+    property="og:description"
+    content="Garage88 - Dealer mobil bekas berkualitas."
+  />
+
+
+  <meta
+    property="og:type"
+    content="website"
+  />
+
+
+
+  <!-- Meta Pixel Code -->
+
+  <script is:inline>
+
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+
+  fbq('init', '1575394220832491');
+
+  fbq('track', 'PageView');
+
+  </script>
+
+
+
+  <noscript>
+
+    <img
+      height="1"
+      width="1"
+      style="display:none"
+      src="https://www.facebook.com/tr?id=1575394220832491&ev=PageView&noscript=1"
     />
-  </head>
 
-  <body class="bg-slate-100 text-slate-900">
-    <slot />
-  </body>
+  </noscript>
+
+
+  <!-- End Meta Pixel Code -->
+
+
+
+</head>
+
+
+
+<body class="bg-slate-100 text-slate-900">
+
+  <slot />
+
+</body>
+
+
 </html>
