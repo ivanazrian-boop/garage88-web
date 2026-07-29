@@ -12,15 +12,19 @@ if (key !== ADMIN_KEY) {
 
 let message = "";
 
+
 if (Astro.request.method === "POST") {
 
   const formData = await Astro.request.formData();
 
+
   const brand =
     formData.get("brand")?.toString().trim() || "";
 
+
   const model =
     formData.get("model")?.toString().trim() || "";
+
 
   const variant =
     formData.get("variant")?.toString().trim() || null;
@@ -30,11 +34,12 @@ if (Astro.request.method === "POST") {
     Number(formData.get("year")) || null;
 
 
+
   const slug =
     `${brand}-${model}-${year}`
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g,"-")
+    .replace(/^-|-$/g,"");
 
 
 
@@ -102,12 +107,12 @@ if (Astro.request.method === "POST") {
 
 
 
-  const { data, error } =
+  const {data,error} =
     await supabase
-      .from("cars")
-      .insert(car)
-      .select()
-      .single();
+    .from("cars")
+    .insert(car)
+    .select()
+    .single();
 
 
 
@@ -118,7 +123,7 @@ if (Astro.request.method === "POST") {
     message = error.message;
 
   }
-  else {
+  else{
 
     return Astro.redirect(
       `/admin/cars/upload?id=${data.id}&key=${ADMIN_KEY}`
@@ -135,12 +140,14 @@ if (Astro.request.method === "POST") {
 
 <section class="min-h-screen bg-slate-100 py-12">
 
+
 <div class="mx-auto max-w-5xl px-6">
 
 
 <h1 class="text-3xl font-bold">
 Tambah Mobil
 </h1>
+
 
 
 {
@@ -155,13 +162,14 @@ message && (
 }
 
 
-<!-- TELEGRAM PARSER -->
 
 <div class="mt-8 rounded-2xl bg-white p-6 shadow">
+
 
 <h2 class="text-xl font-bold">
 📋 Paste Deskripsi Telegram
 </h2>
+
 
 
 <textarea
@@ -170,6 +178,7 @@ rows="10"
 placeholder="Paste deskripsi mobil dari Telegram..."
 class="mt-4 w-full rounded-xl border p-4"
 ></textarea>
+
 
 
 <button
@@ -185,13 +194,17 @@ class="mt-4 rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white"
 
 
 
+
+
 <form
 method="POST"
 class="mt-8 grid gap-6 rounded-2xl bg-white p-8 shadow"
 >
 
 
+
 <div class="grid gap-5 md:grid-cols-2">
+
 
 
 <input
@@ -203,6 +216,7 @@ class="rounded-xl border p-4"
 />
 
 
+
 <input
 id="model"
 name="model"
@@ -212,12 +226,14 @@ class="rounded-xl border p-4"
 />
 
 
+
 <input
 id="variant"
 name="variant"
 placeholder="Variant"
 class="rounded-xl border p-4"
 />
+
 
 
 <input
@@ -229,12 +245,14 @@ class="rounded-xl border p-4"
 />
 
 
+
 <input
 id="color"
 name="color"
 placeholder="Warna"
 class="rounded-xl border p-4"
 />
+
 
 
 <select
@@ -262,6 +280,7 @@ Hybrid
 </select>
 
 
+
 <select
 id="transmission"
 name="transmission"
@@ -281,6 +300,7 @@ MT
 </option>
 
 </select>
+
 <input
 id="odometer"
 name="odometer"
@@ -288,6 +308,7 @@ type="number"
 placeholder="KM"
 class="rounded-xl border p-4"
 />
+
 
 
 <input
@@ -299,6 +320,7 @@ class="rounded-xl border p-4"
 />
 
 
+
 <input
 id="cash_price"
 name="cash_price"
@@ -306,6 +328,7 @@ type="number"
 placeholder="Harga Cash"
 class="rounded-xl border p-4"
 />
+
 
 
 <input
@@ -317,6 +340,7 @@ class="rounded-xl border p-4"
 />
 
 
+
 <input
 name="plate_number"
 placeholder="Plat Nomor"
@@ -324,16 +348,20 @@ class="rounded-xl border p-4"
 />
 
 
+
 </div>
+
+
 
 
 <textarea
 id="description"
 name="description"
 placeholder="Deskripsi mobil"
-rows="8"
+rows="10"
 class="rounded-xl border p-4"
 ></textarea>
+
 
 
 
@@ -352,6 +380,7 @@ Featured
 
 
 
+
 <button
 class="rounded-xl bg-red-600 px-8 py-4 font-semibold text-white hover:bg-red-700"
 >
@@ -363,37 +392,23 @@ Simpan Mobil
 </form>
 
 
+
 </div>
 
 </section>
 
 
+
+
 <script is:inline>
-
-function cleanMoney(value){
-
-  if(!value) return null;
-
-  let number =
-    Number(
-      value
-      .replace(/\./g,"")
-      .replace(/,/g,"")
-    );
-
-  return number;
-
-}
-
 
 
 function jtToNumber(value){
 
-  if(!value) return null;
-
-  return Number(value) * 1000000;
+return Number(value) * 1000000;
 
 }
+
 
 
 
@@ -403,13 +418,14 @@ function parseTelegram(){
 const text =
 document
 .getElementById("telegramInput")
-.value;
+.value
+.trim();
 
 
 
 if(!text){
 
-alert("Paste deskripsi Telegram dulu");
+alert("Paste Telegram dulu");
 
 return;
 
@@ -419,9 +435,9 @@ return;
 
 const firstLine =
 text
-.split("\n")
-[0]
+.split("\n")[0]
 .trim();
+
 
 
 // =================
@@ -434,8 +450,9 @@ firstLine.match(/\b20\d{2}\b/);
 
 if(year){
 
-document.getElementById("year").value =
-year[0];
+document
+.getElementById("year")
+.value = year[0];
 
 }
 
@@ -445,7 +462,9 @@ year[0];
 // BRAND
 // =================
 
+
 const brands = [
+
 "Toyota",
 "Honda",
 "Hyundai",
@@ -456,15 +475,16 @@ const brands = [
 "Wuling",
 "Mitsubishi",
 "Nissan",
-"BYD",
-"Volkswagen"
+"BYD"
+
 ];
 
 
-let brandFound = "";
+let brand = "";
 
 
-brands.forEach(b=>{
+
+for(const b of brands){
 
 if(
 firstLine
@@ -474,15 +494,18 @@ b.toLowerCase()
 )
 ){
 
-brandFound=b;
+brand=b;
+break;
 
 }
 
-});
+}
 
 
-document.getElementById("brand").value =
-brandFound;
+
+document
+.getElementById("brand")
+.value = brand;
 
 
 
@@ -490,7 +513,9 @@ brandFound;
 // COLOR
 // =================
 
-const colors=[
+
+const colors = [
+
 "Putih",
 "Hitam",
 "Silver",
@@ -499,11 +524,14 @@ const colors=[
 "Merah",
 "Biru",
 "Hijau",
-"Coklat"
+"Coklat",
+"Metallic"
+
 ];
 
 
-colors.forEach(c=>{
+
+for(const c of colors){
 
 if(
 firstLine
@@ -513,11 +541,16 @@ c.toLowerCase()
 )
 ){
 
-document.getElementById("color").value=c;
+document
+.getElementById("color")
+.value=c;
+
+break;
 
 }
 
-});
+}
+
 
 
 
@@ -525,21 +558,37 @@ document.getElementById("color").value=c;
 // FUEL
 // =================
 
-if(text.toLowerCase().includes("hybrid")){
 
-document.getElementById("fuel").value="Hybrid";
+if(
+text
+.toLowerCase()
+.includes("hybrid")
+){
+
+document
+.getElementById("fuel")
+.value="Hybrid";
 
 }
-else if(text.toLowerCase().includes("diesel")){
+else if(
+text
+.toLowerCase()
+.includes("diesel")
+){
 
-document.getElementById("fuel").value="Diesel";
+document
+.getElementById("fuel")
+.value="Diesel";
 
 }
 else{
 
-document.getElementById("fuel").value="Bensin";
+document
+.getElementById("fuel")
+.value="Bensin";
 
 }
+
 
 
 
@@ -547,11 +596,14 @@ document.getElementById("fuel").value="Bensin";
 // TRANSMISSION
 // =================
 
+
 if(
 firstLine.match(/\bAT\b/i)
 ){
 
-document.getElementById("transmission").value="AT";
+document
+.getElementById("transmission")
+.value="AT";
 
 }
 
@@ -559,9 +611,13 @@ else if(
 firstLine.match(/\bMT\b/i)
 ){
 
-document.getElementById("transmission").value="MT";
+document
+.getElementById("transmission")
+.value="MT";
 
 }
+
+
 
 
 
@@ -570,20 +626,20 @@ document.getElementById("transmission").value="MT";
 // =================
 
 
-let title =
+let cleanTitle =
 firstLine
-.replace(year?.[0] || "", "")
 .replace(/\(.*?\)/g,"")
+.replace(year?.[0] || "","")
 .trim();
 
 
 
-if(brandFound){
+if(brand){
 
-title =
-title
+cleanTitle =
+cleanTitle
 .replace(
-new RegExp(brandFound,"i"),
+new RegExp(brand,"i"),
 ""
 )
 .trim();
@@ -592,14 +648,17 @@ new RegExp(brandFound,"i"),
 
 
 
+
 const words =
-title.split(" ");
+cleanTitle.split(" ");
 
 
 
 if(words.length){
 
-document.getElementById("model").value =
+document
+.getElementById("model")
+.value =
 words[0];
 
 }
@@ -608,7 +667,9 @@ words[0];
 
 if(words.length > 1){
 
-document.getElementById("variant").value =
+document
+.getElementById("variant")
+.value =
 words
 .slice(1)
 .join(" ");
@@ -617,9 +678,11 @@ words
 
 
 
+
+
 // =================
 // KM
-// PRIORITY ODOMETER
+// PRIORITAS
 // =================
 
 
@@ -643,10 +706,14 @@ text.match(
 
 if(km){
 
-document.getElementById("odometer").value =
+document
+.getElementById("odometer")
+.value =
 Number(km[1]) * 1000;
 
 }
+
+
 
 
 
@@ -655,7 +722,7 @@ Number(km[1]) * 1000;
 // =================
 
 
-let cash =
+const cash =
 text.match(
 /cash\s+(\d+)\s*(jt|juta)/i
 );
@@ -664,19 +731,23 @@ text.match(
 
 if(cash){
 
-document.getElementById("cash_price").value =
+document
+.getElementById("cash_price")
+.value =
 jtToNumber(cash[1]);
 
 }
 
 
 
+
+
 // =================
-// CREDIT / OTR
+// OTR CREDIT
 // =================
 
 
-let otr =
+const otr =
 text.match(
 /(?:otr|harga kredit)\s+(\d+)\s*(jt|juta)/i
 );
@@ -685,10 +756,13 @@ text.match(
 
 if(otr){
 
-document.getElementById("credit_price").value =
+document
+.getElementById("credit_price")
+.value =
 jtToNumber(otr[1]);
 
 }
+
 
 
 
@@ -705,13 +779,14 @@ const dpMatches =
 ];
 
 
-let dpList=[];
+
+let dpValues=[];
 
 
 
 dpMatches.forEach(item=>{
 
-dpList.push(
+dpValues.push(
 jtToNumber(item[1])
 );
 
@@ -719,52 +794,38 @@ jtToNumber(item[1])
 
 
 
-if(dpList.length){
+if(dpValues.length){
 
-document.getElementById("dp").value =
-Math.min(...dpList);
+document
+.getElementById("dp")
+.value =
+Math.min(...dpValues);
 
 }
+
+
 
 
 
 // =================
 // DESCRIPTION
+// FULL TEXT
 // =================
 
 
-let description =
-text
-.split("\n")
-.filter(line=>{
-
-let lower =
-line.toLowerCase();
-
-
-return !(
-lower.includes("cash") ||
-lower.includes("otr") ||
-lower.includes("tdp") ||
-lower.includes("cicilan") ||
-lower.includes("paket")
-);
-
-})
-.join("\n")
-.trim();
+document
+.getElementById("description")
+.value =
+text;
 
 
 
-document.getElementById("description").value =
-description;
-
-
-
-alert("Data Telegram berhasil dikonversi");
+alert("Data berhasil dikonversi");
 
 
 }
+
+
 
 </script>
 
