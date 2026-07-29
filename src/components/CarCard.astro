@@ -10,7 +10,8 @@ interface Props {
 const { car } = Astro.props;
 
 const placeholder =
-  "https://placehold.co/800x450/f1f5f9/64748b?text=Garage88";
+  "https://placehold.co/800x600/f1f5f9/64748b?text=Garage88";
+
 
 const image =
   car.images && car.images.length > 0
@@ -18,114 +19,276 @@ const image =
         .sort((a, b) => a.sort_order - b.sort_order)[0].image_url
     : placeholder;
 
+
 const badge = car.fuel?.toUpperCase() ?? "";
+
 ---
 
-<article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+<article
+class="
+overflow-hidden
+rounded-2xl
+border
+border-slate-200
+bg-white
+shadow-sm
+transition
+hover:-translate-y-1
+hover:shadow-lg
+"
+>
 
-  <!-- Foto -->
-  <a href={`/detail/${car.slug}`}>
-    <div class="relative aspect-video bg-slate-100">
 
-      <img
-        src={image}
-        alt={`${car.brand} ${car.model}`}
-        class="h-full w-full object-cover"
-        loading="lazy"
-      />
+<!-- Foto -->
 
-      {badge && (
-        <span class="absolute right-3 top-3 rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white">
-          {badge}
-        </span>
-      )}
+<a href={`/detail/${car.slug}`}>
 
-    </div>
-  </a>
+<div
+class="
+relative
+aspect-[4/3]
+bg-slate-100
+"
+>
 
-  <!-- Isi -->
-  <div class="p-5">
 
-    <p class="text-sm text-slate-500">
-      {car.year}
-    </p>
+<img
+src={image}
+alt={`${car.brand} ${car.model}`}
+class="
+h-full
+w-full
+object-contain
+"
+loading="lazy"
+/>
 
-    <h3 class="mt-1 line-clamp-2 text-xl font-bold text-slate-900">
-      {car.brand} {car.model} {car.variant}
-    </h3>
 
-    <div class="mt-4">
 
-      <p class="text-3xl font-extrabold text-red-600">
-        {formatPrice(car.credit_price)}
-      </p>
+{
+badge && (
 
-      {car.dp && (
-        <p class="mt-1 text-sm text-slate-500">
-          DP Mulai
-          <span class="font-semibold">
-            {" "}
-            {formatPrice(car.dp)}
-          </span>
-        </p>
-      )}
+<span
+class="
+absolute
+right-3
+top-3
+rounded-full
+bg-red-600
+px-3
+py-1
+text-xs
+font-bold
+text-white
+"
+>
+{badge}
+</span>
 
-    </div>
+)
+}
 
-    <!-- Info -->
-    <div class="mt-5 grid grid-cols-3 gap-3 rounded-xl bg-slate-50 p-3 text-center">
 
-      <div>
-        <p class="text-xs text-slate-400">
-          Transmisi
-        </p>
-        <p class="font-semibold">
-          {car.transmission ?? "-"}
-        </p>
-      </div>
+</div>
 
-      <div>
-        <p class="text-xs text-slate-400">
-          BBM
-        </p>
-        <p class="font-semibold">
-          {car.fuel ?? "-"}
-        </p>
-      </div>
+</a>
 
-      <div>
-        <p class="text-xs text-slate-400">
-          KM
-        </p>
-        <p class="font-semibold">
-          {formatKm(car.odometer)}
-        </p>
-      </div>
 
-    </div>
 
-    <!-- Button -->
-    <div class="mt-6 flex gap-3">
 
-      <a
-        href={`/detail/${car.slug}`}
-        class="flex-1 rounded-xl border border-slate-300 py-3 text-center font-semibold transition hover:bg-slate-100"
-      >
-        Detail
-      </a>
+<!-- Isi -->
 
-      <a
-        href={`https://wa.me/6281385226049?text=${encodeURIComponent(
-          `Halo Garage88, saya tertarik dengan ${car.brand} ${car.model} ${car.variant ?? ""}`
-        )}`}
-        target="_blank"
-        class="flex-1 rounded-xl bg-red-600 py-3 text-center font-semibold text-white transition hover:bg-red-700"
-      >
-        WhatsApp
-      </a>
+<div class="p-4 md:p-5">
 
-    </div>
 
-  </div>
+
+<p class="text-sm text-slate-500">
+{car.year}
+</p>
+
+
+
+
+<h3
+class="
+mt-1
+line-clamp-2
+text-lg
+font-bold
+text-slate-900
+md:text-xl
+"
+>
+{car.brand} {car.model} {car.variant}
+</h3>
+
+
+
+
+<div class="mt-4">
+
+
+<p
+class="
+text-2xl
+font-extrabold
+text-red-600
+md:text-3xl
+"
+>
+{formatPrice(car.credit_price)}
+</p>
+
+
+
+{
+car.dp && (
+
+<p class="mt-1 text-sm text-slate-500">
+
+DP Mulai
+
+<span class="font-semibold">
+
+{" "}
+{formatPrice(car.dp)}
+
+</span>
+
+</p>
+
+)
+}
+
+
+
+</div>
+
+
+
+
+
+<!-- Info -->
+
+<div
+class="
+mt-5
+grid
+grid-cols-3
+gap-2
+rounded-xl
+bg-slate-50
+p-3
+text-center
+"
+>
+
+
+<div>
+
+<p class="text-xs text-slate-400">
+Transmisi
+</p>
+
+<p class="text-sm font-semibold">
+{car.transmission ?? "-"}
+</p>
+
+</div>
+
+
+
+
+<div>
+
+<p class="text-xs text-slate-400">
+BBM
+</p>
+
+<p class="text-sm font-semibold">
+{car.fuel ?? "-"}
+</p>
+
+</div>
+
+
+
+
+
+<div>
+
+<p class="text-xs text-slate-400">
+KM
+</p>
+
+<p class="text-sm font-semibold">
+{formatKm(car.odometer)}
+</p>
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+<!-- Button -->
+
+<div class="mt-6 flex gap-3">
+
+
+<a
+href={`/detail/${car.slug}`}
+class="
+flex-1
+rounded-xl
+border
+border-slate-300
+py-3
+text-center
+text-sm
+font-semibold
+transition
+hover:bg-slate-100
+"
+>
+Detail
+</a>
+
+
+
+
+<a
+href={`https://wa.me/6281385226049?text=${encodeURIComponent(
+`Halo Garage88, saya tertarik dengan ${car.brand} ${car.model} ${car.variant ?? ""}`
+)}`}
+target="_blank"
+class="
+flex-1
+rounded-xl
+bg-red-600
+py-3
+text-center
+text-sm
+font-semibold
+text-white
+transition
+hover:bg-red-700
+"
+>
+WhatsApp
+</a>
+
+
+
+</div>
+
+
+
+</div>
+
 
 </article>

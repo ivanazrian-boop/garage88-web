@@ -23,7 +23,6 @@ const gallery =
         },
       ];
 
-
 ---
 
 <div
@@ -39,6 +38,7 @@ const gallery =
     >
       ❮
     </button>
+
 
     <div class="gallery">
 
@@ -60,12 +60,15 @@ const gallery =
 
     </div>
 
+
     <button
       class="nav next"
       type="button"
     >
       ❯
     </button>
+
+
 
     {
       gallery.length > 1 && (
@@ -87,7 +90,11 @@ const gallery =
       )
     }
 
+
   </div>
+
+
+
 
   {
     gallery.length > 1 && (
@@ -100,8 +107,8 @@ const gallery =
             <img
               src={image.image_url}
               loading="lazy"
-              alt={`Thumbnail ${index+1}`}
-              class={`thumb ${index===0?"active":""}`}
+              alt={`Thumbnail ${index + 1}`}
+              class={`thumb ${index===0 ? "active" : ""}`}
               data-index={index}
             />
 
@@ -113,34 +120,49 @@ const gallery =
     )
   }
 
+
 </div>
+
+
+
 <script is:inline>
 
 document.querySelectorAll("[data-gallery]").forEach((wrapper)=>{
 
+
 const gallery =
 wrapper.querySelector(".gallery");
 
+
 if(!gallery) return;
+
 
 const slides =
 gallery.querySelectorAll(".slide");
 
+
 const thumbs =
 wrapper.querySelectorAll(".thumb");
+
 
 const current =
 wrapper.querySelector(".current");
 
+
 const prev =
 wrapper.querySelector(".prev");
+
 
 const next =
 wrapper.querySelector(".next");
 
+
 let index = 0;
 
+
+
 function update(){
+
 
 gallery.scrollTo({
 
@@ -150,60 +172,95 @@ behavior:"smooth"
 
 });
 
+
+
 thumbs.forEach((thumb,i)=>{
+
 
 thumb.classList.toggle(
 "active",
 i===index
 );
 
+
 });
+
+
 
 if(current){
 
 current.textContent =
-String(index+1);
+String(index + 1);
 
 }
 
+
 }
+
+
+
 
 next?.addEventListener("click",()=>{
 
-if(index>=slides.length-1) return;
+
+if(index >= slides.length - 1)
+return;
+
 
 index++;
 
 update();
 
+
 });
+
+
+
 
 prev?.addEventListener("click",()=>{
 
-if(index<=0) return;
+
+if(index <= 0)
+return;
+
 
 index--;
 
 update();
 
+
 });
+
+
+
+
 
 thumbs.forEach((thumb)=>{
 
+
 thumb.addEventListener("click",()=>{
+
 
 index =
 Number(
 thumb.dataset.index
 );
 
+
 update();
 
-});
 
 });
+
+
+});
+
+
+
+
 
 gallery.addEventListener("scroll",()=>{
+
 
 const newIndex =
 Math.round(
@@ -211,37 +268,60 @@ gallery.scrollLeft /
 gallery.clientWidth
 );
 
-if(newIndex===index) return;
 
-index=newIndex;
+
+if(newIndex === index)
+return;
+
+
+
+index = newIndex;
+
+
 
 thumbs.forEach((thumb,i)=>{
+
 
 thumb.classList.toggle(
 "active",
 i===index
 );
 
+
 });
+
+
 
 if(current){
 
 current.textContent =
-String(index+1);
+String(index + 1);
 
 }
 
+
 });
+
+
+
+
 
 window.addEventListener("resize",()=>{
 
+
 update();
 
-});
 
 });
+
+
+
+});
+
 
 </script>
+
+
 
 <style>
 
@@ -250,6 +330,8 @@ update();
 width:100%;
 
 }
+
+
 
 .viewer{
 
@@ -261,6 +343,9 @@ border-radius:18px;
 
 }
 
+
+
+
 .gallery{
 
 display:flex;
@@ -271,17 +356,23 @@ scroll-snap-type:x mandatory;
 
 scroll-behavior:smooth;
 
+-webkit-overflow-scrolling:touch;
+
 -ms-overflow-style:none;
 
 scrollbar-width:none;
 
 }
 
+
+
 .gallery::-webkit-scrollbar{
 
 display:none;
 
 }
+
+
 
 .slide{
 
@@ -291,13 +382,18 @@ scroll-snap-align:start;
 
 }
 
+
+
+
 .slide img{
 
 width:100%;
 
 height:auto;
 
-max-height:700px;
+max-height:600px;
+
+min-height:220px;
 
 object-fit:contain;
 
@@ -308,6 +404,10 @@ border-radius:18px;
 background:#f3f4f6;
 
 }
+
+
+
+
 
 .nav{
 
@@ -343,6 +443,8 @@ box-shadow:0 4px 12px rgba(0,0,0,.15);
 
 }
 
+
+
 .nav:hover{
 
 background:white;
@@ -351,17 +453,24 @@ transform:translateY(-50%) scale(1.08);
 
 }
 
+
+
 .prev{
 
 left:16px;
 
 }
 
+
+
 .next{
 
 right:16px;
 
 }
+
+
+
 
 .counter{
 
@@ -387,6 +496,10 @@ backdrop-filter:blur(6px);
 
 }
 
+
+
+
+
 .thumbnails{
 
 display:flex;
@@ -403,19 +516,7 @@ scrollbar-width:thin;
 
 }
 
-.thumbnails::-webkit-scrollbar{
 
-height:6px;
-
-}
-
-.thumbnails::-webkit-scrollbar-thumb{
-
-background:#cbd5e1;
-
-border-radius:999px;
-
-}
 
 .thumb{
 
@@ -439,11 +540,15 @@ transition:.25s;
 
 }
 
+
+
 .thumb:hover{
 
 opacity:1;
 
 }
+
+
 
 .thumb.active{
 
@@ -453,17 +558,48 @@ border-color:#dc2626;
 
 }
 
+
+
+
+
 @media(max-width:768px){
+
 
 .nav{
 
-width:40px;
+width:36px;
 
-height:40px;
+height:36px;
 
-font-size:18px;
+font-size:16px;
 
 }
+
+
+.prev{
+
+left:10px;
+
+}
+
+
+.next{
+
+right:10px;
+
+}
+
+
+
+.counter{
+
+font-size:12px;
+
+padding:5px 10px;
+
+}
+
+
 
 .thumb{
 
@@ -473,13 +609,6 @@ height:56px;
 
 }
 
-.counter{
-
-font-size:12px;
-
-padding:5px 10px;
-
-}
 
 }
 
