@@ -72,9 +72,21 @@ const {
 
   fbq('init', '1575394220832491');
 
-  fbq('track', 'PageView');
+fbq('track', 'PageView');
 
-  </script>
+
+window.trackWhatsApp = function () {
+
+  if (typeof fbq !== "undefined") {
+
+    fbq('track', 'Contact');
+
+  }
+
+};
+
+
+</script>
 
 
 

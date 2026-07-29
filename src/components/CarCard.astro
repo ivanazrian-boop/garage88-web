@@ -266,6 +266,7 @@ href={`https://wa.me/6281385226049?text=${encodeURIComponent(
 `Halo Garage88, saya tertarik dengan ${car.brand} ${car.model} ${car.variant ?? ""}`
 )}`}
 target="_blank"
+onclick="window.trackWhatsApp && window.trackWhatsApp()"
 class="
 flex-1
 rounded-xl
@@ -281,7 +282,6 @@ hover:bg-red-700
 >
 WhatsApp
 </a>
-
 
 
 </div>
