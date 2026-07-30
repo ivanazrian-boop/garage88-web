@@ -5,8 +5,8 @@ import Footer from "../../components/Footer.astro";
 import CarGrid from "../../components/CarGrid.astro";
 
 import {
-  getCars,
-  searchCars,
+  getCarsPaginated,
+  searchCarsPaginated,
 } from "../../services/cars.service";
 
 
@@ -14,10 +14,49 @@ const q =
   Astro.url.searchParams.get("q") ?? "";
 
 
-const cars =
-  q
-    ? await searchCars(q)
-    : await getCars();
+let cars = [];
+
+let totalPages = 1;
+
+
+
+if(q){
+
+
+  const result =
+    await searchCarsPaginated(
+      q,
+      1
+    );
+
+
+  cars =
+    result.cars;
+
+
+  totalPages =
+    result.totalPages;
+
+
+
+} else {
+
+
+  const result =
+    await getCarsPaginated(
+      1
+    );
+
+
+  cars =
+    result.cars;
+
+
+  totalPages =
+    result.totalPages;
+
+
+}
 
 ---
 
@@ -34,7 +73,6 @@ const cars =
   <div class="container px-5 md:px-0">
 
 
-
     <h1 class="text-3xl font-bold text-white md:text-4xl">
       Stock Mobil
     </h1>
@@ -44,7 +82,6 @@ const cars =
     <p class="mt-2 text-slate-300">
       {cars.length} Unit Tersedia
     </p>
-
 
 
 
@@ -60,7 +97,6 @@ const cars =
         sm:flex-row
       "
     >
-
 
 
       <input
@@ -96,7 +132,6 @@ const cars =
 
 
 
-
       <button
 
         type="submit"
@@ -120,9 +155,7 @@ const cars =
       </button>
 
 
-
     </form>
-
 
 
   </div>
@@ -139,47 +172,54 @@ const cars =
 
 
 {
-  cars.length > 0
+cars.length > 0
 
-  ?
+?
 
-  <CarGrid cars={cars} />
+<CarGrid
 
-  :
+  cars={cars}
 
-  <div
-    class="
-      rounded-xl
-      border
-      border-dashed
-      border-slate-300
-      py-20
-      text-center
-    "
-  >
+  page={1}
+
+  totalPages={totalPages}
+
+  query={q}
+
+/>
 
 
+:
 
-    <h2 class="text-2xl font-bold">
-      Mobil tidak ditemukan
-    </h2>
+<div
+class="
+rounded-xl
+border
+border-dashed
+border-slate-300
+py-20
+text-center
+"
+>
 
 
-
-    <p class="mt-2 text-slate-500">
-      Coba gunakan kata kunci lain.
-    </p>
-
+<h2 class="text-2xl font-bold">
+Mobil tidak ditemukan
+</h2>
 
 
-  </div>
+<p class="mt-2 text-slate-500">
+Coba gunakan kata kunci lain.
+</p>
+
+
+</div>
 
 }
 
 
 
 </main>
-
 
 
 

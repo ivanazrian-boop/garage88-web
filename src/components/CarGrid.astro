@@ -3,18 +3,217 @@ import type { Car } from "../types/car";
 import CarCard from "./CarCard.astro";
 
 interface Props {
+
   cars: Car[];
+
+  page?: number;
+
+  totalPages?: number;
+
+  query?: string;
+
 }
 
-const { cars } = Astro.props;
+
+const {
+
+  cars,
+
+  page = 1,
+
+  totalPages = 1,
+
+  query = ""
+
+} = Astro.props;
+
 ---
 
-<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+<div
+id="car-grid"
+class="
+grid
+gap-6
+md:grid-cols-2
+lg:grid-cols-3
+"
+>
 
-  {
-    cars.map((car) => (
-      <CarCard car={car} />
-    ))
-  }
+
+{
+cars.map((car)=>(
+  <CarCard car={car}/>
+))
+}
+
 
 </div>
+
+
+
+{
+page < totalPages && (
+
+
+<div class="mt-12 text-center">
+
+
+<button
+
+id="load-more"
+
+data-page={page}
+
+data-total-pages={totalPages}
+
+data-query={query}
+
+class="
+rounded-xl
+bg-red-600
+px-10
+py-4
+font-semibold
+text-white
+transition
+hover:bg-red-700
+"
+
+>
+
+Load More
+
+</button>
+
+
+</div>
+
+
+)
+
+}
+
+
+
+
+<script is:inline>
+
+
+const button =
+document.getElementById(
+"load-more"
+);
+
+
+
+if(button){
+
+
+button.addEventListener(
+"click",
+async()=>{
+
+
+let page =
+Number(
+button.dataset.page
+);
+
+
+
+const totalPages =
+Number(
+button.dataset.totalPages
+);
+
+
+
+const query =
+button.dataset.query || "";
+
+
+
+if(page >= totalPages){
+
+button.remove();
+
+return;
+
+}
+
+
+
+page++;
+
+
+
+button.innerText =
+"Loading...";
+
+
+
+const url =
+query
+
+?
+
+`/api/cars-html?page=${page}&q=${encodeURIComponent(query)}`
+
+:
+
+`/api/cars-html?page=${page}`;
+
+
+
+
+const response =
+await fetch(url);
+
+
+
+const result =
+await response.json();
+
+
+
+const grid =
+document.getElementById(
+"car-grid"
+);
+
+
+
+grid.insertAdjacentHTML(
+
+"beforeend",
+
+result.html
+
+);
+
+
+
+button.dataset.page =
+String(page);
+
+
+
+button.innerText =
+"Load More";
+
+
+
+if(page >= totalPages){
+
+button.remove();
+
+}
+
+
+
+});
+
+}
+
+
+</script>

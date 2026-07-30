@@ -258,3 +258,202 @@ export async function getBrands()
   .sort();
 
 }
+
+export async function getCarsPaginated(
+  page = 1
+) {
+
+  const limit = 21;
+
+  const from =
+    (page - 1) * limit;
+
+  const to =
+    from + limit - 1;
+
+
+  const {
+    data,
+    count,
+    error
+  } =
+    await supabase
+      .from("cars")
+      .select(
+        CAR_SELECT,
+        {
+          count:"exact"
+        }
+      )
+      .eq(
+        "status",
+        "READY"
+      )
+      .order(
+        "featured",
+        {
+          ascending:false
+        }
+      )
+      .order(
+        "created_at",
+        {
+          ascending:false
+        }
+      )
+      .range(
+        from,
+        to
+      );
+
+
+  if(error){
+
+    console.error(
+      "getCarsPaginated:",
+      error
+    );
+
+    return {
+      cars:[],
+      totalPages:1
+    };
+
+  }
+
+
+  return {
+
+    cars:(data ?? []) as Car[],
+
+    totalPages:
+      Math.ceil(
+        (count ?? 0) / limit
+      )
+
+  };
+
+}
+
+export async function searchCarsPaginated(
+  keyword: string,
+  page = 1
+) {
+
+  const limit = 21;
+
+
+  const words =
+    keyword
+      .trim()
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(Boolean);
+
+
+
+  const {
+    data,
+    error
+  } =
+    await supabase
+      .from("cars")
+      .select(CAR_SELECT)
+      .eq(
+        "status",
+        "READY"
+      )
+      .order(
+        "featured",
+        {
+          ascending:false
+        }
+      )
+      .order(
+        "created_at",
+        {
+          ascending:false
+        }
+      );
+
+
+
+  if(error){
+
+    console.error(
+      "searchCarsPaginated:",
+      error
+    );
+
+    return {
+      cars:[],
+      totalPages:1
+    };
+
+  }
+
+
+
+  const filtered =
+    (data ?? [])
+    .filter((car)=>{
+
+
+      const searchable = [
+
+        car.brand,
+
+        car.model,
+
+        car.variant,
+
+        car.color,
+
+        car.fuel,
+
+        car.transmission,
+
+        String(car.year),
+
+        String(car.odometer ?? "")
+
+      ]
+      .join(" ")
+      .toLowerCase();
+
+
+
+      return words.every(
+        word =>
+        searchable.includes(word)
+      );
+
+
+    });
+
+
+
+  const from =
+    (page - 1) * limit;
+
+
+  const cars =
+    filtered.slice(
+      from,
+      from + limit
+    );
+
+
+
+  return {
+
+    cars: cars as Car[],
+
+    totalPages:
+      Math.ceil(
+        filtered.length / limit
+      )
+
+  };
+
+}

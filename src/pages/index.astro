@@ -5,9 +5,14 @@ import Hero from "../components/Hero.astro";
 import Footer from "../components/Footer.astro";
 import CarGrid from "../components/CarGrid.astro";
 
-import { getCars } from "../services/cars.service";
+import { getCarsPaginated } from "../services/cars.service";
 
-const cars = await getCars();
+
+const {
+  cars,
+  totalPages
+} = await getCarsPaginated(1);
+
 ---
 
 <MainLayout title="Garage88">
@@ -16,11 +21,23 @@ const cars = await getCars();
 
   <Hero />
 
+
   <main>
 
-    <section id="stock" class="container py-16">
+    <section
+      id="stock"
+      class="container py-16"
+    >
 
-      <div class="mb-10 flex items-center justify-between">
+
+      <div
+        class="
+        mb-10
+        flex
+        items-center
+        justify-between
+        "
+      >
 
         <div>
 
@@ -33,19 +50,34 @@ const cars = await getCars();
             {cars.length} Unit Tersedia
           </p>
 
+
         </div>
+
 
       </div>
 
 
-      <CarGrid cars={cars} />
+
+      <CarGrid
+
+        cars={cars}
+
+        page={1}
+
+        totalPages={totalPages}
+
+      />
+
 
 
     </section>
 
+
   </main>
 
 
+
   <Footer />
+
 
 </MainLayout>
