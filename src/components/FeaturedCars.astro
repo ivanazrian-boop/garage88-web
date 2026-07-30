@@ -1,0 +1,53 @@
+---
+import type { Car } from "../types/car";
+import CarGrid from "./CarGrid.astro";
+
+interface Props {
+  cars: Car[];
+}
+
+const { cars } = Astro.props;
+---
+
+{
+cars.length > 0 && (
+
+<section class="container py-16">
+
+<div class="mb-8">
+
+<h2 class="text-4xl font-bold">
+🔥 Featured Collection
+</h2>
+
+<p class="mt-2 text-slate-500">
+Pilihan mobil terbaik Garage88
+</p>
+
+</div>
+
+
+<CarGrid cars={cars}/>
+
+
+<a
+href="/featured"
+class="
+mt-10
+inline-flex
+rounded-xl
+bg-red-600
+px-8
+py-4
+font-semibold
+text-white
+"
+>
+Lihat Semua Featured
+</a>
+
+
+</section>
+
+)
+}

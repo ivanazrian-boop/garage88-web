@@ -45,6 +45,7 @@ export async function getCars(): Promise<Car[]> {
 
 
 
+
 export async function searchCars(
   keyword: string
 ): Promise<Car[]> {
@@ -69,13 +70,6 @@ export async function searchCars(
       .filter(Boolean);
 
 
-
-  let results: Car[] = [];
-
-
-
-  // Ambil semua READY dulu
-  // karena jumlah stock showroom masih kecil
 
   const { data, error } =
     await supabase
@@ -106,7 +100,7 @@ export async function searchCars(
 
 
 
-  results =
+  const results =
     cars.filter((car)=>{
 
 
@@ -170,6 +164,7 @@ export async function getFeaturedCars(): Promise<Car[]> {
   if(error){
 
     console.error(
+      "getFeaturedCars:",
       error
     );
 
@@ -182,6 +177,7 @@ export async function getFeaturedCars(): Promise<Car[]> {
   return (data ?? []) as Car[];
 
 }
+
 
 
 
@@ -204,6 +200,7 @@ export async function getCarBySlug(
   if(error){
 
     console.error(
+      "getCarBySlug:",
       error
     );
 
@@ -236,6 +233,7 @@ export async function getBrands()
   if(error){
 
     console.error(
+      "getBrands:",
       error
     );
 
