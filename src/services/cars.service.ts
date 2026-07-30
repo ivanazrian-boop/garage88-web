@@ -21,6 +21,9 @@ export async function getCars(): Promise<Car[]> {
     .from("cars")
     .select(CAR_SELECT)
     .eq("status", "READY")
+    .order("featured", {
+      ascending: false
+    })
     .order("created_at", {
       ascending: false
     });
@@ -76,6 +79,9 @@ export async function searchCars(
       .from("cars")
       .select(CAR_SELECT)
       .eq("status","READY")
+      .order("featured", {
+        ascending:false
+      })
       .order("created_at", {
         ascending:false
       });
