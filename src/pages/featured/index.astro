@@ -2,13 +2,27 @@
 import MainLayout from "../../layouts/MainLayout.astro";
 import Navbar from "../../components/Navbar.astro";
 import Footer from "../../components/Footer.astro";
+
 import FeaturedCard from "../../components/FeaturedCard.astro";
+import StockCard from "../../components/StockCard.astro";
 
-import { getFeaturedCars } from "../../services/cars.service";
+import {
+  getFeaturedCars,
+  getCarsPaginated
+} from "../../services/cars.service";
 
 
-const cars =
+
+const featuredCars =
   await getFeaturedCars();
+
+
+
+const {
+  cars: stockCars,
+  totalPages
+} =
+  await getCarsPaginated(1);
 
 ---
 
@@ -18,6 +32,8 @@ const cars =
 <Navbar />
 
 
+
+<!-- HERO -->
 
 <section
 class="
@@ -64,6 +80,7 @@ Mobil Pilihan
 </h1>
 
 
+
 </div>
 
 
@@ -74,6 +91,7 @@ Mobil Pilihan
 
 
 
+<!-- FEATURED -->
 
 <main
 class="
@@ -83,7 +101,6 @@ py-10
 md:px-0
 "
 >
-
 
 
 <div
@@ -98,15 +115,13 @@ lg:grid-cols-4
 
 
 {
-cars.map((car)=>(
-<FeaturedCard car={car}/>
+featuredCars.map((car)=>(
+  <FeaturedCard car={car}/>
 ))
 }
 
 
 </div>
-
-
 
 
 
@@ -139,8 +154,147 @@ Lihat Semua Stock
 </div>
 
 
-
 </main>
+
+
+
+
+
+
+
+<!-- PEMBATAS -->
+
+<div
+class="
+container
+px-5
+md:px-0
+"
+>
+
+<hr
+class="
+border-slate-200
+"
+/>
+
+</div>
+
+
+
+
+
+
+
+
+<!-- STOCK LAINNYA -->
+
+
+<section
+class="
+container
+px-5
+py-12
+md:px-0
+"
+>
+
+
+<div
+class="
+mb-8
+"
+>
+
+
+<h2
+class="
+text-3xl
+font-bold
+text-slate-900
+"
+>
+Stock Lainnya Garage88
+</h2>
+
+
+
+<p
+class="
+mt-2
+text-slate-500
+"
+>
+Pilihan unit lainnya yang tersedia
+</p>
+
+
+
+</div>
+
+
+
+
+
+
+<div
+class="
+grid
+grid-cols-2
+gap-4
+md:grid-cols-3
+lg:grid-cols-4
+"
+>
+
+
+{
+stockCars.map((car)=>(
+  <StockCard car={car}/>
+))
+}
+
+
+</div>
+
+
+
+
+
+
+<div
+class="
+mt-10
+text-center
+"
+>
+
+
+<a
+href="/stock"
+class="
+inline-flex
+rounded-xl
+border
+border-slate-300
+px-8
+py-3
+font-semibold
+text-slate-900
+transition
+hover:bg-slate-100
+"
+>
+Lihat Semua Stock
+</a>
+
+
+</div>
+
+
+
+</section>
+
 
 
 
