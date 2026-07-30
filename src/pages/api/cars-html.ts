@@ -1,11 +1,15 @@
 import type { APIRoute } from "astro";
+
 import {
   getCarsPaginated,
   searchCarsPaginated,
+  filterCarsPaginated,
 } from "../../services/cars.service";
 
 import CarCard from "../../components/CarCard.astro";
+
 import { experimental_AstroContainer } from "astro/container";
+
 
 
 export const GET: APIRoute = async ({ url }) => {
@@ -21,12 +25,35 @@ export const GET: APIRoute = async ({ url }) => {
     url.searchParams.get("q") ?? "";
 
 
+  const price =
+    url.searchParams.get("price") ?? "";
+
+
 
   let result;
 
 
 
-  if(q){
+  /*
+    PRIORITAS:
+    1. Price
+    2. Search
+    3. Semua
+  */
+
+
+  if(price){
+
+
+    result =
+      await filterCarsPaginated(
+        price,
+        page
+      );
+
+
+  }
+  else if(q){
 
 
     result =
@@ -36,7 +63,8 @@ export const GET: APIRoute = async ({ url }) => {
       );
 
 
-  } else {
+  }
+  else {
 
 
     result =
@@ -49,30 +77,38 @@ export const GET: APIRoute = async ({ url }) => {
 
 
 
+
+
   const container =
     await experimental_AstroContainer.create();
+
 
 
 
   const html =
     await Promise.all(
 
-      result.cars.map(async(car)=>{
+      result.cars.map(
+        async(car)=>{
 
 
-        return await container.renderToString(
-          CarCard,
-          {
-            props:{
-              car
+          return await container.renderToString(
+            CarCard,
+            {
+              props:{
+                car
+              }
             }
-          }
-        );
+          );
 
 
-      })
+        }
+
+      )
 
     );
+
+
 
 
 
@@ -91,6 +127,7 @@ export const GET: APIRoute = async ({ url }) => {
         result.totalPages
 
     }),
+
 
     {
       status:200,

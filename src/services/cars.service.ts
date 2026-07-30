@@ -17,19 +17,21 @@ const CAR_SELECT = `
 
 export async function getCars(): Promise<Car[]> {
 
-  const { data, error } = await supabase
-    .from("cars")
-    .select(CAR_SELECT)
-    .eq("status", "READY")
-    .order("featured", {
-      ascending: false
-    })
-    .order("created_at", {
-      ascending: false
-    });
+
+  const { data, error } =
+    await supabase
+      .from("cars")
+      .select(CAR_SELECT)
+      .eq("status", "READY")
+      .order(
+        "created_at",
+        {
+          ascending:false
+        }
+      );
 
 
-  if (error) {
+  if(error){
 
     console.error(
       "getCars:",
@@ -49,227 +51,21 @@ export async function getCars(): Promise<Car[]> {
 
 
 
-export async function searchCars(
-  keyword: string
-): Promise<Car[]> {
-
-
-  const q =
-    keyword.trim();
-
-
-  if (!q) {
-
-    return getCars();
-
-  }
-
-
-
-  const words =
-    q
-      .toLowerCase()
-      .split(/\s+/)
-      .filter(Boolean);
-
-
-
-  const { data, error } =
-    await supabase
-      .from("cars")
-      .select(CAR_SELECT)
-      .eq("status","READY")
-      .order("featured", {
-        ascending:false
-      })
-      .order("created_at", {
-        ascending:false
-      });
-
-
-
-  if(error){
-
-    console.error(
-      "searchCars:",
-      error
-    );
-
-    return [];
-
-  }
-
-
-
-  const cars =
-    (data ?? []) as Car[];
-
-
-
-  const results =
-    cars.filter((car)=>{
-
-
-      const searchable = [
-
-        car.brand,
-
-        car.model,
-
-        car.variant,
-
-        car.color,
-
-        car.fuel,
-
-        car.transmission,
-
-        String(car.year),
-
-        String(car.odometer ?? "")
-
-      ]
-      .join(" ")
-      .toLowerCase();
-
-
-
-      return words.every(
-        word =>
-          searchable.includes(word)
-      );
-
-
-    });
-
-
-
-  return results;
-
-}
-
-
-
-
-
-export async function getFeaturedCars(): Promise<Car[]> {
-
-
-  const { data, error } =
-    await supabase
-      .from("cars")
-      .select(CAR_SELECT)
-      .eq("status","READY")
-      .eq("featured",true)
-      .order("created_at", {
-        ascending:false
-      });
-
-
-
-  if(error){
-
-    console.error(
-      "getFeaturedCars:",
-      error
-    );
-
-    return [];
-
-  }
-
-
-
-  return (data ?? []) as Car[];
-
-}
-
-
-
-
-
-export async function getCarBySlug(
-  slug:string
-): Promise<Car | null> {
-
-
-  const { data,error } =
-    await supabase
-      .from("cars")
-      .select(CAR_SELECT)
-      .eq("slug",slug)
-      .eq("status","READY")
-      .single();
-
-
-
-  if(error){
-
-    console.error(
-      "getCarBySlug:",
-      error
-    );
-
-    return null;
-
-  }
-
-
-
-  return data as Car;
-
-}
-
-
-
-
-
-export async function getBrands()
-: Promise<string[]> {
-
-
-  const { data,error } =
-    await supabase
-      .from("cars")
-      .select("brand")
-      .eq("status","READY");
-
-
-
-  if(error){
-
-    console.error(
-      "getBrands:",
-      error
-    );
-
-    return [];
-
-  }
-
-
-
-  return [
-    ...new Set(
-      (data ?? [])
-      .map(x=>x.brand)
-    )
-  ]
-  .sort();
-
-}
-
 export async function getCarsPaginated(
   page = 1
 ) {
 
+
   const limit = 21;
+
 
   const from =
     (page - 1) * limit;
 
+
   const to =
     from + limit - 1;
+
 
 
   const {
@@ -307,6 +103,7 @@ export async function getCarsPaginated(
       );
 
 
+
   if(error){
 
     console.error(
@@ -322,6 +119,7 @@ export async function getCarsPaginated(
   }
 
 
+
   return {
 
     cars:(data ?? []) as Car[],
@@ -335,10 +133,90 @@ export async function getCarsPaginated(
 
 }
 
+
+
+
+
+export async function searchCars(
+  keyword:string
+):Promise<Car[]>{
+
+
+  const q =
+    keyword
+      .trim()
+      .toLowerCase();
+
+
+
+  if(!q){
+
+    return getCars();
+
+  }
+
+
+
+  const { data,error } =
+    await supabase
+      .from("cars")
+      .select(CAR_SELECT)
+      .eq(
+        "status",
+        "READY"
+      );
+
+
+
+  if(error){
+
+    console.error(
+      error
+    );
+
+    return [];
+
+  }
+
+
+
+  return (data ?? [])
+  .filter((car)=>{
+
+
+    const text = [
+
+      car.brand,
+      car.model,
+      car.variant,
+      car.color,
+      car.fuel,
+      car.transmission,
+      car.year,
+      car.odometer
+
+    ]
+    .join(" ")
+    .toLowerCase();
+
+
+
+    return text.includes(q);
+
+
+  }) as Car[];
+
+}
+
+
+
+
+
 export async function searchCarsPaginated(
-  keyword: string,
+  keyword:string,
   page = 1
-) {
+){
+
 
   const limit = 21;
 
@@ -381,9 +259,9 @@ export async function searchCarsPaginated(
   if(error){
 
     console.error(
-      "searchCarsPaginated:",
       error
     );
+
 
     return {
       cars:[],
@@ -402,20 +280,13 @@ export async function searchCarsPaginated(
       const searchable = [
 
         car.brand,
-
         car.model,
-
         car.variant,
-
         car.color,
-
         car.fuel,
-
         car.transmission,
-
-        String(car.year),
-
-        String(car.odometer ?? "")
+        car.year,
+        car.odometer
 
       ]
       .join(" ")
@@ -425,7 +296,7 @@ export async function searchCarsPaginated(
 
       return words.every(
         word =>
-        searchable.includes(word)
+          searchable.includes(word)
       );
 
 
@@ -437,23 +308,299 @@ export async function searchCarsPaginated(
     (page - 1) * limit;
 
 
-  const cars =
-    filtered.slice(
-      from,
-      from + limit
-    );
-
-
 
   return {
 
-    cars: cars as Car[],
+
+    cars:
+      filtered
+      .slice(
+        from,
+        from + limit
+      ) as Car[],
+
 
     totalPages:
       Math.ceil(
         filtered.length / limit
       )
 
+
   };
+
+
+}
+
+
+
+
+
+export async function filterCarsPaginated(
+  price:string,
+  page = 1
+){
+
+
+  const limit = 21;
+
+
+  const from =
+    (page - 1) * limit;
+
+
+  const to =
+    from + limit - 1;
+
+
+
+  let min = 0;
+
+  let max = 9999999999;
+
+
+
+  switch(price){
+
+
+    case "0-150":
+
+      min = 0;
+      max = 150000000;
+
+      break;
+
+
+
+    case "150-250":
+
+      min = 150000000;
+      max = 250000000;
+
+      break;
+
+
+
+    case "250-300":
+
+      min = 250000000;
+      max = 300000000;
+
+      break;
+
+
+
+    case "300-up":
+
+      min = 300000000;
+
+      break;
+
+
+  }
+
+
+
+  const {
+    data,
+    count,
+    error
+  } =
+    await supabase
+      .from("cars")
+      .select(
+        CAR_SELECT,
+        {
+          count:"exact"
+        }
+      )
+      .eq(
+        "status",
+        "READY"
+      )
+      .gte(
+        "credit_price",
+        min
+      )
+      .lte(
+        "credit_price",
+        max
+      )
+      .order(
+        "featured",
+        {
+          ascending:false
+        }
+      )
+      .order(
+        "created_at",
+        {
+          ascending:false
+        }
+      )
+      .range(
+        from,
+        to
+      );
+
+
+
+  if(error){
+
+    console.error(
+      "filterCarsPaginated:",
+      error
+    );
+
+
+    return {
+      cars:[],
+      totalPages:1
+    };
+
+  }
+
+
+
+  return {
+
+
+    cars:(data ?? []) as Car[],
+
+
+    totalPages:
+      Math.ceil(
+        (count ?? 0) / limit
+      )
+
+
+  };
+
+
+}
+
+
+
+
+
+export async function getFeaturedCars():Promise<Car[]> {
+
+
+  const { data,error } =
+    await supabase
+      .from("cars")
+      .select(CAR_SELECT)
+      .eq(
+        "status",
+        "READY"
+      )
+      .eq(
+        "featured",
+        true
+      )
+      .order(
+        "created_at",
+        {
+          ascending:false
+        }
+      );
+
+
+
+  if(error){
+
+    console.error(
+      error
+    );
+
+    return [];
+
+  }
+
+
+
+  return (data ?? []) as Car[];
+
+}
+
+
+
+
+
+export async function getCarBySlug(
+  slug:string
+):Promise<Car | null>{
+
+
+  const { data,error } =
+    await supabase
+      .from("cars")
+      .select(CAR_SELECT)
+      .eq(
+        "slug",
+        slug
+      )
+      .eq(
+        "status",
+        "READY"
+      )
+      .single();
+
+
+
+  if(error){
+
+    console.error(
+      error
+    );
+
+    return null;
+
+  }
+
+
+
+  return data as Car;
+
+}
+
+
+
+
+
+export async function getBrands()
+:Promise<string[]>{
+
+
+  const { data,error } =
+    await supabase
+      .from("cars")
+      .select("brand")
+      .eq(
+        "status",
+        "READY"
+      );
+
+
+
+  if(error){
+
+    console.error(
+      error
+    );
+
+    return [];
+
+  }
+
+
+
+  return [
+    ...new Set(
+      (data ?? [])
+      .map(x=>x.brand)
+    )
+  ]
+  .sort();
+
 
 }

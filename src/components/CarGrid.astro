@@ -12,6 +12,8 @@ interface Props {
 
   query?: string;
 
+  price?: string;
+
 }
 
 
@@ -23,7 +25,9 @@ const {
 
   totalPages = 1,
 
-  query = ""
+  query = "",
+
+  price = ""
 
 } = Astro.props;
 
@@ -68,6 +72,8 @@ data-total-pages={totalPages}
 
 data-query={query}
 
+data-price={price}
+
 class="
 rounded-xl
 bg-red-600
@@ -92,6 +98,7 @@ Load More
 )
 
 }
+
 
 
 
@@ -133,6 +140,11 @@ button.dataset.query || "";
 
 
 
+const price =
+button.dataset.price || "";
+
+
+
 if(page >= totalPages){
 
 button.remove();
@@ -152,16 +164,26 @@ button.innerText =
 
 
 
-const url =
-query
-
-?
-
-`/api/cars-html?page=${page}&q=${encodeURIComponent(query)}`
-
-:
-
+let url =
 `/api/cars-html?page=${page}`;
+
+
+
+if(query){
+
+url +=
+`&q=${encodeURIComponent(query)}`;
+
+}
+
+
+
+if(price){
+
+url +=
+`&price=${price}`;
+
+}
 
 
 
