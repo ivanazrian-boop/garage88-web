@@ -604,3 +604,47 @@ export async function getBrands()
 
 
 }
+
+export async function getNonFeaturedCars(): Promise<Car[]> {
+
+
+  const {
+    data,
+    error
+  } =
+    await supabase
+      .from("cars")
+      .select(CAR_SELECT)
+      .eq(
+        "status",
+        "READY"
+      )
+      .eq(
+        "featured",
+        false
+      )
+      .order(
+        "created_at",
+        {
+          ascending:false
+        }
+      );
+
+
+
+  if(error){
+
+    console.error(
+      "getNonFeaturedCars:",
+      error
+    );
+
+    return [];
+
+  }
+
+
+
+  return (data ?? []) as Car[];
+
+}

@@ -8,21 +8,16 @@ import StockCard from "../../components/StockCard.astro";
 
 import {
   getFeaturedCars,
-  getCarsPaginated
+  getNonFeaturedCars
 } from "../../services/cars.service";
-
 
 
 const featuredCars =
   await getFeaturedCars();
 
 
-
-const {
-  cars: stockCars,
-  totalPages
-} =
-  await getCarsPaginated(1);
+const stockCars =
+  await getNonFeaturedCars();
 
 ---
 
@@ -93,14 +88,15 @@ Mobil Pilihan
 
 <!-- FEATURED -->
 
-<main
+<section
 class="
 container
 px-5
-py-10
+py-8
 md:px-0
 "
 >
+
 
 
 <div
@@ -125,36 +121,7 @@ featuredCars.map((car)=>(
 
 
 
-<div
-class="
-mt-12
-text-center
-"
->
-
-
-<a
-href="/stock"
-class="
-inline-flex
-rounded-xl
-bg-red-600
-px-8
-py-3
-font-semibold
-text-white
-transition
-hover:bg-red-700
-"
->
-Lihat Semua Stock
-</a>
-
-
-</div>
-
-
-</main>
+</section>
 
 
 
@@ -189,15 +156,15 @@ border-slate-200
 
 <!-- STOCK LAINNYA -->
 
-
 <section
 class="
 container
 px-5
-py-12
+py-10
 md:px-0
 "
 >
+
 
 
 <div
@@ -229,8 +196,8 @@ Pilihan unit lainnya yang tersedia
 </p>
 
 
-
 </div>
+
 
 
 
@@ -275,14 +242,13 @@ href="/stock"
 class="
 inline-flex
 rounded-xl
-border
-border-slate-300
+bg-red-600
 px-8
 py-3
 font-semibold
-text-slate-900
+text-white
 transition
-hover:bg-slate-100
+hover:bg-red-700
 "
 >
 Lihat Semua Stock
@@ -294,6 +260,7 @@ Lihat Semua Stock
 
 
 </section>
+
 
 
 
