@@ -1,64 +1,355 @@
+---
+import MainLayout from "../../../layouts/MainLayout.astro";
+import { supabase } from "../../../lib/supabase";
+
+const key = Astro.url.searchParams.get("key");
+const carId = Astro.url.searchParams.get("id");
+
+const ADMIN_KEY = "garage88";
+
+
+if (key !== ADMIN_KEY || !carId) {
+  return Astro.redirect("/");
+}
+
+
+let message = "";
+
+
+
+// DELETE FOTO
+
+const deleteId =
+  Astro.url.searchParams.get("delete");
+
+
+if(deleteId){
+
+
+  const { data:image } =
+    await supabase
+      .from("car_images")
+      .select("*")
+      .eq("id", deleteId)
+      .single();
+
+
+
+  if(image){
+
+
+    const path =
+      image.image_url
+      .split("/cars/")
+      .pop();
+
+
+
+    if(path){
+
+      await supabase.storage
+        .from("cars")
+        .remove([
+          path
+        ]);
+
+    }
+
+
+
+    await supabase
+      .from("car_images")
+      .delete()
+      .eq(
+        "id",
+        deleteId
+      );
+
+
+    return Astro.redirect(
+      `/admin/cars/photos?id=${carId}&key=${ADMIN_KEY}`
+    );
+
+  }
+
+}
+
+
+
+
+
+
+const { data:car } =
+await supabase
+.from("cars")
+.select("*")
+.eq("id", carId)
+.single();
+
+
+
+
+
+const { data:images } =
+await supabase
+.from("car_images")
+.select("*")
+.eq("car_id", carId)
+.order(
+  "sort_order",
+  {
+    ascending:true
+  }
+);
+
+---
+
+<MainLayout title="Kelola Foto | Garage88">
+
+
+<section class="min-h-screen bg-slate-100 py-12">
+
+
+<div class="mx-auto max-w-6xl px-6">
+
+
+
+<h1 class="text-3xl font-bold">
+Kelola Foto
+</h1>
+
+
+<p class="mt-2 text-slate-500">
+{car?.brand} {car?.model}
+</p>
+
+
+
+
+<div class="mt-8">
+
+<a
+href={`/admin/cars/upload?id=${carId}&key=${ADMIN_KEY}`}
+class="
+rounded-xl
+bg-red-600
+px-6
+py-3
+font-semibold
+text-white
+"
+>
++ Tambah Foto
+</a>
+
+</div>
+
+
+
+
+<p class="mt-8 text-sm text-slate-500">
+Geser foto untuk menentukan foto utama.
+Foto paling atas adalah cover.
+</p>
+
+
+
+
+
+<div
+id="photo-grid"
+class="
+mt-8
+grid
+gap-6
+md:grid-cols-3
+"
+>
+
+
+{
+images?.map((image)=>(
+<div
+class="
+photo-item
+cursor-move
+overflow-hidden
+rounded-2xl
+bg-white
+shadow
+"
+data-id={image.id}
+>
+
+
+<img
+src={image.image_url}
+class="
+aspect-video
+w-full
+object-cover
+"
+/>
+
+
+
+<div class="p-4">
+
+
+{
+image.sort_order === 1 && (
+
+<span
+class="
+rounded-full
+bg-green-100
+px-3
+py-1
+text-xs
+font-semibold
+text-green-700
+"
+>
+Foto Utama
+</span>
+
+)
+
+}
+
+
+
+
+<p class="mt-3 text-xs text-slate-400">
+Urutan {image.sort_order}
+</p>
+
+
+
+
+
+<a
+href={`/admin/cars/photos?id=${carId}&key=${ADMIN_KEY}&delete=${image.id}`}
+onclick="return confirm('Hapus foto ini?')"
+class="
+mt-4
+block
+rounded-xl
+bg-red-600
+py-2
+text-center
+text-sm
+font-semibold
+text-white
+"
+>
+Hapus Foto
+</a>
+
+
+</div>
+
+
+</div>
+
+))
+}
+
+
+</div>
+
+
+</div>
+
+
+</section>
+
+
+
+
+
+
+<script is:inline src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+
+
+
 <script is:inline>
 
-import Sortable from "https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/+esm";
+const grid =
+document.getElementById(
+"photo-grid"
+);
 
-
-const grid = document.querySelector("#photo-grid");
 
 
 if(grid){
 
 
-  new Sortable(
-    grid,
-    {
+new Sortable(
+grid,
+{
 
-      animation: 150,
-
-
-      onEnd: async () => {
+animation:150,
 
 
-        const items =
-          [...grid.children]
-          .map((el, index) => ({
-
-            id: el.dataset.id,
-
-            sort_order: index + 1
-
-          }));
+onEnd: async function(){
 
 
+const items =
+Array
+.from(grid.children)
+.map(
+(item,index)=>({
 
-        await fetch(
-          "/api/admin/reorder-images",
-          {
+id:
+item.dataset.id,
 
-            method: "POST",
+sort_order:
+index + 1
 
-            headers: {
-              "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-              images: items
-            })
-
-          }
-        );
+})
+);
 
 
 
-        window.location.reload();
+await fetch(
+"/api/admin/reorder-images",
+{
+
+method:"POST",
+
+headers:{
+"Content-Type":
+"application/json"
+},
 
 
-      }
+body:
+JSON.stringify({
+images:items
+})
 
-    }
-  );
+}
+
+);
+
+
+
+window.location.reload();
+
+
+}
+
+
+}
+);
 
 
 }
 
 </script>
+
+
+
+
+</MainLayout>
