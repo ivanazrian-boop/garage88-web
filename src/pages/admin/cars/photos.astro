@@ -1,204 +1,64 @@
----
-import MainLayout from "../../../layouts/MainLayout.astro";
-import { supabase } from "../../../lib/supabase";
+<script is:inline>
 
-const key = Astro.url.searchParams.get("key");
-const carId = Astro.url.searchParams.get("id");
-
-const ADMIN_KEY = "garage88";
-
-if (key !== ADMIN_KEY || !carId) {
-  return Astro.redirect("/");
-}
+import Sortable from "https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/+esm";
 
 
-let message = "";
+const grid = document.querySelector("#photo-grid");
 
 
-// DELETE FOTO
-
-const deleteId =
-  Astro.url.searchParams.get("delete");
+if(grid){
 
 
-if(deleteId){
+  new Sortable(
+    grid,
+    {
+
+      animation: 150,
 
 
-  const { data:image } =
-    await supabase
-      .from("car_images")
-      .select("*")
-      .eq("id", deleteId)
-      .single();
+      onEnd: async () => {
+
+
+        const items =
+          [...grid.children]
+          .map((el, index) => ({
+
+            id: el.dataset.id,
+
+            sort_order: index + 1
+
+          }));
 
 
 
-  if(image){
+        await fetch(
+          "/api/admin/reorder-images",
+          {
+
+            method: "POST",
+
+            headers: {
+              "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+              images: items
+            })
+
+          }
+        );
 
 
-    const path =
-      image.image_url
-      .split("/cars/")
-      .pop();
+
+        window.location.reload();
 
 
-
-    if(path){
-
-      await supabase.storage
-        .from("cars")
-        .remove([
-          path
-        ]);
+      }
 
     }
-
-
-
-    await supabase
-      .from("car_images")
-      .delete()
-      .eq("id", deleteId);
-
-
-
-    message =
-      "Foto berhasil dihapus";
-
-  }
+  );
 
 
 }
 
-
-
-const { data:car } =
-await supabase
-.from("cars")
-.select("*")
-.eq("id", carId)
-.single();
-
-
-
-const { data:images } =
-await supabase
-.from("car_images")
-.select("*")
-.eq("car_id", carId)
-.order("sort_order");
-
----
-
-<MainLayout title="Kelola Foto | Garage88">
-
-
-<section class="min-h-screen bg-slate-100 py-12">
-
-
-<div class="mx-auto max-w-6xl px-6">
-
-
-
-<h1 class="text-3xl font-bold">
-Kelola Foto
-</h1>
-
-
-<p class="mt-2 text-slate-500">
-
-{car?.brand}
-{car?.model}
-
-</p>
-
-
-
-{
-message && (
-
-<div class="mt-5 rounded-xl bg-green-100 p-4 text-green-700">
-{message}
-</div>
-
-)
-
-}
-
-
-
-<div class="mt-8">
-
-<a
-href={`/admin/cars/upload?id=${carId}&key=${ADMIN_KEY}`}
-class="rounded-xl bg-red-600 px-6 py-3 font-semibold text-white"
->
-+ Tambah Foto
-</a>
-
-</div>
-
-
-
-
-<div class="mt-10 grid gap-6 md:grid-cols-3">
-
-
-
-{
-images?.map((image)=>(
-<div
-class="overflow-hidden rounded-2xl bg-white shadow"
->
-
-
-<img
-src={image.image_url}
-class="aspect-video w-full object-cover"
-/>
-
-
-<div class="p-4">
-
-
-{
-image.sort_order === 1 && (
-
-<span class="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
-Foto Utama
-</span>
-
-)
-
-}
-
-
-
-<a
-href={`/admin/cars/photos?id=${carId}&key=${ADMIN_KEY}&delete=${image.id}`}
-onclick="return confirm('Hapus foto ini?')"
-class="mt-4 block rounded-xl bg-red-600 py-2 text-center text-sm font-semibold text-white"
->
-Hapus Foto
-</a>
-
-
-</div>
-
-
-</div>
-))
-
-}
-
-
-
-</div>
-
-
-</div>
-
-</section>
-
-
-</MainLayout>
+</script>
