@@ -9,6 +9,7 @@ interface Props {
 
 const { car } = Astro.props;
 
+
 const placeholder =
   "https://placehold.co/800x600/f1f5f9/64748b?text=Garage88";
 
@@ -65,6 +66,36 @@ loading="lazy"
 
 
 
+<!-- Featured Badge -->
+
+{
+car.featured && (
+
+<span
+class="
+absolute
+left-3
+top-3
+rounded-full
+bg-yellow-400
+px-3
+py-1
+text-xs
+font-extrabold
+text-slate-900
+shadow
+"
+>
+⭐ FEATURED
+</span>
+
+)
+}
+
+
+
+<!-- Fuel Badge -->
+
 {
 badge && (
 
@@ -86,12 +117,14 @@ text-white
 </span>
 
 )
+
 }
 
 
 </div>
 
 </a>
+
 
 
 
@@ -121,6 +154,7 @@ md:text-xl
 >
 {car.brand} {car.model} {car.variant}
 </h3>
+
 
 
 
@@ -158,6 +192,7 @@ DP Mulai
 </p>
 
 )
+
 }
 
 
@@ -270,14 +305,14 @@ onclick="window.trackWhatsApp && window.trackWhatsApp()"
 class="
 flex-1
 rounded-xl
-bg-red-600
+bg-green-600
 py-3
 text-center
 text-sm
 font-semibold
 text-white
 transition
-hover:bg-red-700
+hover:bg-green-700
 "
 >
 WhatsApp
