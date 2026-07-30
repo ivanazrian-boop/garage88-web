@@ -6,12 +6,8 @@ import Footer from "../components/Footer.astro";
 import CarGrid from "../components/CarGrid.astro";
 
 import { getCars } from "../services/cars.service";
-import FeaturedCars from "../components/FeaturedCars.astro";
-import { getFeaturedCars } from "../services/cars.service";
 
 const cars = await getCars();
-const featuredCars =
-  await getFeaturedCars();
 ---
 
 <MainLayout title="Garage88">
@@ -20,31 +16,35 @@ const featuredCars =
 
   <Hero />
 
-  <FeaturedCars cars={featuredCars} />
-
   <main>
 
     <section id="stock" class="container py-16">
 
-      <div class="flex items-center justify-between mb-10">
+      <div class="mb-10 flex items-center justify-between">
 
         <div>
+
           <h2 class="text-4xl font-bold">
             Stock Mobil
           </h2>
 
-          <p class="text-slate-500 mt-2">
+
+          <p class="mt-2 text-slate-500">
             {cars.length} Unit Tersedia
           </p>
+
         </div>
 
       </div>
 
+
       <CarGrid cars={cars} />
+
 
     </section>
 
   </main>
+
 
   <Footer />
 
