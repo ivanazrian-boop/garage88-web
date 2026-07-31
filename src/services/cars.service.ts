@@ -142,14 +142,16 @@ export async function searchCars(
 ):Promise<Car[]>{
 
 
-  const q =
+  const words =
     keyword
       .trim()
-      .toLowerCase();
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(Boolean);
 
 
 
-  if(!q){
+  if(words.length === 0){
 
     return getCars();
 
@@ -160,23 +162,21 @@ export async function searchCars(
   const { data,error } =
     await supabase
       .from("cars")
-      .select(CAR_SELECT)
-      .eq(
-        "status",
-        "READY"
-      );
+      .select(CAR_SELECT);
 
 
 
   if(error){
 
     console.error(
+      "searchCars:",
       error
     );
 
     return [];
 
   }
+
 
 
 
@@ -193,7 +193,8 @@ export async function searchCars(
       car.fuel,
       car.transmission,
       car.year,
-      car.odometer
+      car.odometer,
+      car.description
 
     ]
     .join(" ")
@@ -201,14 +202,16 @@ export async function searchCars(
 
 
 
-    return text.includes(q);
+
+    return words.every(
+      word =>
+        text.includes(word)
+    );
 
 
   }) as Car[];
 
 }
-
-
 
 
 
