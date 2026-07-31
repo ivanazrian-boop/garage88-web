@@ -153,10 +153,41 @@ if (Astro.request.method === "POST") {
 <div class="mx-auto max-w-5xl px-6">
 
 
+<div class="flex items-center justify-between">
+
+<div>
+
 <h1 class="text-3xl font-bold">
 Edit Mobil
 </h1>
 
+<p class="mt-2 text-slate-500">
+{car.brand} {car.model}
+</p>
+
+</div>
+
+
+
+<a
+href={`/admin/cars?key=${ADMIN_KEY}`}
+class="
+rounded-xl
+border
+border-slate-300
+bg-white
+px-5
+py-3
+font-semibold
+text-slate-700
+hover:bg-slate-50
+"
+>
+← Kembali ke Stock
+</a>
+
+
+</div>
 
 
 {
@@ -354,7 +385,9 @@ name="status"
 class="mt-2 w-full rounded-xl border p-4"
 >
 
+
 <option
+value="READY"
 selected={car.status==="READY"}
 >
 READY
@@ -362,6 +395,15 @@ READY
 
 
 <option
+value="BOOKED"
+selected={car.status==="BOOKED"}
+>
+BOOKED
+</option>
+
+
+<option
+value="SOLD"
 selected={car.status==="SOLD"}
 >
 SOLD

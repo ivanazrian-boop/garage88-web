@@ -22,7 +22,13 @@ export async function getCars(): Promise<Car[]> {
     await supabase
       .from("cars")
       .select(CAR_SELECT)
-      .eq("status", "READY")
+      .in(
+        "status",
+        [
+          "READY",
+          "BOOKED"
+        ]
+      )
       .order(
         "created_at",
         {
@@ -81,9 +87,12 @@ export async function getCarsPaginated(
           count:"exact"
         }
       )
-      .eq(
+      .in(
         "status",
-        "READY"
+        [
+          "READY",
+          "BOOKED"
+        ]
       )
       .order(
         "featured",
@@ -162,7 +171,14 @@ export async function searchCars(
   const { data,error } =
     await supabase
       .from("cars")
-      .select(CAR_SELECT);
+      .select(CAR_SELECT)
+      .in(
+        "status",
+        [
+          "READY",
+          "BOOKED"
+        ]
+      );
 
 
 
@@ -176,7 +192,6 @@ export async function searchCars(
     return [];
 
   }
-
 
 
 
@@ -194,12 +209,12 @@ export async function searchCars(
       car.transmission,
       car.year,
       car.odometer,
-      car.description
+      car.description,
+      car.status
 
     ]
     .join(" ")
     .toLowerCase();
-
 
 
 
@@ -212,6 +227,8 @@ export async function searchCars(
   }) as Car[];
 
 }
+
+
 
 
 
@@ -240,9 +257,12 @@ export async function searchCarsPaginated(
     await supabase
       .from("cars")
       .select(CAR_SELECT)
-      .eq(
+      .in(
         "status",
-        "READY"
+        [
+          "READY",
+          "BOOKED"
+        ]
       )
       .order(
         "featured",
@@ -289,7 +309,9 @@ export async function searchCarsPaginated(
         car.fuel,
         car.transmission,
         car.year,
-        car.odometer
+        car.odometer,
+        car.description,
+        car.status
 
       ]
       .join(" ")
@@ -330,7 +352,6 @@ export async function searchCarsPaginated(
 
 
   };
-
 
 }
 
@@ -416,9 +437,12 @@ export async function filterCarsPaginated(
           count:"exact"
         }
       )
-      .eq(
+      .in(
         "status",
-        "READY"
+        [
+          "READY",
+          "BOOKED"
+        ]
       )
       .gte(
         "credit_price",
@@ -492,9 +516,12 @@ export async function getFeaturedCars():Promise<Car[]> {
     await supabase
       .from("cars")
       .select(CAR_SELECT)
-      .eq(
+      .in(
         "status",
-        "READY"
+        [
+          "READY",
+          "BOOKED"
+        ]
       )
       .eq(
         "featured",
@@ -542,9 +569,12 @@ export async function getCarBySlug(
         "slug",
         slug
       )
-      .eq(
+      .in(
         "status",
-        "READY"
+        [
+          "READY",
+          "BOOKED"
+        ]
       )
       .single();
 
@@ -578,9 +608,12 @@ export async function getBrands()
     await supabase
       .from("cars")
       .select("brand")
-      .eq(
+      .in(
         "status",
-        "READY"
+        [
+          "READY",
+          "BOOKED"
+        ]
       );
 
 
@@ -608,6 +641,10 @@ export async function getBrands()
 
 }
 
+
+
+
+
 export async function getNonFeaturedCars(): Promise<Car[]> {
 
 
@@ -618,9 +655,12 @@ export async function getNonFeaturedCars(): Promise<Car[]> {
     await supabase
       .from("cars")
       .select(CAR_SELECT)
-      .eq(
+      .in(
         "status",
-        "READY"
+        [
+          "READY",
+          "BOOKED"
+        ]
       )
       .eq(
         "featured",

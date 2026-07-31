@@ -13,11 +13,10 @@ if (key !== ADMIN_KEY || !carId) {
 }
 
 
-let message = "";
 
-
-
+// ========================
 // DELETE FOTO
+// ========================
 
 const deleteId =
   Astro.url.searchParams.get("delete");
@@ -26,12 +25,17 @@ const deleteId =
 if(deleteId){
 
 
-  const { data:image } =
-    await supabase
-      .from("car_images")
-      .select("*")
-      .eq("id", deleteId)
-      .single();
+  const {
+    data:image
+  } =
+  await supabase
+    .from("car_images")
+    .select("*")
+    .eq(
+      "id",
+      deleteId
+    )
+    .single();
 
 
 
@@ -40,7 +44,7 @@ if(deleteId){
 
     const path =
       image.image_url
-      .split("/cars/")
+      .split("/public/cars/")
       .pop();
 
 
@@ -66,11 +70,14 @@ if(deleteId){
       );
 
 
-    return Astro.redirect(
-      `/admin/cars/photos?id=${carId}&key=${ADMIN_KEY}`
-    );
-
   }
+
+
+
+  return Astro.redirect(
+    `/admin/cars/photos?id=${carId}&key=${ADMIN_KEY}&refresh=${Date.now()}`
+  );
+
 
 }
 
@@ -79,22 +86,39 @@ if(deleteId){
 
 
 
+// ========================
+// DATA MOBIL
+// ========================
+
+
 const { data:car } =
 await supabase
 .from("cars")
 .select("*")
-.eq("id", carId)
+.eq(
+  "id",
+  carId
+)
 .single();
 
 
 
 
 
+
+// ========================
+// DATA FOTO
+// ========================
+
+
 const { data:images } =
 await supabase
 .from("car_images")
 .select("*")
-.eq("car_id", carId)
+.eq(
+  "car_id",
+  carId
+)
 .order(
   "sort_order",
   {
@@ -107,12 +131,18 @@ await supabase
 <MainLayout title="Kelola Foto | Garage88">
 
 
+
 <section class="min-h-screen bg-slate-100 py-12">
 
 
 <div class="mx-auto max-w-6xl px-6">
 
 
+
+<div class="flex items-center justify-between">
+
+
+<div>
 
 <h1 class="text-3xl font-bold">
 Kelola Foto
@@ -124,9 +154,37 @@ Kelola Foto
 </p>
 
 
+</div>
+
+
+
+
+<a
+href={`/admin/cars/edit?id=${carId}&key=${ADMIN_KEY}`}
+class="
+rounded-xl
+border
+border-slate-300
+bg-white
+px-5
+py-3
+font-semibold
+text-slate-700
+hover:bg-slate-50
+"
+>
+← Kembali ke Edit Mobil
+</a>
+
+
+</div>
+
+
+
 
 
 <div class="mt-8">
+
 
 <a
 href={`/admin/cars/upload?id=${carId}&key=${ADMIN_KEY}`}
@@ -142,7 +200,9 @@ text-white
 + Tambah Foto
 </a>
 
+
 </div>
+
 
 
 
@@ -151,6 +211,8 @@ text-white
 Geser foto untuk menentukan foto utama.
 Foto paling atas adalah cover.
 </p>
+
+
 
 
 
@@ -167,19 +229,22 @@ md:grid-cols-3
 >
 
 
+
 {
 images?.map((image)=>(
+
+
 <div
+data-id={image.id}
 class="
-photo-item
 cursor-move
 overflow-hidden
 rounded-2xl
 bg-white
 shadow
 "
-data-id={image.id}
 >
+
 
 
 <img
@@ -190,6 +255,8 @@ w-full
 object-cover
 "
 />
+
+
 
 
 
@@ -228,6 +295,7 @@ Urutan {image.sort_order}
 
 
 
+
 <a
 href={`/admin/cars/photos?id=${carId}&key=${ADMIN_KEY}&delete=${image.id}`}
 onclick="return confirm('Hapus foto ini?')"
@@ -247,16 +315,20 @@ Hapus Foto
 </a>
 
 
+
 </div>
 
 
 </div>
+
 
 ))
+
 }
 
 
 </div>
+
 
 
 </div>
@@ -269,11 +341,13 @@ Hapus Foto
 
 
 
+
 <script is:inline src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
 
 
 
 <script is:inline>
+
 
 const grid =
 document.getElementById(
@@ -289,10 +363,13 @@ new Sortable(
 grid,
 {
 
+
 animation:150,
 
 
+
 onEnd: async function(){
+
 
 
 const items =
@@ -335,17 +412,17 @@ images:items
 
 
 
-window.location.reload();
-
-
 }
 
 
 }
+
 );
 
 
 }
+
+
 
 </script>
 

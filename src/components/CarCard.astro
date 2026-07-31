@@ -66,6 +66,54 @@ loading="lazy"
 
 
 
+
+<!-- BOOKED WATERMARK -->
+
+{
+car.status === "BOOKED" && (
+
+<div
+class="
+absolute
+inset-0
+flex
+items-center
+justify-center
+bg-black/20
+"
+>
+
+<span
+class="
+rotate-[-15deg]
+rounded-xl
+border-4
+border-red-600
+bg-red-600/80
+px-8
+py-4
+text-5xl
+font-black
+tracking-widest
+text-white
+shadow-lg
+"
+>
+BOOKED
+</span>
+
+</div>
+
+)
+
+}
+
+
+
+
+
+
+
 <!-- Featured Badge -->
 
 {
@@ -90,7 +138,11 @@ shadow
 </span>
 
 )
+
 }
+
+
+
 
 
 
@@ -129,6 +181,8 @@ text-white
 
 
 
+
+
 <!-- Isi -->
 
 <div class="p-4 md:p-5">
@@ -138,6 +192,7 @@ text-white
 <p class="text-sm text-slate-500">
 {car.year}
 </p>
+
 
 
 
@@ -159,6 +214,8 @@ md:text-xl
 
 
 
+
+
 <div class="mt-4">
 
 
@@ -172,6 +229,7 @@ md:text-3xl
 >
 {formatPrice(car.credit_price)}
 </p>
+
 
 
 
@@ -198,6 +256,8 @@ DP Mulai
 
 
 </div>
+
+
 
 
 
@@ -234,6 +294,7 @@ Transmisi
 
 
 
+
 <div>
 
 <p class="text-xs text-slate-400">
@@ -263,8 +324,9 @@ KM
 </div>
 
 
-
 </div>
+
+
 
 
 
@@ -296,6 +358,7 @@ Detail
 
 
 
+
 <a
 href={`https://wa.me/6281385226049?text=${encodeURIComponent(
 `Halo Garage88, saya tertarik dengan ${car.brand} ${car.model} ${car.variant ?? ""}`
@@ -317,6 +380,7 @@ hover:bg-green-700
 >
 WhatsApp
 </a>
+
 
 
 </div>

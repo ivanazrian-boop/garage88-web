@@ -31,7 +31,10 @@ export const POST: APIRoute = async ({
           error:"Invalid data"
         }),
         {
-          status:400
+          status:400,
+          headers:{
+            "Content-Type":"application/json"
+          }
         }
       );
 
@@ -45,6 +48,9 @@ export const POST: APIRoute = async ({
     ){
 
 
+      const {
+        error
+      } =
       await supabase
         .from("car_images")
         .update({
@@ -59,6 +65,32 @@ export const POST: APIRoute = async ({
         );
 
 
+
+      if(error){
+
+
+        console.error(
+          "Reorder error:",
+          error
+        );
+
+
+        return new Response(
+          JSON.stringify({
+            error:error.message
+          }),
+          {
+            status:500,
+            headers:{
+              "Content-Type":"application/json"
+            }
+          }
+        );
+
+
+      }
+
+
     }
 
 
@@ -70,7 +102,10 @@ export const POST: APIRoute = async ({
         success:true
       }),
       {
-        status:200
+        status:200,
+        headers:{
+          "Content-Type":"application/json"
+        }
       }
     );
 
@@ -80,6 +115,7 @@ export const POST: APIRoute = async ({
 
 
     console.error(
+      "Reorder server error:",
       error
     );
 
@@ -89,7 +125,10 @@ export const POST: APIRoute = async ({
         error:"Server error"
       }),
       {
-        status:500
+        status:500,
+        headers:{
+          "Content-Type":"application/json"
+        }
       }
     );
 
