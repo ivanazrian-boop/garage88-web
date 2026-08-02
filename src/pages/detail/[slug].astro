@@ -745,6 +745,14 @@ overflow:hidden;
 
 </style>
 
-
+<script is:inline>
+  fbq('track', 'ViewContent', {
+    content_name: "{car.brand} {car.model} {car.year}",
+    content_category: "Mobil Bekas",
+    content_ids: ["{car.id}"],
+    value: {car.credit_price ?? 0},
+    currency: "IDR"
+  });
+</script>
 
 </MainLayout>
