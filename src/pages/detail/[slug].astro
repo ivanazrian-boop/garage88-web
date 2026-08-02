@@ -136,7 +136,8 @@ const pageTitle =
 const pageDescription =
 car.description ??
 `${car.brand} ${car.model} ${car.year} bekas berkualitas di Garage88.`;
-
+const metaContentName =
+`${car.brand} ${car.model} ${car.year}`;
 ---
 
 <MainLayout title={pageTitle}>
@@ -745,14 +746,28 @@ overflow:hidden;
 
 </style>
 
-<script is:inline>
-  fbq('track', 'ViewContent', {
-    content_name: `${car.brand} ${car.model} ${car.year}`,
-    content_category: "Mobil Bekas",
-    content_ids: ["{car.id}"],
-    value: {car.credit_price ?? 0},
-    currency: "IDR"
-  });
+<script is:inline define:vars={{
+  metaContentName,
+  carId: car.id,
+  creditPrice: car.credit_price ?? 0
+}}>
+
+fbq('track', 'ViewContent', {
+
+  content_name: metaContentName,
+
+  content_category: "Mobil Bekas",
+
+  content_ids: [
+    carId
+  ],
+
+  value: creditPrice,
+
+  currency: "IDR"
+
+});
+
 </script>
 
 </MainLayout>
