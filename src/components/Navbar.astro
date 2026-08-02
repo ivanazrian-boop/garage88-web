@@ -65,7 +65,10 @@ const menus = [
   href="https://wa.me/6281385226049"
   target="_blank"
   rel="noopener noreferrer"
-  onclick="window.trackWhatsApp && window.trackWhatsApp()"
+  onclick="
+  fbq('track','Lead');
+  window.trackWhatsApp && window.trackWhatsApp()
+  "
   class="
     rounded-xl
     bg-green-600
@@ -80,7 +83,6 @@ const menus = [
 >
   WhatsApp
 </a>
-
 
 
   </div>

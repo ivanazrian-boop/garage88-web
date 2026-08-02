@@ -332,12 +332,14 @@ Warna
 </div>
 
 
-
 <a
 href={whatsappUrl}
 target="_blank"
 rel="noopener noreferrer"
-onclick="window.trackWhatsApp && window.trackWhatsApp()"
+onclick="
+fbq('track','Lead');
+window.trackWhatsApp && window.trackWhatsApp()
+"
 class="
 mt-8
 flex
@@ -697,6 +699,10 @@ Chat WhatsApp
 href={whatsappUrl}
 target="_blank"
 rel="noopener noreferrer"
+onclick="
+fbq('track','Lead');
+window.trackWhatsApp && window.trackWhatsApp()
+"
 class="
 fixed
 bottom-5
