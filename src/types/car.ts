@@ -41,5 +41,7 @@ export interface Car {
 
   updated_at: string;
 
+  meta_image_url: string | null;
+
   images: CarImage[];
 }

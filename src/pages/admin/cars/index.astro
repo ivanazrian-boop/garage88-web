@@ -34,7 +34,6 @@ const cars =
 <div class="mx-auto max-w-7xl px-6">
 
 
-
 <div class="flex items-center justify-between">
 
 
@@ -70,14 +69,11 @@ hover:bg-red-700
 </a>
 
 
-
 </div>
 
 
 
 
-
-<!-- SEARCH -->
 
 <form
 method="GET"
@@ -88,8 +84,7 @@ max-w-3xl
 flex-col
 gap-3
 sm:flex-row
-"
->
+">
 
 
 <input
@@ -114,10 +109,6 @@ bg-white
 px-5
 py-3
 text-slate-900
-outline-none
-focus:border-red-600
-focus:ring-2
-focus:ring-red-200
 "
 />
 
@@ -132,7 +123,6 @@ px-8
 py-3
 font-semibold
 text-white
-hover:bg-red-700
 "
 >
 Cari
@@ -179,7 +169,6 @@ class="aspect-video w-full object-cover"
 
 
 
-
 <div class="p-5">
 
 
@@ -201,21 +190,78 @@ class="aspect-video w-full object-cover"
 </div>
 
 
-
 <span
 class:list={[
 "rounded-full px-3 py-1 text-xs font-semibold",
 car.status === "READY"
-? "bg-green-100 text-green-700"
-: "bg-red-100 text-red-700"
+?
+"bg-green-100 text-green-700"
+:
+"bg-red-100 text-red-700"
 ]}
 >
 {car.status}
 </span>
 
 
+</div>
+
+<!-- META COVER -->
+
+<div class="mt-5">
+
+
+<p class="mb-2 text-xs font-semibold text-slate-500">
+META COVER
+</p>
+
+
+
+{
+car.meta_image_url ? (
+
+<img
+src={car.meta_image_url}
+alt="Meta Cover"
+class="
+h-32
+w-24
+rounded-xl
+border
+border-slate-200
+object-cover
+"
+/>
+
+) : (
+
+<div
+class="
+flex
+h-32
+w-24
+items-center
+justify-center
+rounded-xl
+bg-slate-100
+text-center
+text-xs
+font-semibold
+text-slate-400
+"
+>
+BELUM
+ADA
+COVER
+</div>
+
+)
+
+}
+
 
 </div>
+
 
 
 
@@ -253,14 +299,14 @@ Foto:
 </p>
 
 
-
 </div>
 
 
 
 
 
-<div class="mt-6 grid grid-cols-3 gap-3">
+<div class="mt-6 grid grid-cols-4 gap-3">
+
 
 
 <a
@@ -294,6 +340,33 @@ text-white
 >
 Edit
 </a>
+
+
+
+
+<button
+data-generate-id={car.id}
+class="
+cursor-pointer
+rounded-xl
+bg-yellow-400
+py-3
+text-center
+text-sm
+font-semibold
+text-slate-900
+hover:bg-yellow-300
+"
+>
+{
+car.meta_image_url
+?
+"Generate Ulang"
+:
+"Generate"
+}
+</button>
+
 
 
 
@@ -334,15 +407,18 @@ Hapus
 ) : (
 
 
+
 <div class="col-span-full rounded-xl bg-white p-10 text-center">
 
 <h2 class="text-xl font-bold">
 Mobil tidak ditemukan
 </h2>
 
+
 <p class="mt-2 text-slate-500">
 Coba gunakan kata kunci lain.
 </p>
+
 
 </div>
 
@@ -356,10 +432,110 @@ Coba gunakan kata kunci lain.
 </div>
 
 
-
 </div>
 
+
 </section>
+
+
+
+
+
+<script>
+
+document
+.querySelectorAll("[data-generate-id]")
+.forEach((button)=>{
+
+
+button.addEventListener(
+"click",
+async()=>{
+
+
+const id =
+button.getAttribute(
+"data-generate-id"
+);
+
+
+if(!id) return;
+
+
+button.innerText =
+"Queue...";
+
+
+button.disabled =
+true;
+
+
+console.log(
+"GENERATE CLICK",
+id
+);
+
+
+
+const response =
+await fetch(
+`/api/generate-meta/${id}`,
+{
+method:"POST"
+}
+);
+
+
+
+const text =
+await response.text();
+
+
+console.log(
+"API RESPONSE",
+text
+);
+
+
+
+if(response.ok){
+
+
+alert(
+"Cover masuk antrian generate"
+);
+
+
+location.reload();
+
+
+}
+else{
+
+
+alert(text);
+
+
+button.disabled =
+false;
+
+
+button.innerText =
+"Generate";
+
+
+}
+
+
+}
+
+);
+
+
+});
+
+
+</script>
 
 
 </MainLayout>

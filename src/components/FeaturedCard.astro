@@ -225,7 +225,7 @@ text-slate-500
 "
 >
 
-{formatKm(car.odometer)} KM
+{car.odometer ? formatKm(car.odometer) : "-"} KM
 
 </div>
 
