@@ -10,6 +10,7 @@ const key = Astro.url.searchParams.get("key");
 
 const ADMIN_KEY = "garage88";
 
+
 if (key !== ADMIN_KEY) {
   return Astro.redirect("/");
 }
@@ -26,6 +27,7 @@ const cars =
 
 ---
 
+
 <MainLayout title="Stock Admin | Garage88">
 
 
@@ -35,7 +37,6 @@ const cars =
 
 
 <div class="flex items-center justify-between">
-
 
 <div>
 
@@ -47,7 +48,6 @@ Garage88 Stock Management
 <p class="mt-2 text-slate-500">
 {cars.length} Unit Mobil
 </p>
-
 
 </div>
 
@@ -74,7 +74,6 @@ hover:bg-red-700
 
 
 
-
 <form
 method="GET"
 class="
@@ -94,7 +93,6 @@ value={ADMIN_KEY}
 />
 
 
-
 <input
 type="text"
 name="q"
@@ -111,7 +109,6 @@ py-3
 text-slate-900
 "
 />
-
 
 
 <button
@@ -155,7 +152,6 @@ car.images?.length
 "https://placehold.co/800x450?text=Garage88";
 
 
-
 return (
 
 <div class="overflow-hidden rounded-2xl bg-white shadow">
@@ -166,7 +162,6 @@ src={image}
 alt={`${car.brand} ${car.model}`}
 class="aspect-video w-full object-cover"
 />
-
 
 
 <div class="p-5">
@@ -185,7 +180,6 @@ class="aspect-video w-full object-cover"
 <p class="text-sm text-slate-500">
 {car.variant}
 </p>
-
 
 </div>
 
@@ -206,7 +200,9 @@ car.status === "READY"
 
 </div>
 
-<!-- META COVER -->
+
+
+
 
 <div class="mt-5">
 
@@ -216,12 +212,23 @@ META COVER
 </p>
 
 
+<label
+class="
+group
+relative
+block
+h-32
+w-24
+cursor-pointer
+"
+>
+
 
 {
 car.meta_image_url ? (
 
 <img
-src={car.meta_image_url}
+src={`${car.meta_image_url}?v=${Date.now()}`}
 alt="Meta Cover"
 class="
 h-32
@@ -230,6 +237,8 @@ rounded-xl
 border
 border-slate-200
 object-cover
+transition
+group-hover:opacity-70
 "
 />
 
@@ -244,10 +253,10 @@ items-center
 justify-center
 rounded-xl
 bg-slate-100
-text-center
 text-xs
 font-semibold
 text-slate-400
+text-center
 "
 >
 BELUM
@@ -258,6 +267,17 @@ COVER
 )
 
 }
+
+
+<input
+type="file"
+accept="image/*"
+data-cover-upload={car.id}
+class="hidden"
+/>
+
+
+</label>
 
 
 </div>
@@ -305,8 +325,8 @@ Foto:
 
 
 
-<div class="mt-6 grid grid-cols-4 gap-3">
 
+<div class="mt-6 grid grid-cols-4 gap-3">
 
 
 <a
@@ -336,6 +356,7 @@ text-center
 text-sm
 font-semibold
 text-white
+hover:bg-slate-700
 "
 >
 Edit
@@ -356,8 +377,10 @@ text-sm
 font-semibold
 text-slate-900
 hover:bg-yellow-300
+transition
 "
 >
+
 {
 car.meta_image_url
 ?
@@ -365,6 +388,7 @@ car.meta_image_url
 :
 "Generate"
 }
+
 </button>
 
 
@@ -388,7 +412,6 @@ Hapus
 </a>
 
 
-
 </div>
 
 
@@ -403,10 +426,11 @@ Hapus
 
 })
 
+)
 
-) : (
+:
 
-
+(
 
 <div class="col-span-full rounded-xl bg-white p-10 text-center">
 
@@ -422,26 +446,147 @@ Coba gunakan kata kunci lain.
 
 </div>
 
-
 )
 
 }
 
 
-
 </div>
 
 
 </div>
 
 
-</section>
+</section><script>
+
+
+// ==============================
+// UPLOAD MANUAL META COVER
+// ==============================
+
+document
+.querySelectorAll("[data-cover-upload]")
+.forEach((input)=>{
+
+
+input.addEventListener(
+"change",
+async()=>{
+
+
+const file =
+(input as HTMLInputElement)
+.files?.[0];
+
+
+if(!file){
+return;
+}
+
+
+const id =
+(input as HTMLElement)
+.dataset.coverUpload;
+
+
+if(!id){
+return;
+}
+
+
+
+const formData =
+new FormData();
+
+
+formData.append(
+"file",
+file
+);
+
+
+
+try{
+
+
+const response =
+await fetch(
+
+`/api/upload-meta-cover/${id}`,
+
+{
+method:"POST",
+body:formData
+}
+
+);
+
+
+
+const result =
+await response.text();
+
+
+
+console.log(
+"UPLOAD META:",
+result
+);
+
+
+
+if(response.ok){
+
+
+alert(
+"Cover berhasil diganti"
+);
+
+
+location.reload();
+
+
+}
+else{
+
+
+alert(result);
+
+
+}
+
+
+}
+
+catch(error){
+
+
+console.error(error);
+
+
+alert(
+"Gagal upload cover"
+);
+
+
+}
+
+
+}
+
+);
+
+
+});
 
 
 
 
 
-<script>
+// ==============================
+// GENERATE META COVER
+// ==============================
+
 
 document
 .querySelectorAll("[data-generate-id]")
@@ -454,35 +599,44 @@ async()=>{
 
 
 const id =
-button.getAttribute(
-"data-generate-id"
-);
+(button as HTMLElement)
+.dataset.generateId;
 
 
-if(!id) return;
+
+if(!id){
+return;
+}
 
 
-button.innerText =
+
+const btn =
+button as HTMLButtonElement;
+
+
+
+btn.innerText =
 "Queue...";
 
 
-button.disabled =
+btn.disabled =
 true;
 
 
-console.log(
-"GENERATE CLICK",
-id
-);
 
+
+try{
 
 
 const response =
 await fetch(
+
 `/api/generate-meta/${id}`,
+
 {
 method:"POST"
 }
+
 );
 
 
@@ -491,8 +645,9 @@ const text =
 await response.text();
 
 
+
 console.log(
-"API RESPONSE",
+"META RESPONSE:",
 text
 );
 
@@ -510,18 +665,39 @@ location.reload();
 
 
 }
+
 else{
 
 
 alert(text);
 
 
-button.disabled =
-false;
+btn.disabled=false;
 
 
-button.innerText =
-"Generate";
+btn.innerText="Generate";
+
+
+}
+
+
+}
+
+catch(error){
+
+
+console.error(error);
+
+
+alert(
+"Gagal generate cover"
+);
+
+
+btn.disabled=false;
+
+
+btn.innerText="Generate";
 
 
 }
