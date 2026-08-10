@@ -43,5 +43,7 @@ export interface Car {
 
   meta_image_url: string | null;
 
+  ig_image_url: string | null;
+
   images: CarImage[];
 }

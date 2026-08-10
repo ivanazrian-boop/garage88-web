@@ -167,7 +167,7 @@ class="aspect-video w-full object-cover"
 <div class="p-5">
 
 
-<div class="flex items-start justify-between">
+<div class="flex items-start flex justify-between">
 
 
 <div>
@@ -204,8 +204,14 @@ car.status === "READY"
 
 
 
-<div class="mt-5">
+<!-- COVER AREA -->
 
+<div class="mt-5 flex gap-5">
+
+
+<!-- META COVER -->
+
+<div>
 
 <p class="mb-2 text-xs font-semibold text-slate-500">
 META COVER
@@ -286,6 +292,88 @@ class="hidden"
 
 
 
+<!-- IG COVER -->
+
+<div>
+
+<p class="mb-2 text-xs font-semibold text-slate-500">
+IG COVER
+</p>
+
+
+<label
+class="
+group
+relative
+block
+h-32
+w-24
+cursor-pointer
+"
+>
+
+
+{
+car.ig_image_url ? (
+
+<img
+src={`${car.ig_image_url}?v=${Date.now()}`}
+alt="IG Cover"
+class="
+h-32
+w-24
+rounded-xl
+border
+border-slate-200
+object-cover
+transition
+group-hover:opacity-70
+"
+/>
+
+) : (
+
+<div
+class="
+flex
+h-32
+w-24
+items-center
+justify-center
+rounded-xl
+bg-slate-100
+text-xs
+font-semibold
+text-slate-400
+text-center
+"
+>
+BELUM
+ADA
+COVER
+</div>
+
+)
+
+}
+
+
+<input
+type="file"
+accept="image/*"
+data-ig-upload={car.id}
+class="hidden"
+/>
+
+
+</label>
+
+
+</div>
+
+
+</div>
+
 <div class="mt-4 space-y-1 text-sm">
 
 
@@ -320,7 +408,6 @@ Foto:
 
 
 </div>
-
 
 
 
@@ -457,7 +544,12 @@ Coba gunakan kata kunci lain.
 </div>
 
 
-</section><script>
+</section>
+
+
+
+
+<script>
 
 
 // ==============================
@@ -539,7 +631,7 @@ if(response.ok){
 
 
 alert(
-"Cover berhasil diganti"
+"Meta Cover berhasil diganti"
 );
 
 
@@ -565,7 +657,131 @@ console.error(error);
 
 
 alert(
-"Gagal upload cover"
+"Gagal upload Meta Cover"
+);
+
+
+}
+
+
+}
+
+);
+
+
+});
+
+
+
+
+
+// ==============================
+// UPLOAD MANUAL IG COVER
+// ==============================
+
+
+document
+.querySelectorAll("[data-ig-upload]")
+.forEach((input)=>{
+
+
+input.addEventListener(
+"change",
+async()=>{
+
+
+const file =
+(input as HTMLInputElement)
+.files?.[0];
+
+
+if(!file){
+return;
+}
+
+
+const id =
+(input as HTMLElement)
+.dataset.igUpload;
+
+
+if(!id){
+return;
+}
+
+
+
+const formData =
+new FormData();
+
+
+formData.append(
+"file",
+file
+);
+
+
+
+try{
+
+
+const response =
+await fetch(
+
+`/api/upload-ig-cover/${id}`,
+
+{
+method:"POST",
+body:formData
+}
+
+);
+
+
+
+const result =
+await response.text();
+
+
+
+console.log(
+"UPLOAD IG:",
+result
+);
+
+
+
+if(response.ok){
+
+
+alert(
+"IG Cover berhasil diganti"
+);
+
+
+location.reload();
+
+
+}
+else{
+
+
+alert(result);
+
+
+}
+
+
+}
+
+catch(error){
+
+
+console.error(error);
+
+
+alert(
+"Gagal upload IG Cover"
 );
 
 
