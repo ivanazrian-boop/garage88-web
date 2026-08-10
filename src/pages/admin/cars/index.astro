@@ -33,42 +33,43 @@ q
 : await getCars();
 
 
-
 const filteredCars =
 cars.filter((car)=>{
 
 
 if(
-status !== "ALL" &&
-car.status !== status
+  status !== "ALL" &&
+  car.status !== status
 ){
-return false;
+  return false;
 }
 
 
 
 if(
-cover === "META_BLANK" &&
-car.meta_image_url
+  cover === "META_BLANK" &&
+  car.meta_image_url &&
+  car.meta_image_url.trim() !== ""
 ){
-return false;
+  return false;
 }
 
 
 
 if(
-cover === "IG_BLANK" &&
-car.ig_image_url
+  cover === "IG_BLANK" &&
+  car.ig_image_url &&
+  car.ig_image_url.trim() !== ""
 ){
-return false;
+  return false;
 }
 
 
 
 return true;
 
-});
 
+});
 ---
 
 
