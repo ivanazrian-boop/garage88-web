@@ -96,8 +96,8 @@ export function buildGarage88CoverHtml(
         variantSize: 54,
         specSize: 29,
         pillSize: 22,
-        priceSize: 146,
-        jtSize: 60,
+        priceSize: 100,
+        jtSize: 40,
         footerH: 86,
         footerBottom: 20,
         footerPadY: 14,
@@ -358,7 +358,7 @@ html,body{width:1080px;height:${height}px;overflow:hidden;background:#050505;fon
     <div class="price-label">HARGA KREDIT</div>
     <div class="price-value">${esc(credit)}<span class="jt">JT</span></div>
     ` : car.credit_price ? `
-    <div class="price-label">HARGA OTR</div>
+    <div class="price-label">OTR</div>
     <div class="price-value">${esc(credit)}<span class="jt">JT</span></div>
     ` : ""}
   </section>
