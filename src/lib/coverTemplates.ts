@@ -64,8 +64,8 @@ export function buildGarage88CoverHtml(
   const square = format === "meta";
   const height = square ? 1080 : 1350;
 
-  // Meta Catalog cover must not show monetary values.
   // IG keeps DP, credit price, cash price, and the price footer.
+  // Meta only shows OTR using credit_price.
   const showMonetaryInfo = !square;
 
   const brand = String(car.brand ?? "").toUpperCase();
@@ -133,7 +133,7 @@ export function buildGarage88CoverHtml(
       };
 
   // Meta cover: if the yellow variant text becomes two lines,
-  // lift the whole information block so the large price stays clear of the footer.
+  // lift the whole information block so the large price stays clear.
   const variantNeedsTwoLines =
     square &&
     primary.length > 14;
@@ -240,7 +240,6 @@ html,body{width:1080px;height:${height}px;overflow:hidden;background:#050505;fon
   top:-2px;
   white-space:nowrap;
 }
-
 
 .text-panel{
   position:absolute;
@@ -357,6 +356,9 @@ html,body{width:1080px;height:${height}px;overflow:hidden;background:#050505;fon
     </div>
 
     <div class="price-label">HARGA KREDIT</div>
+    <div class="price-value">${esc(credit)}<span class="jt">JT</span></div>
+    ` : car.credit_price ? `
+    <div class="price-label">HARGA OTR</div>
     <div class="price-value">${esc(credit)}<span class="jt">JT</span></div>
     ` : ""}
   </section>
