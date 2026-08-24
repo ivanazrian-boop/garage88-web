@@ -13,7 +13,7 @@ type BrowserBinding = {
 };
 
 function getRequiredEnv(name: string): string {
-  const value = env as unknown as Record<string, unknown>
+  const value = (env as unknown as Record<string, unknown>)[name];
   if (!value || typeof value !== "string") {
     throw new Error(`Missing Cloudflare env: ${name}`);
   }
