@@ -11,9 +11,7 @@ if (key !== ADMIN_KEY || !id) {
   return Astro.redirect("/");
 }
 
-
 let message = "";
-
 
 // Ambil data mobil
 
@@ -23,106 +21,82 @@ const { data: car, error } = await supabase
   .eq("id", id)
   .single();
 
-
 if (!car) {
   return Astro.redirect(
     `/admin/cars?key=${ADMIN_KEY}`
   );
 }
 
-
-
 // UPDATE
 
 if (Astro.request.method === "POST") {
 
-
   const formData =
     await Astro.request.formData();
 
-
-
   const updateData = {
-
 
     brand:
       formData.get("brand")?.toString() || "",
 
-
     model:
       formData.get("model")?.toString() || "",
-
 
     variant:
       formData.get("variant")?.toString() || null,
 
-
     year:
       Number(formData.get("year")) || null,
 
+    branch:
+      formData.get("branch")?.toString() || null,
 
     color:
       formData.get("color")?.toString() || null,
 
-
     fuel:
       formData.get("fuel")?.toString() || null,
-
 
     transmission:
       formData.get("transmission")?.toString() || null,
 
-
     odometer:
       Number(formData.get("odometer")) || 0,
-
 
     credit_price:
       Number(formData.get("credit_price")) || null,
 
-
     cash_price:
       Number(formData.get("cash_price")) || null,
-
 
     dp:
       Number(formData.get("dp")) || null,
 
-
     plate_number:
       formData.get("plate_number")?.toString() || null,
-
 
     tax_valid_until:
       formData.get("tax_valid_until")?.toString() || null,
 
-
     description:
       formData.get("description")?.toString() || null,
-
 
     status:
       formData.get("status")?.toString() || "READY",
 
-
     featured:
       formData.get("featured") === "on",
-
 
     updated_at:
       new Date().toISOString()
 
   };
 
-
-
   const { error:updateError } =
     await supabase
       .from("cars")
       .update(updateData)
       .eq("id", id);
-
-
 
   if(updateError){
 
@@ -138,20 +112,14 @@ if (Astro.request.method === "POST") {
 
   }
 
-
 }
-
-
 ---
 
 <MainLayout title="Edit Mobil | Garage88 Admin">
 
-
 <section class="min-h-screen bg-slate-100 py-12">
 
-
 <div class="mx-auto max-w-5xl px-6">
-
 
 <div class="flex items-center justify-between">
 
@@ -166,8 +134,6 @@ Edit Mobil
 </p>
 
 </div>
-
-
 
 <a
 href={`/admin/cars?key=${ADMIN_KEY}`}
@@ -186,9 +152,7 @@ hover:bg-slate-50
 ← Kembali ke Stock
 </a>
 
-
 </div>
-
 
 {
 message && (
@@ -198,21 +162,14 @@ message && (
 </div>
 
 )
-
 }
-
-
 
 <form
 method="POST"
 class="mt-8 grid gap-6 rounded-2xl bg-white p-8 shadow"
 >
 
-
-
 <div class="grid gap-5 md:grid-cols-2">
-
-
 
 <input
 name="brand"
@@ -220,23 +177,17 @@ value={car.brand}
 class="rounded-xl border p-4"
 />
 
-
-
 <input
 name="model"
 value={car.model}
 class="rounded-xl border p-4"
 />
 
-
-
 <input
 name="variant"
 value={car.variant ?? ""}
 class="rounded-xl border p-4"
 />
-
-
 
 <input
 name="year"
@@ -245,15 +196,88 @@ value={car.year}
 class="rounded-xl border p-4"
 />
 
-
-
 <input
 name="color"
 value={car.color ?? ""}
 class="rounded-xl border p-4"
 />
 
+<select
+name="branch"
+class="rounded-xl border p-4"
+>
 
+<option
+value=""
+selected={!car.branch}
+>
+Cabang
+</option>
+
+<option
+value="AHA Gallery"
+selected={car.branch==="AHA Gallery"}
+>
+AHA Gallery
+</option>
+
+<option
+value="AHA Nusantara"
+selected={car.branch==="AHA Nusantara"}
+>
+AHA Nusantara
+</option>
+
+<option
+value="AHA Gajah Mada Cipondoh"
+selected={car.branch==="AHA Gajah Mada Cipondoh"}
+>
+AHA Gajah Mada Cipondoh
+</option>
+
+<option
+value="AHA Gajah Mada Cipete"
+selected={car.branch==="AHA Gajah Mada Cipete"}
+>
+AHA Gajah Mada Cipete
+</option>
+
+<option
+value="Garage88 Kebayoran"
+selected={car.branch==="Garage88 Kebayoran"}
+>
+Garage88 Kebayoran
+</option>
+
+<option
+value="Garage88 Basura"
+selected={car.branch==="Garage88 Basura"}
+>
+Garage88 Basura
+</option>
+
+<option
+value="Garage88 Joglo"
+selected={car.branch==="Garage88 Joglo"}
+>
+Garage88 Joglo
+</option>
+
+<option
+value="Garage88 Ciater"
+selected={car.branch==="Garage88 Ciater"}
+>
+Garage88 Ciater
+</option>
+
+<option
+value="AHA ADEX"
+selected={car.branch==="AHA ADEX"}
+>
+AHA ADEX
+</option>
+
+</select>
 
 <select
 name="fuel"
@@ -278,9 +302,6 @@ Electric Vehicle
 
 </select>
 
-
-
-
 <select
 name="transmission"
 class="rounded-xl border p-4"
@@ -296,9 +317,6 @@ MT
 
 </select>
 
-
-
-
 <input
 name="odometer"
 type="number"
@@ -306,8 +324,6 @@ value={car.odometer ?? ""}
 placeholder="KM"
 class="rounded-xl border p-4"
 />
-
-
 
 <input
 name="credit_price"
@@ -317,8 +333,6 @@ placeholder="Harga Kredit"
 class="rounded-xl border p-4"
 />
 
-
-
 <input
 name="cash_price"
 type="number"
@@ -326,8 +340,6 @@ value={car.cash_price ?? ""}
 placeholder="Harga Cash"
 class="rounded-xl border p-4"
 />
-
-
 
 <input
 name="dp"
@@ -337,16 +349,12 @@ placeholder="DP"
 class="rounded-xl border p-4"
 />
 
-
-
 <input
 name="plate_number"
 value={car.plate_number ?? ""}
 placeholder="Plat"
 class="rounded-xl border p-4"
 />
-
-
 
 <input
 name="tax_valid_until"
@@ -355,12 +363,7 @@ placeholder="Pajak"
 class="rounded-xl border p-4"
 />
 
-
-
 </div>
-
-
-
 
 <textarea
 name="description"
@@ -370,21 +373,16 @@ class="rounded-xl border p-4"
 {car.description ?? ""}
 </textarea>
 
-
-
-
 <div>
 
 <label class="font-semibold">
 Status
 </label>
 
-
 <select
 name="status"
 class="mt-2 w-full rounded-xl border p-4"
 >
-
 
 <option
 value="READY"
@@ -393,14 +391,12 @@ selected={car.status==="READY"}
 READY
 </option>
 
-
 <option
 value="BOOKED"
 selected={car.status==="BOOKED"}
 >
 BOOKED
 </option>
-
 
 <option
 value="SOLD"
@@ -409,13 +405,9 @@ selected={car.status==="SOLD"}
 SOLD
 </option>
 
-
 </select>
 
 </div>
-
-
-
 
 <label class="flex items-center gap-3">
 
@@ -429,24 +421,16 @@ Featured
 
 </label>
 
-
-
-
 <button
 class="rounded-xl bg-red-600 px-8 py-4 font-semibold text-white"
 >
 Simpan Perubahan
 </button>
 
-
-
 </form>
-
-
 
 </div>
 
 </section>
-
 
 </MainLayout>

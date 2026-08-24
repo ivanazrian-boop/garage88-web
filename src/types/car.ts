@@ -1,6 +1,7 @@
 import type { CarImage } from "./car-image";
 
 export interface Car {
+
   id: string;
 
   slug: string;
@@ -12,6 +13,8 @@ export interface Car {
   variant: string | null;
 
   year: number;
+
+  branch: string | null;
 
   color: string | null;
 
@@ -46,4 +49,5 @@ export interface Car {
   ig_image_url: string | null;
 
   images: CarImage[];
+
 }

@@ -1,8 +1,8 @@
 ---
 import MainLayout from "../../../layouts/MainLayout.astro";
 import {
-getCars,
-searchCars,
+  getCars,
+  searchCars,
 } from "../../../services/cars.service";
 
 const key = Astro.url.searchParams.get("key");
@@ -10,66 +10,87 @@ const key = Astro.url.searchParams.get("key");
 const ADMIN_KEY = "garage88";
 
 if (key !== ADMIN_KEY) {
-return Astro.redirect("/");
+  return Astro.redirect("/");
 }
 
 
 const q =
-Astro.url.searchParams.get("q") ?? "";
+  Astro.url.searchParams.get("q") ?? "";
 
 
 const status =
-Astro.url.searchParams.get("status") ?? "READY";
+  Astro.url.searchParams.get("status") ?? "READY";
 
 
 const cover =
-Astro.url.searchParams.get("cover") ?? "ALL";
+  Astro.url.searchParams.get("cover") ?? "ALL";
 
+
+const branch =
+  Astro.url.searchParams.get("branch") ?? "ALL";
+
+
+const BRANCHES = [
+  "AHA Gallery",
+  "AHA Nusantara",
+  "AHA Gajah Mada Cipondoh",
+  "AHA Gajah Mada Cipete",
+  "Garage88 Kebayoran",
+  "Garage88 Basura",
+  "Garage88 Joglo",
+  "Garage88 Ciater",
+  "AHA ADEX",
+];
 
 
 const cars =
-q
-? await searchCars(q)
-: await getCars();
+  q
+    ? await searchCars(q)
+    : await getCars();
 
 
 const filteredCars =
-cars.filter((car)=>{
+  cars.filter((car) => {
 
 
-if(
-  status !== "ALL" &&
-  car.status !== status
-){
-  return false;
-}
+    if (
+      status !== "ALL" &&
+      car.status !== status
+    ) {
+      return false;
+    }
 
 
-
-if(
-  cover === "META_BLANK" &&
-  car.meta_image_url &&
-  car.meta_image_url.trim() !== ""
-){
-  return false;
-}
-
+    if (
+      cover === "META_BLANK" &&
+      car.meta_image_url &&
+      car.meta_image_url.trim() !== ""
+    ) {
+      return false;
+    }
 
 
-if(
-  cover === "IG_BLANK" &&
-  car.ig_image_url &&
-  car.ig_image_url.trim() !== ""
-){
-  return false;
-}
+    if (
+      cover === "IG_BLANK" &&
+      car.ig_image_url &&
+      car.ig_image_url.trim() !== ""
+    ) {
+      return false;
+    }
 
 
+    if (
+      branch !== "ALL" &&
+      car.branch !== branch
+    ) {
+      return false;
+    }
 
-return true;
+
+    return true;
 
 
-});
+  });
 ---
 
 
@@ -124,7 +145,7 @@ method="GET"
 class="
 mt-8
 flex
-max-w-5xl
+max-w-7xl
 flex-col
 gap-3
 lg:flex-row
@@ -234,6 +255,48 @@ selected={cover === "IG_BLANK"}
 >
 IG COVER BLANK
 </option>
+
+
+</select>
+
+
+
+<select
+name="branch"
+class="
+min-w-[220px]
+rounded-xl
+border
+border-slate-300
+bg-white
+px-4
+py-3
+text-sm
+font-semibold
+text-slate-700
+"
+>
+
+<option
+value="ALL"
+selected={branch === "ALL"}
+>
+ALL CABANG
+</option>
+
+
+{
+  BRANCHES.map((branchName) => (
+
+    <option
+      value={branchName}
+      selected={branch === branchName}
+    >
+      {branchName}
+    </option>
+
+  ))
+}
 
 
 </select>
@@ -549,6 +612,14 @@ class="hidden"
 <p>
 Tahun:
 <b>{car.year}</b>
+</p>
+
+
+<p>
+Cabang:
+<b>
+{car.branch ?? "-"}
+</b>
 </p>
 
 
