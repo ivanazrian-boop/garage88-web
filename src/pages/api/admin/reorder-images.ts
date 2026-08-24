@@ -11,9 +11,12 @@ export const POST: APIRoute = async ({
 
 
     const body =
-      await request.json();
-
-
+  (await request.json()) as {
+    images?: Array<{
+      id: string;
+      sort_order: number;
+    }>;
+  };
 
     const {
       images

@@ -13,7 +13,7 @@ type BrowserBinding = {
 };
 
 function getRequiredEnv(name: string): string {
-  const value = (env as Record<string, unknown>)[name];
+  const value = env as unknown as Record<string, unknown>
   if (!value || typeof value !== "string") {
     throw new Error(`Missing Cloudflare env: ${name}`);
   }
@@ -78,7 +78,7 @@ export const POST: APIRoute = async ({ params }) => {
 
     const supabaseUrl = getRequiredEnv("SUPABASE_URL");
     const serviceKey = getRequiredEnv("SUPABASE_SERVICE_KEY");
-    const browser = (env as Record<string, unknown>).BROWSER as BrowserBinding | undefined;
+    const browser = (env as unknown as Record<string, unknown>).BROWSER as BrowserBinding | undefined;
 
     if (!browser) {
       throw new Error("Missing Cloudflare BROWSER binding");
