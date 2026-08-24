@@ -415,6 +415,26 @@ class="hidden"
 
 </label>
 
+{
+  car.meta_image_url && (
+    <a
+      href={`${car.meta_image_url}?v=${Date.now()}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="
+        mt-2
+        inline-block
+        text-xs
+        font-semibold
+        text-slate-500
+        hover:text-slate-900
+        hover:underline
+      "
+    >
+      View Image
+    </a>
+  )
+}
 
 </div>
 
@@ -498,7 +518,26 @@ class="hidden"
 
 </label>
 
-
+{
+  car.ig_image_url && (
+    <a
+      href={`${car.ig_image_url}?v=${Date.now()}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="
+        mt-2
+        inline-block
+        text-xs
+        font-semibold
+        text-slate-500
+        hover:text-slate-900
+        hover:underline
+      "
+    >
+      View Image
+    </a>
+  )
+}  
 </div>
 
 
@@ -962,7 +1001,7 @@ button as HTMLButtonElement;
 
 
 btn.innerText =
-"Queue...";
+"Generating...";
 
 
 btn.disabled =
@@ -977,7 +1016,7 @@ try{
 const response =
 await fetch(
 
-`/api/generate-meta/${id}`,
+`/api/generate-covers/${id}`,
 
 {
 method:"POST"
@@ -1003,7 +1042,7 @@ if(response.ok){
 
 
 alert(
-"Cover masuk antrian generate"
+"IG Cover + Meta Cover berhasil dibuat"
 );
 
 
