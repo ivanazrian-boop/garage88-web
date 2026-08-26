@@ -36,7 +36,7 @@ function getRequiredEnv(
 ): string {
   const value =
     (
-      env as Record<
+      env as unknown as Record<
         string,
         unknown
       >
@@ -187,7 +187,7 @@ export const POST:
 
     const browser =
       (
-        env as Record<
+        env as unknown as Record<
           string,
           unknown
         >

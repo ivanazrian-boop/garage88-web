@@ -5,7 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 export const prerender = false;
 
 function getRequiredEnv(name: string): string {
-  const value = (env as Record<string, unknown>)[name];
+  const value = (env as unknown as Record<string, unknown>)[name];
 
   if (!value || typeof value !== "string") {
     throw new Error(`Missing Cloudflare env: ${name}`);

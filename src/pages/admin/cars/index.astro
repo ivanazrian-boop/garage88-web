@@ -25,6 +25,8 @@ const cover =
 const branch =
   Astro.url.searchParams.get("branch") ?? "ALL";
 
+const UNASSIGNED_BRANCH = "__UNASSIGNED__";
+
 const BRANCHES = [
   "AHA Gallery",
   "AHA Nusantara",
@@ -45,12 +47,21 @@ const cars =
 const filteredCars =
   cars.filter((car) => {
 
+    // ==============================
+    // STATUS
+    // ==============================
+
     if (
       status !== "ALL" &&
       car.status !== status
     ) {
       return false;
     }
+
+
+    // ==============================
+    // COVER
+    // ==============================
 
     if (
       cover === "META_BLANK" &&
@@ -68,12 +79,27 @@ const filteredCars =
       return false;
     }
 
+
+    // ==============================
+    // CABANG
+    // ==============================
+
     if (
+      branch === UNASSIGNED_BRANCH
+    ) {
+      if (
+        car.branch &&
+        car.branch.trim() !== ""
+      ) {
+        return false;
+      }
+    } else if (
       branch !== "ALL" &&
       car.branch !== branch
     ) {
       return false;
     }
+
 
     return true;
   });
@@ -162,6 +188,8 @@ const filteredCars =
         />
 
 
+        <!-- STATUS -->
+
         <select
           name="status"
           class="
@@ -198,6 +226,8 @@ const filteredCars =
 
         </select>
 
+
+        <!-- COVER -->
 
         <select
           name="cover"
@@ -239,6 +269,8 @@ const filteredCars =
         </select>
 
 
+        <!-- CABANG -->
+
         <select
           name="branch"
           class="
@@ -260,6 +292,13 @@ const filteredCars =
             selected={branch === "ALL"}
           >
             ALL CABANG
+          </option>
+
+          <option
+            value={UNASSIGNED_BRANCH}
+            selected={branch === UNASSIGNED_BRANCH}
+          >
+            BELUM ADA CABANG
           </option>
 
           {
@@ -776,7 +815,12 @@ const filteredCars =
                       <p>
                         Cabang:
                         <b>
-                          {car.branch ?? "-"}
+                          {
+                            car.branch &&
+                            car.branch.trim() !== ""
+                              ? car.branch
+                              : "BELUM ADA CABANG"
+                          }
                         </b>
                       </p>
 
@@ -937,7 +981,7 @@ const filteredCars =
               </h2>
 
               <p class="mt-2 text-slate-500">
-                Coba gunakan kata kunci lain.
+                Coba gunakan filter atau kata kunci lain.
               </p>
 
             </div>
@@ -954,7 +998,6 @@ const filteredCars =
 
 
   <script>
-
 
     // ==============================
     // UPLOAD PHOTOROOM POLOS
@@ -976,7 +1019,6 @@ const filteredCars =
               return;
             }
 
-
             const id =
               (input as HTMLElement)
                 .dataset.coverSourceUpload;
@@ -985,7 +1027,6 @@ const filteredCars =
               return;
             }
 
-
             const formData =
               new FormData();
 
@@ -993,7 +1034,6 @@ const filteredCars =
               "file",
               file
             );
-
 
             try {
 
@@ -1006,16 +1046,13 @@ const filteredCars =
                   }
                 );
 
-
               const result =
                 await response.text();
-
 
               console.log(
                 "UPLOAD PHOTOROOM:",
                 result
               );
-
 
               if (response.ok) {
 
@@ -1068,7 +1105,6 @@ const filteredCars =
               return;
             }
 
-
             const id =
               (input as HTMLElement)
                 .dataset.coverUpload;
@@ -1077,7 +1113,6 @@ const filteredCars =
               return;
             }
 
-
             const formData =
               new FormData();
 
@@ -1085,7 +1120,6 @@ const filteredCars =
               "file",
               file
             );
-
 
             try {
 
@@ -1098,16 +1132,13 @@ const filteredCars =
                   }
                 );
 
-
               const result =
                 await response.text();
-
 
               console.log(
                 "UPLOAD META:",
                 result
               );
-
 
               if (response.ok) {
 
@@ -1160,7 +1191,6 @@ const filteredCars =
               return;
             }
 
-
             const id =
               (input as HTMLElement)
                 .dataset.igUpload;
@@ -1169,7 +1199,6 @@ const filteredCars =
               return;
             }
 
-
             const formData =
               new FormData();
 
@@ -1177,7 +1206,6 @@ const filteredCars =
               "file",
               file
             );
-
 
             try {
 
@@ -1190,16 +1218,13 @@ const filteredCars =
                   }
                 );
 
-
               const result =
                 await response.text();
-
 
               console.log(
                 "UPLOAD IG:",
                 result
               );
-
 
               if (response.ok) {
 
@@ -1248,22 +1273,18 @@ const filteredCars =
               (button as HTMLElement)
                 .dataset.generateId;
 
-
             if (!id) {
               return;
             }
 
-
             const btn =
               button as HTMLButtonElement;
-
 
             btn.innerText =
               "Generating...";
 
             btn.disabled =
               true;
-
 
             try {
 
@@ -1275,16 +1296,13 @@ const filteredCars =
                   }
                 );
 
-
               const text =
                 await response.text();
-
 
               console.log(
                 "GENERATE RESPONSE:",
                 text
               );
-
 
               if (response.ok) {
 
