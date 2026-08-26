@@ -1,217 +1,176 @@
-import type { APIRoute } from "astro";
+import type {
+  APIRoute,
+} from "astro";
 
-import { env } from "cloudflare:workers";
+import {
+  env,
+} from "cloudflare:workers";
 
 import {
   createClient,
 } from "@supabase/supabase-js";
 
 import {
-  buildGarage88CoverHtml,
-} from "../../../lib/coverTemplates";
-
-import {
   buildGarage88IgCoverHtml,
 } from "../../../lib/igCoverTemplate";
 
+import {
+  buildGarage88MetaSquareHtml,
+} from "../../../lib/metaSquareTemplate";
 
-export const prerender = false;
 
+export const prerender =
+  false;
 
 
 type BrowserBinding = {
-
   quickAction: (
     action: "screenshot",
     options: Record<string, unknown>
   ) => Promise<Response>;
-
 };
-
 
 
 function getRequiredEnv(
   name: string
 ): string {
-
   const value =
-    (env as Record<string, unknown>)[name];
-
+    (
+      env as Record<
+        string,
+        unknown
+      >
+    )[name];
 
   if (
     !value ||
     typeof value !== "string"
   ) {
-
     throw new Error(
       `Missing Cloudflare env: ${name}`
     );
-
   }
 
-
   return value;
-
 }
-
 
 
 function sleep(
   ms: number
 ) {
-
   return new Promise(
     (resolve) =>
-      setTimeout(resolve, ms)
+      setTimeout(
+        resolve,
+        ms
+      )
   );
-
 }
 
 
-
 async function renderJpeg(
-
   browser: BrowserBinding,
-
   html: string,
-
   width: number,
-
   height: number
-
 ): Promise<Uint8Array> {
-
+  const maxAttempts = 3;
 
   for (
-    let attempt = 0;
-    attempt < 3;
+    let attempt = 1;
+    attempt <= maxAttempts;
     attempt++
   ) {
-
-
     const response =
       await browser.quickAction(
         "screenshot",
         {
-
           html,
 
           viewport: {
-
             width,
-
             height,
-
             deviceScaleFactor: 1,
-
           },
-
 
           screenshotOptions: {
-
             type: "jpeg",
-
-            quality: 94,
-
+            quality: 92,
             fullPage: false,
-
           },
 
-
           gotoOptions: {
-
             waitUntil:
               "networkidle0",
 
             timeout:
               30000,
-
           },
-
         }
       );
 
 
     if (response.ok) {
-
       return new Uint8Array(
         await response.arrayBuffer()
       );
-
     }
 
 
+    /*
+     * Cloudflare Browser Free:
+     * minimum sekitar 10 detik
+     * antar Quick Action.
+     */
+
     if (
       response.status === 429 &&
-      attempt < 2
+      attempt < maxAttempts
     ) {
-
-      const retryAfter =
-        Number(
-          response.headers.get(
-            "retry-after"
-          ) || "10"
-        );
-
-
-      const waitMs =
-        Math.max(
-          11_000,
-          retryAfter * 1000 + 1000
-        );
-
-
       console.log(
-        `Browser Run rate limited. Retry in ${waitMs}ms`
+        `Browser rate limit. Retry ${attempt}/${maxAttempts}...`
       );
 
-
-      await sleep(waitMs);
+      await sleep(
+        11_000
+      );
 
       continue;
-
     }
 
 
     throw new Error(
-
-      `Browser Run screenshot failed (${response.status}): ${await response.text()}`
-
+      `Browser screenshot failed (${response.status}): ${await response.text()}`
     );
-
   }
 
 
   throw new Error(
-    "Browser Run screenshot failed after retries"
+    "Browser screenshot failed after retries"
   );
-
 }
 
 
-
-export const POST: APIRoute =
-async ({ params }) => {
-
+export const POST:
+  APIRoute =
+  async ({
+    params,
+  }) => {
 
   try {
-
 
     const id =
       params.id;
 
 
     if (!id) {
-
       return new Response(
         "Missing car id",
         {
           status: 400,
         }
       );
-
     }
-
 
 
     const supabaseUrl =
@@ -237,15 +196,11 @@ async ({ params }) => {
         undefined;
 
 
-
     if (!browser) {
-
       throw new Error(
         "Missing Cloudflare BROWSER binding"
       );
-
     }
-
 
 
     const supabase =
@@ -253,239 +208,134 @@ async ({ params }) => {
         supabaseUrl,
         serviceKey,
         {
-
           auth: {
-            persistSession: false,
+            persistSession:
+              false,
           },
-
         }
       );
 
 
+    /* =================================
+       GET CAR
+       ================================= */
 
-    // ==============================
-    // LOAD CAR + GALLERY
-    // ==============================
-
-    const [
-
-      {
-        data: car,
-        error: carError,
-      },
-
-      {
-        data: images,
-        error: imagesError,
-      },
-
-    ] =
-      await Promise.all([
-
-
-        supabase
-          .from("cars")
-          .select("*")
-          .eq("id", id)
-          .single(),
-
-
-        supabase
-          .from("car_images")
-          .select(
-            "image_url,sort_order"
-          )
-          .eq(
-            "car_id",
-            id
-          )
-          .order(
-            "sort_order",
-            {
-              ascending: true,
-            }
-          ),
-
-      ]);
-
+    const {
+      data: car,
+      error: carError,
+    } =
+      await supabase
+        .from("cars")
+        .select("*")
+        .eq(
+          "id",
+          id
+        )
+        .single();
 
 
     if (
       carError ||
       !car
     ) {
-
       throw new Error(
         carError?.message ||
         "Car not found"
       );
-
     }
 
 
+    /* =================================
+       PHOTOROOM SOURCE
 
-    if (imagesError) {
+       IG + META sekarang
+       menggunakan source yang sama.
+       ================================= */
 
-      throw new Error(
-        imagesError.message
-      );
-
-    }
-
-
-
-    // ==============================
-    // PHOTOROOM WAJIB UNTUK IG
-    // ==============================
-
-    if (
-      !car.cover_source_image_url ||
+    const sourceImageUrl =
       String(
-        car.cover_source_image_url
-      ).trim() === ""
-    ) {
+        car.cover_source_image_url ??
+        ""
+      ).trim();
 
+
+    if (!sourceImageUrl) {
       return new Response(
-
         "Upload PHOTOROOM POLOS terlebih dahulu",
-
         {
           status: 400,
         }
-
       );
-
     }
 
 
-
-    // ==============================
-    // GALLERY WAJIB UNTUK META
-    // ==============================
-
-    if (
-      !images ||
-      images.length === 0
-    ) {
-
-      return new Response(
-
-        "Mobil belum punya foto gallery",
-
-        {
-          status: 400,
-        }
-
-      );
-
-    }
-
-
-
-    const imageTop =
-      images[0].image_url;
-
-
-    const imageBottom =
-      images[1]?.image_url ??
-      images[0].image_url;
-
-
-
-    // ==============================
-    // BUILD IG BARU
-    // ==============================
+    /* =================================
+       BUILD HTML
+       ================================= */
 
     const igHtml =
       buildGarage88IgCoverHtml(
-
         car,
-
-        car.cover_source_image_url
-
+        sourceImageUrl
       );
 
-
-
-    // ==============================
-    // META TETAP TEMPLATE LAMA
-    // ==============================
 
     const metaHtml =
-      buildGarage88CoverHtml(
-
+      buildGarage88MetaSquareHtml(
         car,
-
-        imageTop,
-
-        imageBottom,
-
-        "meta"
-
+        sourceImageUrl
       );
 
 
-
-    // ==============================
-    // RENDER IG
-    // ==============================
+    /* =================================
+       RENDER IG
+       ================================= */
 
     console.log(
-      "Render IG PhotoRoom 1080x1350..."
+      "Render IG Cover..."
     );
 
 
     const igJpeg =
       await renderJpeg(
-
         browser,
-
         igHtml,
-
         1080,
-
         1350
-
       );
 
 
-
-    // Cloudflare Browser Free:
-    // hindari screenshot paralel
+    /*
+     * Cloudflare Browser Free
+     * jangan render kedua langsung.
+     */
 
     await sleep(
       11_000
     );
 
 
-
-    // ==============================
-    // RENDER META
-    // ==============================
+    /* =================================
+       RENDER META
+       ================================= */
 
     console.log(
-      "Render Meta 1080x1080..."
+      "Render Meta Cover..."
     );
 
 
     const metaJpeg =
       await renderJpeg(
-
         browser,
-
         metaHtml,
-
         1080,
-
         1080
-
       );
 
 
-
-    // ==============================
-    // PATH
-    // ==============================
+    /* =================================
+       STORAGE PATH
+       ================================= */
 
     const igPath =
       `${id}/generated/ig-cover.jpg`;
@@ -495,20 +345,15 @@ async ({ params }) => {
       `${id}/generated/meta-cover.jpg`;
 
 
-
-    // ==============================
-    // UPLOAD
-    // ==============================
+    /* =================================
+       UPLOAD
+       ================================= */
 
     const [
-
       igUpload,
-
       metaUpload,
-
     ] =
       await Promise.all([
-
 
         supabase
           .storage
@@ -517,7 +362,6 @@ async ({ params }) => {
             igPath,
             igJpeg,
             {
-
               contentType:
                 "image/jpeg",
 
@@ -526,10 +370,8 @@ async ({ params }) => {
 
               upsert:
                 true,
-
             }
           ),
-
 
         supabase
           .storage
@@ -538,7 +380,6 @@ async ({ params }) => {
             metaPath,
             metaJpeg,
             {
-
               contentType:
                 "image/jpeg",
 
@@ -547,41 +388,33 @@ async ({ params }) => {
 
               upsert:
                 true,
-
             }
           ),
 
       ]);
 
 
-
     if (
       igUpload.error
     ) {
-
       throw new Error(
         `IG upload: ${igUpload.error.message}`
       );
-
     }
-
 
 
     if (
       metaUpload.error
     ) {
-
       throw new Error(
         `Meta upload: ${metaUpload.error.message}`
       );
-
     }
 
 
-
-    // ==============================
-    // PUBLIC URL
-    // ==============================
+    /* =================================
+       PUBLIC URL
+       ================================= */
 
     const igUrl =
       supabase
@@ -605,24 +438,22 @@ async ({ params }) => {
         .publicUrl;
 
 
-
-    // ==============================
-    // UPDATE DATABASE
-    // ==============================
+    /* =================================
+       DATABASE
+       ================================= */
 
     const {
-      error: updateError,
+      error:
+        updateError,
     } =
       await supabase
         .from("cars")
         .update({
-
           ig_image_url:
             igUrl,
 
           meta_image_url:
             metaUrl,
-
         })
         .eq(
           "id",
@@ -630,44 +461,37 @@ async ({ params }) => {
         );
 
 
-
     if (
       updateError
     ) {
-
       throw new Error(
         `DB update: ${updateError.message}`
       );
-
     }
 
 
+    /* =================================
+       DONE
+       ================================= */
 
     return Response.json({
-
-      ok:
-        true,
+      ok: true,
 
       car_id:
         id,
 
-      cover_source_image_url:
-        car.cover_source_image_url,
+      source_image_url:
+        sourceImageUrl,
 
       ig_image_url:
         igUrl,
 
       meta_image_url:
         metaUrl,
-
     });
 
 
-
-  }
-
-  catch (error) {
-
+  } catch (error) {
 
     console.error(
       "generate-covers:",
@@ -676,25 +500,17 @@ async ({ params }) => {
 
 
     return Response.json(
-
       {
-
-        ok:
-          false,
+        ok: false,
 
         error:
           error instanceof Error
             ? error.message
             : String(error),
-
       },
-
       {
         status: 500,
       }
-
     );
-
   }
-
 };
