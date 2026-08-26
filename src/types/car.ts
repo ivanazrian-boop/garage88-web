@@ -44,6 +44,8 @@ export interface Car {
 
   updated_at: string;
 
+  cover_source_image_url: string | null;
+
   meta_image_url: string | null;
 
   ig_image_url: string | null;

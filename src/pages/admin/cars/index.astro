@@ -13,22 +13,17 @@ if (key !== ADMIN_KEY) {
   return Astro.redirect("/");
 }
 
-
 const q =
   Astro.url.searchParams.get("q") ?? "";
-
 
 const status =
   Astro.url.searchParams.get("status") ?? "READY";
 
-
 const cover =
   Astro.url.searchParams.get("cover") ?? "ALL";
 
-
 const branch =
   Astro.url.searchParams.get("branch") ?? "ALL";
-
 
 const BRANCHES = [
   "AHA Gallery",
@@ -42,16 +37,13 @@ const BRANCHES = [
   "AHA ADEX",
 ];
 
-
 const cars =
   q
     ? await searchCars(q)
     : await getCars();
 
-
 const filteredCars =
   cars.filter((car) => {
-
 
     if (
       status !== "ALL" &&
@@ -59,7 +51,6 @@ const filteredCars =
     ) {
       return false;
     }
-
 
     if (
       cover === "META_BLANK" &&
@@ -69,7 +60,6 @@ const filteredCars =
       return false;
     }
 
-
     if (
       cover === "IG_BLANK" &&
       car.ig_image_url &&
@@ -78,7 +68,6 @@ const filteredCars =
       return false;
     }
 
-
     if (
       branch !== "ALL" &&
       car.branch !== branch
@@ -86,1088 +75,1258 @@ const filteredCars =
       return false;
     }
 
-
     return true;
-
-
   });
 ---
 
-
 <MainLayout title="Stock Admin | Garage88">
 
+  <section class="min-h-screen bg-slate-100 py-12">
+
+    <div class="mx-auto max-w-7xl px-6">
+
+      <!-- ============================== -->
+      <!-- HEADER -->
+      <!-- ============================== -->
+
+      <div class="flex items-center justify-between">
+
+        <div>
+
+          <h1 class="text-3xl font-bold">
+            Garage88 Stock Management
+          </h1>
+
+          <p class="mt-2 text-slate-500">
+            {filteredCars.length} Unit Mobil
+          </p>
+
+        </div>
+
+        <a
+          href={`/admin/cars/new?key=${ADMIN_KEY}`}
+          class="
+            rounded-xl
+            bg-red-600
+            px-6
+            py-3
+            font-semibold
+            text-white
+            hover:bg-red-700
+          "
+        >
+          + Tambah Mobil
+        </a>
+
+      </div>
+
+
+
+      <!-- ============================== -->
+      <!-- FILTER -->
+      <!-- ============================== -->
+
+      <form
+        method="GET"
+        class="
+          mt-8
+          flex
+          max-w-7xl
+          flex-col
+          gap-3
+          lg:flex-row
+        "
+      >
+
+        <input
+          type="hidden"
+          name="key"
+          value={ADMIN_KEY}
+        />
+
+        <input
+          type="text"
+          name="q"
+          value={q}
+          placeholder="Cari Toyota, Fortuner, Zenix..."
+          class="
+            flex-1
+            rounded-xl
+            border
+            border-slate-300
+            bg-white
+            px-5
+            py-3
+            text-slate-900
+          "
+        />
+
+
+        <select
+          name="status"
+          class="
+            rounded-xl
+            border
+            border-slate-300
+            bg-white
+            px-4
+            py-3
+            text-slate-900
+          "
+        >
+
+          <option
+            value="READY"
+            selected={status === "READY"}
+          >
+            READY
+          </option>
+
+          <option
+            value="BOOKED"
+            selected={status === "BOOKED"}
+          >
+            BOOKED
+          </option>
+
+          <option
+            value="ALL"
+            selected={status === "ALL"}
+          >
+            ALL STATUS
+          </option>
+
+        </select>
+
+
+        <select
+          name="cover"
+          class="
+            min-w-[180px]
+            rounded-xl
+            border
+            border-slate-300
+            bg-white
+            px-4
+            py-3
+            text-sm
+            font-semibold
+            text-slate-700
+          "
+        >
+
+          <option
+            value="ALL"
+            selected={cover === "ALL"}
+          >
+            ALL COVER
+          </option>
+
+          <option
+            value="META_BLANK"
+            selected={cover === "META_BLANK"}
+          >
+            META COVER BLANK
+          </option>
+
+          <option
+            value="IG_BLANK"
+            selected={cover === "IG_BLANK"}
+          >
+            IG COVER BLANK
+          </option>
+
+        </select>
+
+
+        <select
+          name="branch"
+          class="
+            min-w-[220px]
+            rounded-xl
+            border
+            border-slate-300
+            bg-white
+            px-4
+            py-3
+            text-sm
+            font-semibold
+            text-slate-700
+          "
+        >
+
+          <option
+            value="ALL"
+            selected={branch === "ALL"}
+          >
+            ALL CABANG
+          </option>
+
+          {
+            BRANCHES.map((branchName) => (
+
+              <option
+                value={branchName}
+                selected={branch === branchName}
+              >
+                {branchName}
+              </option>
+
+            ))
+          }
+
+        </select>
+
+
+        <button
+          type="submit"
+          class="
+            rounded-xl
+            bg-red-600
+            px-8
+            py-3
+            text-sm
+            font-bold
+            text-white
+            transition
+            hover:bg-red-700
+          "
+        >
+          Cari
+        </button>
+
+      </form>
+
+
+
+      <!-- ============================== -->
+      <!-- CAR GRID -->
+      <!-- ============================== -->
+
+      <div
+        class="
+          mt-10
+          grid
+          gap-6
+          md:grid-cols-2
+          lg:grid-cols-3
+        "
+      >
+
+        {
+          filteredCars.length > 0 ? (
+
+            filteredCars.map((car) => {
+
+              const image =
+                car.images?.length
+                  ? [...car.images]
+                      .sort(
+                        (a, b) =>
+                          a.sort_order - b.sort_order
+                      )[0].image_url
+                  : "https://placehold.co/800x450?text=Garage88";
+
+              return (
+
+                <div
+                  class="
+                    overflow-hidden
+                    rounded-2xl
+                    bg-white
+                    shadow
+                  "
+                >
+
+                  <!-- ============================== -->
+                  <!-- MAIN IMAGE -->
+                  <!-- ============================== -->
+
+                  <img
+                    src={image}
+                    alt={`${car.brand} ${car.model}`}
+                    class="
+                      aspect-video
+                      w-full
+                      object-cover
+                    "
+                  />
+
+
+                  <div class="p-5">
+
+
+                    <!-- ============================== -->
+                    <!-- CAR HEADER -->
+                    <!-- ============================== -->
+
+                    <div
+                      class="
+                        flex
+                        items-start
+                        justify-between
+                        gap-4
+                      "
+                    >
+
+                      <div class="min-w-0">
+
+                        <h2 class="text-xl font-bold">
+                          {car.brand} {car.model}
+                        </h2>
+
+                        <p class="text-sm text-slate-500">
+                          {car.variant}
+                        </p>
+
+                      </div>
+
+
+                      <span
+                        class:list={[
+                          "shrink-0 rounded-full px-3 py-1 text-xs font-semibold",
+                          car.status === "READY"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                        ]}
+                      >
+                        {car.status}
+                      </span>
+
+                    </div>
+
+
+
+                    <!-- ============================== -->
+                    <!-- COVER AREA -->
+                    <!-- ============================== -->
+
+                    <div
+                      class="
+                        mt-5
+                        grid
+                        grid-cols-3
+                        gap-3
+                      "
+                    >
+
+
+                      <!-- ============================== -->
+                      <!-- PHOTOROOM POLOS -->
+                      <!-- ============================== -->
+
+                      <div class="min-w-0">
+
+                        <p
+                          class="
+                            mb-2
+                            whitespace-nowrap
+                            text-[10px]
+                            font-bold
+                            text-slate-500
+                          "
+                        >
+                          PHOTOROOM POLOS
+                        </p>
+
+
+                        <label
+                          class="
+                            group
+                            relative
+                            block
+                            h-28
+                            w-20
+                            cursor-pointer
+                          "
+                        >
+
+                          {
+                            car.cover_source_image_url ? (
+
+                              <img
+                                src={`${car.cover_source_image_url}?v=${Date.now()}`}
+                                alt="PhotoRoom Polos"
+                                class="
+                                  h-28
+                                  w-20
+                                  rounded-lg
+                                  border
+                                  border-slate-200
+                                  object-cover
+                                  transition
+                                  group-hover:opacity-70
+                                "
+                              />
+
+                            ) : (
+
+                              <div
+                                class="
+                                  flex
+                                  h-28
+                                  w-20
+                                  items-center
+                                  justify-center
+                                  rounded-lg
+                                  border-2
+                                  border-dashed
+                                  border-slate-300
+                                  bg-slate-50
+                                  px-1
+                                  text-center
+                                  text-[9px]
+                                  font-semibold
+                                  leading-tight
+                                  text-slate-400
+                                "
+                              >
+                                UPLOAD
+                                <br />
+                                PHOTOROOM
+                              </div>
+
+                            )
+                          }
+
+
+                          <input
+                            type="file"
+                            accept="image/*"
+                            data-cover-source-upload={car.id}
+                            class="hidden"
+                          />
+
+                        </label>
+
+
+                        {
+                          car.cover_source_image_url && (
+
+                            <a
+                              href={`${car.cover_source_image_url}?v=${Date.now()}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              class="
+                                mt-1
+                                inline-block
+                                text-[10px]
+                                font-semibold
+                                text-slate-500
+                                hover:text-slate-900
+                                hover:underline
+                              "
+                            >
+                              View Image
+                            </a>
+
+                          )
+                        }
+
+                      </div>
+
+
+
+                      <!-- ============================== -->
+                      <!-- META COVER -->
+                      <!-- ============================== -->
+
+                      <div class="min-w-0">
+
+                        <p
+                          class="
+                            mb-2
+                            whitespace-nowrap
+                            text-[10px]
+                            font-bold
+                            text-slate-500
+                          "
+                        >
+                          META COVER
+                        </p>
+
+
+                        <label
+                          class="
+                            group
+                            relative
+                            block
+                            h-28
+                            w-20
+                            cursor-pointer
+                          "
+                        >
+
+                          {
+                            car.meta_image_url ? (
+
+                              <img
+                                src={`${car.meta_image_url}?v=${Date.now()}`}
+                                alt="Meta Cover"
+                                class="
+                                  h-28
+                                  w-20
+                                  rounded-lg
+                                  border
+                                  border-slate-200
+                                  object-cover
+                                  transition
+                                  group-hover:opacity-70
+                                "
+                              />
+
+                            ) : (
+
+                              <div
+                                class="
+                                  flex
+                                  h-28
+                                  w-20
+                                  items-center
+                                  justify-center
+                                  rounded-lg
+                                  bg-slate-100
+                                  px-1
+                                  text-center
+                                  text-[9px]
+                                  font-semibold
+                                  leading-tight
+                                  text-slate-400
+                                "
+                              >
+                                BELUM
+                                <br />
+                                ADA
+                              </div>
+
+                            )
+                          }
+
+
+                          <input
+                            type="file"
+                            accept="image/*"
+                            data-cover-upload={car.id}
+                            class="hidden"
+                          />
+
+                        </label>
+
+
+                        {
+                          car.meta_image_url && (
+
+                            <a
+                              href={`${car.meta_image_url}?v=${Date.now()}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              class="
+                                mt-1
+                                inline-block
+                                text-[10px]
+                                font-semibold
+                                text-slate-500
+                                hover:text-slate-900
+                                hover:underline
+                              "
+                            >
+                              View Image
+                            </a>
+
+                          )
+                        }
+
+                      </div>
+
+
+
+                      <!-- ============================== -->
+                      <!-- IG COVER -->
+                      <!-- ============================== -->
+
+                      <div class="min-w-0">
+
+                        <p
+                          class="
+                            mb-2
+                            whitespace-nowrap
+                            text-[10px]
+                            font-bold
+                            text-slate-500
+                          "
+                        >
+                          IG COVER
+                        </p>
+
+
+                        <label
+                          class="
+                            group
+                            relative
+                            block
+                            h-28
+                            w-20
+                            cursor-pointer
+                          "
+                        >
+
+                          {
+                            car.ig_image_url ? (
+
+                              <img
+                                src={`${car.ig_image_url}?v=${Date.now()}`}
+                                alt="IG Cover"
+                                class="
+                                  h-28
+                                  w-20
+                                  rounded-lg
+                                  border
+                                  border-slate-200
+                                  object-cover
+                                  transition
+                                  group-hover:opacity-70
+                                "
+                              />
+
+                            ) : (
+
+                              <div
+                                class="
+                                  flex
+                                  h-28
+                                  w-20
+                                  items-center
+                                  justify-center
+                                  rounded-lg
+                                  bg-slate-100
+                                  px-1
+                                  text-center
+                                  text-[9px]
+                                  font-semibold
+                                  leading-tight
+                                  text-slate-400
+                                "
+                              >
+                                BELUM
+                                <br />
+                                ADA
+                              </div>
+
+                            )
+                          }
+
+
+                          <input
+                            type="file"
+                            accept="image/*"
+                            data-ig-upload={car.id}
+                            class="hidden"
+                          />
+
+                        </label>
+
+
+                        {
+                          car.ig_image_url && (
+
+                            <a
+                              href={`${car.ig_image_url}?v=${Date.now()}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              class="
+                                mt-1
+                                inline-block
+                                text-[10px]
+                                font-semibold
+                                text-slate-500
+                                hover:text-slate-900
+                                hover:underline
+                              "
+                            >
+                              View Image
+                            </a>
+
+                          )
+                        }
+
+                      </div>
+
+                    </div>
+
+
+
+                    <!-- ============================== -->
+                    <!-- CAR INFO -->
+                    <!-- ============================== -->
+
+                    <div
+                      class="
+                        mt-4
+                        space-y-1
+                        text-sm
+                      "
+                    >
+
+                      <p>
+                        Tahun:
+                        <b>{car.year}</b>
+                      </p>
+
+
+                      <p>
+                        Cabang:
+                        <b>
+                          {car.branch ?? "-"}
+                        </b>
+                      </p>
+
+
+                      <p>
+                        KM:
+                        <b>
+                          {
+                            car.odometer !== null &&
+                            car.odometer !== undefined
+                              ? car.odometer.toLocaleString("id-ID")
+                              : "-"
+                          }
+                          {" "}KM
+                        </b>
+                      </p>
+
+
+                      <p>
+                        Harga Kredit:
+                        <b>
+                          Rp {
+                            car.credit_price !== null &&
+                            car.credit_price !== undefined
+                              ? car.credit_price.toLocaleString("id-ID")
+                              : "-"
+                          }
+                        </b>
+                      </p>
+
+
+                      <p>
+                        Foto:
+                        <b>
+                          {car.images?.length ?? 0} pcs
+                        </b>
+                      </p>
+
+                    </div>
+
+
+
+                    <!-- ============================== -->
+                    <!-- ACTION BUTTONS -->
+                    <!-- ============================== -->
+
+                    <div
+                      class="
+                        mt-6
+                        grid
+                        grid-cols-4
+                        gap-3
+                      "
+                    >
+
+                      <a
+                        href={`/admin/cars/photos?id=${car.id}&key=${ADMIN_KEY}`}
+                        class="
+                          rounded-xl
+                          border
+                          py-3
+                          text-center
+                          text-sm
+                          font-semibold
+                          hover:bg-slate-50
+                        "
+                      >
+                        Foto
+                      </a>
+
+
+                      <a
+                        href={`/admin/cars/edit?id=${car.id}&key=${ADMIN_KEY}`}
+                        class="
+                          rounded-xl
+                          bg-slate-900
+                          py-3
+                          text-center
+                          text-sm
+                          font-semibold
+                          text-white
+                          hover:bg-slate-700
+                        "
+                      >
+                        Edit
+                      </a>
+
+
+                      <button
+                        data-generate-id={car.id}
+                        class="
+                          cursor-pointer
+                          rounded-xl
+                          bg-yellow-400
+                          py-3
+                          text-center
+                          text-sm
+                          font-semibold
+                          text-slate-900
+                          transition
+                          hover:bg-yellow-300
+                          disabled:cursor-not-allowed
+                          disabled:opacity-60
+                        "
+                      >
+
+                        {
+                          car.meta_image_url
+                            ? "Generate Ulang"
+                            : "Generate"
+                        }
+
+                      </button>
+
+
+                      <a
+                        href={`/admin/cars/delete?id=${car.id}&key=${ADMIN_KEY}`}
+                        onclick="return confirm('Hapus mobil ini?')"
+                        class="
+                          rounded-xl
+                          bg-red-600
+                          py-3
+                          text-center
+                          text-sm
+                          font-semibold
+                          text-white
+                          hover:bg-red-700
+                        "
+                      >
+                        Hapus
+                      </a>
+
+                    </div>
+
+
+                  </div>
+
+                </div>
+
+              );
+
+            })
+
+          ) : (
+
+            <div
+              class="
+                col-span-full
+                rounded-xl
+                bg-white
+                p-10
+                text-center
+              "
+            >
+
+              <h2 class="text-xl font-bold">
+                Mobil tidak ditemukan
+              </h2>
+
+              <p class="mt-2 text-slate-500">
+                Coba gunakan kata kunci lain.
+              </p>
+
+            </div>
+
+          )
+        }
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+
+  <script>
+
+
+    // ==============================
+    // UPLOAD PHOTOROOM POLOS
+    // ==============================
+
+    document
+      .querySelectorAll("[data-cover-source-upload]")
+      .forEach((input) => {
+
+        input.addEventListener(
+          "change",
+          async () => {
+
+            const file =
+              (input as HTMLInputElement)
+                .files?.[0];
+
+            if (!file) {
+              return;
+            }
+
+
+            const id =
+              (input as HTMLElement)
+                .dataset.coverSourceUpload;
+
+            if (!id) {
+              return;
+            }
+
+
+            const formData =
+              new FormData();
+
+            formData.append(
+              "file",
+              file
+            );
+
+
+            try {
+
+              const response =
+                await fetch(
+                  `/api/upload-cover-source/${id}`,
+                  {
+                    method: "POST",
+                    body: formData,
+                  }
+                );
+
+
+              const result =
+                await response.text();
+
+
+              console.log(
+                "UPLOAD PHOTOROOM:",
+                result
+              );
+
+
+              if (response.ok) {
+
+                alert(
+                  "PhotoRoom polos berhasil diupload"
+                );
+
+                location.reload();
+
+              } else {
+
+                alert(result);
+
+              }
+
+            } catch (error) {
+
+              console.error(error);
+
+              alert(
+                "Gagal upload PhotoRoom"
+              );
+
+            }
+
+          }
+        );
+
+      });
+
+
+
+    // ==============================
+    // UPLOAD MANUAL META COVER
+    // ==============================
+
+    document
+      .querySelectorAll("[data-cover-upload]")
+      .forEach((input) => {
+
+        input.addEventListener(
+          "change",
+          async () => {
+
+            const file =
+              (input as HTMLInputElement)
+                .files?.[0];
+
+            if (!file) {
+              return;
+            }
+
+
+            const id =
+              (input as HTMLElement)
+                .dataset.coverUpload;
+
+            if (!id) {
+              return;
+            }
+
+
+            const formData =
+              new FormData();
+
+            formData.append(
+              "file",
+              file
+            );
+
+
+            try {
+
+              const response =
+                await fetch(
+                  `/api/upload-meta-cover/${id}`,
+                  {
+                    method: "POST",
+                    body: formData,
+                  }
+                );
+
+
+              const result =
+                await response.text();
+
+
+              console.log(
+                "UPLOAD META:",
+                result
+              );
+
+
+              if (response.ok) {
+
+                alert(
+                  "Meta Cover berhasil diganti"
+                );
+
+                location.reload();
+
+              } else {
+
+                alert(result);
+
+              }
+
+            } catch (error) {
+
+              console.error(error);
+
+              alert(
+                "Gagal upload Meta Cover"
+              );
+
+            }
+
+          }
+        );
+
+      });
+
+
+
+    // ==============================
+    // UPLOAD MANUAL IG COVER
+    // ==============================
+
+    document
+      .querySelectorAll("[data-ig-upload]")
+      .forEach((input) => {
+
+        input.addEventListener(
+          "change",
+          async () => {
+
+            const file =
+              (input as HTMLInputElement)
+                .files?.[0];
+
+            if (!file) {
+              return;
+            }
+
+
+            const id =
+              (input as HTMLElement)
+                .dataset.igUpload;
+
+            if (!id) {
+              return;
+            }
+
+
+            const formData =
+              new FormData();
+
+            formData.append(
+              "file",
+              file
+            );
+
+
+            try {
+
+              const response =
+                await fetch(
+                  `/api/upload-ig-cover/${id}`,
+                  {
+                    method: "POST",
+                    body: formData,
+                  }
+                );
+
+
+              const result =
+                await response.text();
+
+
+              console.log(
+                "UPLOAD IG:",
+                result
+              );
+
+
+              if (response.ok) {
+
+                alert(
+                  "IG Cover berhasil diganti"
+                );
+
+                location.reload();
+
+              } else {
+
+                alert(result);
+
+              }
+
+            } catch (error) {
+
+              console.error(error);
+
+              alert(
+                "Gagal upload IG Cover"
+              );
+
+            }
+
+          }
+        );
 
-<section class="min-h-screen bg-slate-100 py-12">
+      });
 
-<div class="mx-auto max-w-7xl px-6">
 
-
-<div class="flex items-center justify-between">
-
-<div>
 
-<h1 class="text-3xl font-bold">
-Garage88 Stock Management
-</h1>
-
-
-<p class="mt-2 text-slate-500">
-{filteredCars.length} Unit Mobil
-</p>
+    // ==============================
+    // GENERATE COVER
+    // ==============================
 
-</div>
+    document
+      .querySelectorAll("[data-generate-id]")
+      .forEach((button) => {
 
+        button.addEventListener(
+          "click",
+          async () => {
 
+            const id =
+              (button as HTMLElement)
+                .dataset.generateId;
 
-<a
-href={`/admin/cars/new?key=${ADMIN_KEY}`}
-class="
-rounded-xl
-bg-red-600
-px-6
-py-3
-font-semibold
-text-white
-hover:bg-red-700
-"
->
-+ Tambah Mobil
-</a>
-
-
-</div>
-
-
-
-
-<form
-method="GET"
-class="
-mt-8
-flex
-max-w-7xl
-flex-col
-gap-3
-lg:flex-row
-">
-
-
-<input
-type="hidden"
-name="key"
-value={ADMIN_KEY}
-/>
-
-
-<input
-type="text"
-name="q"
-value={q}
-placeholder="Cari Toyota, Fortuner, Zenix..."
-class="
-flex-1
-rounded-xl
-border
-border-slate-300
-bg-white
-px-5
-py-3
-text-slate-900
-"
-/>
-
-<select
-name="status"
-class="
-rounded-xl
-border
-border-slate-300
-bg-white
-px-4
-py-3
-text-slate-900
-"
->
-
-<option
-value="READY"
-selected={status === "READY"}
->
-READY
-</option>
-
-
-<option
-value="BOOKED"
-selected={status === "BOOKED"}
->
-BOOKED
-</option>
 
+            if (!id) {
+              return;
+            }
 
-<option
-value="ALL"
-selected={status === "ALL"}
->
-ALL STATUS
-</option>
-
-
-</select>
-
-
-
-<select
-name="cover"
-class="
-min-w-[180px]
-rounded-xl
-border
-border-slate-300
-bg-white
-px-4
-py-3
-text-sm
-font-semibold
-text-slate-700
-"
->
 
-<option
-value="ALL"
-selected={cover === "ALL"}
->
-ALL COVER
-</option>
+            const btn =
+              button as HTMLButtonElement;
 
 
-<option
-value="META_BLANK"
-selected={cover === "META_BLANK"}
->
-META COVER BLANK
-</option>
+            btn.innerText =
+              "Generating...";
 
+            btn.disabled =
+              true;
 
-<option
-value="IG_BLANK"
-selected={cover === "IG_BLANK"}
->
-IG COVER BLANK
-</option>
 
+            try {
 
-</select>
+              const response =
+                await fetch(
+                  `/api/generate-covers/${id}`,
+                  {
+                    method: "POST",
+                  }
+                );
 
 
+              const text =
+                await response.text();
 
-<select
-name="branch"
-class="
-min-w-[220px]
-rounded-xl
-border
-border-slate-300
-bg-white
-px-4
-py-3
-text-sm
-font-semibold
-text-slate-700
-"
->
 
-<option
-value="ALL"
-selected={branch === "ALL"}
->
-ALL CABANG
-</option>
+              console.log(
+                "GENERATE RESPONSE:",
+                text
+              );
 
 
-{
-  BRANCHES.map((branchName) => (
+              if (response.ok) {
 
-    <option
-      value={branchName}
-      selected={branch === branchName}
-    >
-      {branchName}
-    </option>
+                alert(
+                  "IG Cover + Meta Cover berhasil dibuat"
+                );
 
-  ))
-}
+                location.reload();
 
+              } else {
 
-</select>
+                alert(text);
 
+                btn.disabled =
+                  false;
 
-<button
-type="submit"
-class="
-rounded-xl
-bg-red-600
-px-8
-py-3
-text-sm
-font-bold
-text-white
-transition
-hover:bg-red-700
-"
->
-Cari
-</button>
+                btn.innerText =
+                  "Generate";
 
-</form>
+              }
 
+            } catch (error) {
 
+              console.error(error);
 
+              alert(
+                "Gagal generate cover"
+              );
 
+              btn.disabled =
+                false;
 
-<div class="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              btn.innerText =
+                "Generate";
 
+            }
 
-{
-filteredCars.length > 0 ? (
+          }
+        );
 
-filteredCars.map((car)=>{
+      });
 
-
-const image =
-car.images?.length
-?
-[...car.images]
-.sort(
-(a,b)=>a.sort_order-b.sort_order
-)[0].image_url
-:
-"https://placehold.co/800x450?text=Garage88";
-
-
-return (
-
-<div class="overflow-hidden rounded-2xl bg-white shadow">
-
-
-<img
-src={image}
-alt={`${car.brand} ${car.model}`}
-class="aspect-video w-full object-cover"
-/>
-
-
-<div class="p-5">
-
-
-<div class="flex items-start flex justify-between">
-
-
-<div>
-
-<h2 class="text-xl font-bold">
-{car.brand} {car.model}
-</h2>
-
-
-<p class="text-sm text-slate-500">
-{car.variant}
-</p>
-
-</div>
-
-
-<span
-class:list={[
-"rounded-full px-3 py-1 text-xs font-semibold",
-car.status === "READY"
-?
-"bg-green-100 text-green-700"
-:
-"bg-red-100 text-red-700"
-]}
->
-{car.status}
-</span>
-
-
-</div>
-
-
-
-
-
-<!-- COVER AREA -->
-
-<div class="mt-5 flex gap-5">
-
-
-<!-- META COVER -->
-
-<div>
-
-<p class="mb-2 text-xs font-semibold text-slate-500">
-META COVER
-</p>
-
-
-<label
-class="
-group
-relative
-block
-h-32
-w-24
-cursor-pointer
-"
->
-
-
-{
-car.meta_image_url ? (
-
-<img
-src={`${car.meta_image_url}?v=${Date.now()}`}
-alt="Meta Cover"
-class="
-h-32
-w-24
-rounded-xl
-border
-border-slate-200
-object-cover
-transition
-group-hover:opacity-70
-"
-/>
-
-) : (
-
-<div
-class="
-flex
-h-32
-w-24
-items-center
-justify-center
-rounded-xl
-bg-slate-100
-text-xs
-font-semibold
-text-slate-400
-text-center
-"
->
-BELUM
-ADA
-COVER
-</div>
-
-)
-
-}
-
-
-<input
-type="file"
-accept="image/*"
-data-cover-upload={car.id}
-class="hidden"
-/>
-
-
-</label>
-
-{
-  car.meta_image_url && (
-    <a
-      href={`${car.meta_image_url}?v=${Date.now()}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      class="
-        mt-2
-        inline-block
-        text-xs
-        font-semibold
-        text-slate-500
-        hover:text-slate-900
-        hover:underline
-      "
-    >
-      View Image
-    </a>
-  )
-}
-
-</div>
-
-
-
-
-
-<!-- IG COVER -->
-
-<div>
-
-<p class="mb-2 text-xs font-semibold text-slate-500">
-IG COVER
-</p>
-
-
-<label
-class="
-group
-relative
-block
-h-32
-w-24
-cursor-pointer
-"
->
-
-
-{
-car.ig_image_url ? (
-
-<img
-src={`${car.ig_image_url}?v=${Date.now()}`}
-alt="IG Cover"
-class="
-h-32
-w-24
-rounded-xl
-border
-border-slate-200
-object-cover
-transition
-group-hover:opacity-70
-"
-/>
-
-) : (
-
-<div
-class="
-flex
-h-32
-w-24
-items-center
-justify-center
-rounded-xl
-bg-slate-100
-text-xs
-font-semibold
-text-slate-400
-text-center
-"
->
-BELUM
-ADA
-COVER
-</div>
-
-)
-
-}
-
-
-<input
-type="file"
-accept="image/*"
-data-ig-upload={car.id}
-class="hidden"
-/>
-
-
-</label>
-
-{
-  car.ig_image_url && (
-    <a
-      href={`${car.ig_image_url}?v=${Date.now()}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      class="
-        mt-2
-        inline-block
-        text-xs
-        font-semibold
-        text-slate-500
-        hover:text-slate-900
-        hover:underline
-      "
-    >
-      View Image
-    </a>
-  )
-}  
-</div>
-
-
-</div>
-
-<div class="mt-4 space-y-1 text-sm">
-
-
-<p>
-Tahun:
-<b>{car.year}</b>
-</p>
-
-
-<p>
-Cabang:
-<b>
-{car.branch ?? "-"}
-</b>
-</p>
-
-
-<p>
-KM:
-<b>
-{car.odometer?.toLocaleString("id-ID")} KM
-</b>
-</p>
-
-
-<p>
-Harga Kredit:
-<b>
-Rp {car.credit_price?.toLocaleString("id-ID")}
-</b>
-</p>
-
-
-<p>
-Foto:
-<b>
-{car.images?.length ?? 0} pcs
-</b>
-</p>
-
-
-</div>
-
-
-
-
-
-<div class="mt-6 grid grid-cols-4 gap-3">
-
-
-<a
-href={`/admin/cars/photos?id=${car.id}&key=${ADMIN_KEY}`}
-class="
-rounded-xl
-border
-py-3
-text-center
-text-sm
-font-semibold
-hover:bg-slate-50
-"
->
-Foto
-</a>
-
-
-
-<a
-href={`/admin/cars/edit?id=${car.id}&key=${ADMIN_KEY}`}
-class="
-rounded-xl
-bg-slate-900
-py-3
-text-center
-text-sm
-font-semibold
-text-white
-hover:bg-slate-700
-"
->
-Edit
-</a>
-
-
-
-
-<button
-data-generate-id={car.id}
-class="
-cursor-pointer
-rounded-xl
-bg-yellow-400
-py-3
-text-center
-text-sm
-font-semibold
-text-slate-900
-hover:bg-yellow-300
-transition
-"
->
-
-{
-car.meta_image_url
-?
-"Generate Ulang"
-:
-"Generate"
-}
-
-</button>
-
-
-
-
-<a
-href={`/admin/cars/delete?id=${car.id}&key=${ADMIN_KEY}`}
-onclick="return confirm('Hapus mobil ini?')"
-class="
-rounded-xl
-bg-red-600
-py-3
-text-center
-text-sm
-font-semibold
-text-white
-hover:bg-red-700
-"
->
-Hapus
-</a>
-
-
-</div>
-
-
-
-</div>
-
-
-</div>
-
-
-)
-
-})
-
-)
-
-:
-
-(
-
-<div class="col-span-full rounded-xl bg-white p-10 text-center">
-
-<h2 class="text-xl font-bold">
-Mobil tidak ditemukan
-</h2>
-
-
-<p class="mt-2 text-slate-500">
-Coba gunakan kata kunci lain.
-</p>
-
-
-</div>
-
-)
-
-}
-
-
-</div>
-
-
-</div>
-
-
-</section>
-
-
-
-
-<script>
-
-
-// ==============================
-// UPLOAD MANUAL META COVER
-// ==============================
-
-document
-.querySelectorAll("[data-cover-upload]")
-.forEach((input)=>{
-
-
-input.addEventListener(
-"change",
-async()=>{
-
-
-const file =
-(input as HTMLInputElement)
-.files?.[0];
-
-
-if(!file){
-return;
-}
-
-
-const id =
-(input as HTMLElement)
-.dataset.coverUpload;
-
-
-if(!id){
-return;
-}
-
-
-
-const formData =
-new FormData();
-
-
-formData.append(
-"file",
-file
-);
-
-
-
-try{
-
-
-const response =
-await fetch(
-
-`/api/upload-meta-cover/${id}`,
-
-{
-method:"POST",
-body:formData
-}
-
-);
-
-
-
-const result =
-await response.text();
-
-
-
-console.log(
-"UPLOAD META:",
-result
-);
-
-
-
-if(response.ok){
-
-
-alert(
-"Meta Cover berhasil diganti"
-);
-
-
-location.reload();
-
-
-}
-else{
-
-
-alert(result);
-
-
-}
-
-
-}
-
-catch(error){
-
-
-console.error(error);
-
-
-alert(
-"Gagal upload Meta Cover"
-);
-
-
-}
-
-
-}
-
-);
-
-
-});
-
-
-
-
-
-// ==============================
-// UPLOAD MANUAL IG COVER
-// ==============================
-
-
-document
-.querySelectorAll("[data-ig-upload]")
-.forEach((input)=>{
-
-
-input.addEventListener(
-"change",
-async()=>{
-
-
-const file =
-(input as HTMLInputElement)
-.files?.[0];
-
-
-if(!file){
-return;
-}
-
-
-const id =
-(input as HTMLElement)
-.dataset.igUpload;
-
-
-if(!id){
-return;
-}
-
-
-
-const formData =
-new FormData();
-
-
-formData.append(
-"file",
-file
-);
-
-
-
-try{
-
-
-const response =
-await fetch(
-
-`/api/upload-ig-cover/${id}`,
-
-{
-method:"POST",
-body:formData
-}
-
-);
-
-
-
-const result =
-await response.text();
-
-
-
-console.log(
-"UPLOAD IG:",
-result
-);
-
-
-
-if(response.ok){
-
-
-alert(
-"IG Cover berhasil diganti"
-);
-
-
-location.reload();
-
-
-}
-else{
-
-
-alert(result);
-
-
-}
-
-
-}
-
-catch(error){
-
-
-console.error(error);
-
-
-alert(
-"Gagal upload IG Cover"
-);
-
-
-}
-
-
-}
-
-);
-
-
-});
-
-
-
-
-
-// ==============================
-// GENERATE META COVER
-// ==============================
-
-
-document
-.querySelectorAll("[data-generate-id]")
-.forEach((button)=>{
-
-
-button.addEventListener(
-"click",
-async()=>{
-
-
-const id =
-(button as HTMLElement)
-.dataset.generateId;
-
-
-
-if(!id){
-return;
-}
-
-
-
-const btn =
-button as HTMLButtonElement;
-
-
-
-btn.innerText =
-"Generating...";
-
-
-btn.disabled =
-true;
-
-
-
-
-try{
-
-
-const response =
-await fetch(
-
-`/api/generate-covers/${id}`,
-
-{
-method:"POST"
-}
-
-);
-
-
-
-const text =
-await response.text();
-
-
-
-console.log(
-"META RESPONSE:",
-text
-);
-
-
-
-if(response.ok){
-
-
-alert(
-"IG Cover + Meta Cover berhasil dibuat"
-);
-
-
-location.reload();
-
-
-}
-
-else{
-
-
-alert(text);
-
-
-btn.disabled=false;
-
-
-btn.innerText="Generate";
-
-
-}
-
-
-}
-
-catch(error){
-
-
-console.error(error);
-
-
-alert(
-"Gagal generate cover"
-);
-
-
-btn.disabled=false;
-
-
-btn.innerText="Generate";
-
-
-}
-
-
-}
-
-);
-
-
-});
-
-
-</script>
-
+  </script>
 
 </MainLayout>

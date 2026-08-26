@@ -285,7 +285,7 @@ export const GET: APIRoute = async () => {
 
     const cashPrice =
       Number(
-        car.credit_price
+        car.cash_price
       );
 
 
