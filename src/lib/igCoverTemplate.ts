@@ -658,7 +658,7 @@ export function buildGarage88IgCoverHtml(
   }
 
   .car-name {
-    margin-top: 9px;
+    margin-top: 7px;
     font-size: 34px;
     font-weight: 900;
     line-height: 1.06;
