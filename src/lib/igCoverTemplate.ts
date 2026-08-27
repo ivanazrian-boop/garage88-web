@@ -572,7 +572,7 @@ export function buildGarage88IgCoverHtml(
     z-index: 8;
     left: 66px;
     right: 66px;
-    top: 1070px;
+    top: 1060px;
     display: grid;
     grid-template-columns: 1fr 1fr;
     column-gap: 24px;
