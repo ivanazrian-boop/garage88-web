@@ -8,46 +8,54 @@ type MetaCoverCar = {
   credit_price?: number | null;
   cash_price?: number | null;
   dp?: number | null;
-  cover_hero_title?: string | null;
+
+  cover_hero_title?:
+    string | null;
 };
 
-function esc(value: unknown): string {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+
+/* =====================================================
+   ESCAPE HTML
+   ===================================================== */
+
+function esc(
+  value: unknown
+): string {
+
+  return String(
+    value ?? ""
+  )
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
 }
+
+
+/* =====================================================
+   FORMAT
+   ===================================================== */
 
 function formatJt(
   value?: number | null
-): string | null {
-  if (
-    value === null ||
-    value === undefined ||
-    !Number.isFinite(value) ||
-    value <= 0
-  ) {
-    return null;
-  }
-
-  const jt =
-    value / 1_000_000;
-
-  return Number.isInteger(jt)
-    ? String(jt)
-    : jt.toLocaleString(
-        "id-ID",
-        {
-          maximumFractionDigits: 1,
-        }
-      );
-}
-
-function formatKm(
-  value?: number | null
 ): string {
+
   if (
     value === null ||
     value === undefined ||
@@ -56,64 +64,70 @@ function formatKm(
     return "-";
   }
 
-  return Math.round(value)
-    .toLocaleString("id-ID");
+
+  const jt =
+    value /
+    1_000_000;
+
+
+  return Number.isInteger(jt)
+    ? `${jt}JT`
+    : `${jt.toLocaleString(
+        "id-ID",
+        {
+          maximumFractionDigits: 1,
+        }
+      )}JT`;
 }
 
-function cleanColorWords(
-  raw: string
+
+function formatKm(
+  value?: number | null
 ): string {
-  const COLOR_WORDS =
-    new Set([
-      "HITAM",
-      "PUTIH",
-      "BLACK",
-      "WHITE",
-      "SILVER",
-      "GREY",
-      "GRAY",
-      "ABU",
-      "ABU-ABU",
-      "MERAH",
-      "RED",
-      "BIRU",
-      "BLUE",
-      "COKLAT",
-      "BROWN",
-      "HIJAU",
-      "GREEN",
-      "GOLD",
-      "KUNING",
-      "YELLOW",
-      "METALIK",
-      "METALLIC",
-    ]);
 
-  return raw
-    .split(/\s+/)
-    .filter(
-      (token) =>
-        !COLOR_WORDS.has(token)
-    )
-    .join(" ")
-    .trim();
+  if (
+    value === null ||
+    value === undefined ||
+    !Number.isFinite(value)
+  ) {
+    return "-";
+  }
+
+
+  return Math.round(
+    value
+  ).toLocaleString(
+    "id-ID"
+  );
 }
+
+
+/* =====================================================
+   CLEAN VARIANT FOR AUTO HERO
+   ===================================================== */
 
 function cleanVariantForHero(
   variant?: string | null
 ): string {
+
   const raw =
-    cleanColorWords(
-      String(variant ?? "")
-        .trim()
-        .toUpperCase()
-    );
+    String(
+      variant ?? ""
+    )
+      .toUpperCase()
+      .replace(
+        /\s+/g,
+        " "
+      )
+      .trim();
+
 
   if (!raw) {
     return "";
   }
 
-  const REMOVE =
+
+  const removeTokens =
     new Set([
       "AT",
       "MT",
@@ -126,29 +140,49 @@ function cleanVariantForHero(
       "AWD",
       "4X2",
       "4X4",
+
+      "BLACK",
+      "WHITE",
+      "PUTIH",
+      "HITAM",
+      "SILVER",
+      "GREY",
+      "GRAY",
+      "ABU",
+      "MERAH",
+      "BIRU",
     ]);
 
-  return raw
-    .split(/\s+/)
-    .filter((token) => {
 
-      if (REMOVE.has(token)) {
-        return false;
-      }
+  const tokens =
+    raw
+      .split(
+        /\s+/
+      )
+      .filter(Boolean)
+      .filter(
+        (token) =>
+          !removeTokens.has(
+            token
+          )
+      )
+      .filter(
+        (token) =>
+          !/^\d(?:\.\d)?$/.test(
+            token
+          )
+      );
 
-      if (
-        /^\d+(\.\d+)?$/.test(
-          token
-        )
-      ) {
-        return false;
-      }
 
-      return true;
-    })
+  return tokens
     .join(" ")
     .trim();
 }
+
+
+/* =====================================================
+   HERO TITLE
+   ===================================================== */
 
 function buildHeroTitle(
   car: MetaCoverCar
@@ -156,23 +190,37 @@ function buildHeroTitle(
 
   const manualHero =
     String(
-      car.cover_hero_title ?? ""
-    ).trim();
+      car.cover_hero_title ??
+      ""
+    )
+      .replace(
+        /\s+/g,
+        " "
+      )
+      .trim();
+
 
   if (manualHero) {
-    return manualHero.toUpperCase();
+
+    return manualHero
+      .toUpperCase();
+
   }
 
 
   const model =
-    String(car.model ?? "")
+    String(
+      car.model ?? ""
+    )
       .trim()
       .toUpperCase();
+
 
   const variant =
     cleanVariantForHero(
       car.variant
     );
+
 
   return [
     model,
@@ -180,460 +228,589 @@ function buildHeroTitle(
   ]
     .filter(Boolean)
     .join(" ")
+    .replace(
+      /\s+/g,
+      " "
+    )
     .trim();
 }
 
-function getHeroFontSize(
-  title: string
-): number {
-  const length =
-    title.length;
 
-  if (length <= 10) {
-    return 94;
-  }
+/* =====================================================
+   SPLIT HERO
 
-  if (length <= 16) {
-    return 84;
-  }
+   Kita balance berdasarkan panjang karakter.
 
-  if (length <= 24) {
-    return 72;
-  }
+   Contoh:
 
-  if (length <= 30) {
-    return 64;
-  }
+   IONIQ 5 SIGNATURE
+   LONG RANGE
 
-  return 56;
-}
+   ALPHARD G
+   ATPM
+   ===================================================== */
 
 function splitHeroLines(
-  title: string,
-  year: string
-): {
-  html: string;
-  lineCount: number;
-} {
-  const tokens =
+  title: string
+) {
+
+  const words =
     title
-      .split(/\s+/)
+      .trim()
+      .split(
+        /\s+/
+      )
       .filter(Boolean);
 
-  /*
-   * Judul pendek:
-   *
-   * CAMRY V 2021
-   */
+
   if (
-    tokens.length <= 2 ||
-    title.length <= 14
+    words.length <= 1
   ) {
+
     return {
-      html: `
-        <span class="hero-line hero-line-bottom">
+      line1:
+        title,
 
-          <span>
-            ${esc(title)}
-          </span>
+      line2:
+        "",
 
-          ${
-            year
-              ? `
-                <span class="year-inline">
-                  ${esc(year)}
-                </span>
-              `
-              : ""
-          }
-
-        </span>
-      `,
-      lineCount: 1,
+      lineCount:
+        1,
     };
+
   }
 
+
   /*
-   * Judul panjang:
-   *
-   * IONIQ 5 SIGNATURE
-   * LONG RANGE 2022
+   * Title pendek tetap satu baris.
    */
 
-  let bestIndex = 1;
+  if (
+    title.length <= 11
+  ) {
 
-  let bestDiff =
-    Number.POSITIVE_INFINITY;
+    return {
+      line1:
+        title,
+
+      line2:
+        "",
+
+      lineCount:
+        1,
+    };
+
+  }
+
+
+  /*
+   * Cari pembagian dua baris
+   * yang paling seimbang.
+   */
+
+  let bestIndex =
+    1;
+
+  let bestScore =
+    Infinity;
+
 
   for (
     let i = 1;
-    i < tokens.length;
+    i < words.length;
     i++
   ) {
-    const left =
-      tokens
-        .slice(0, i)
+
+    const a =
+      words
+        .slice(
+          0,
+          i
+        )
         .join(" ");
 
-    const right =
-      tokens
+
+    const b =
+      words
         .slice(i)
         .join(" ");
 
-    const diff =
+
+    const score =
       Math.abs(
-        left.length -
-        right.length
+        a.length -
+        b.length
       );
 
-    if (diff < bestDiff) {
-      bestDiff = diff;
-      bestIndex = i;
+
+    if (
+      score <
+      bestScore
+    ) {
+
+      bestScore =
+        score;
+
+      bestIndex =
+        i;
+
     }
+
   }
 
+
   const line1 =
-    tokens
+    words
       .slice(
         0,
         bestIndex
       )
       .join(" ");
 
+
   const line2 =
-    tokens
+    words
       .slice(
         bestIndex
       )
       .join(" ");
 
+
   return {
-    html: `
-      <span class="hero-line">
-        ${esc(line1)}
-      </span>
-
-      <span class="hero-line hero-line-bottom">
-
-        <span>
-          ${esc(line2)}
-        </span>
-
-        ${
-          year
-            ? `
-              <span class="year-inline">
-                ${esc(year)}
-              </span>
-            `
-            : ""
-        }
-
-      </span>
-    `,
-    lineCount: 2,
+    line1,
+    line2,
+    lineCount:
+      2,
   };
 }
+
+
+/* =====================================================
+   HERO FONT SIZE
+
+   Yang dihitung bukan hanya Hero,
+   tapi line kedua + tahun juga.
+
+   Jadi tidak overflow ke kanan.
+   ===================================================== */
+
+function getHeroFontSize(
+  heroLines: {
+    line1: string;
+    line2: string;
+    lineCount: number;
+  },
+  year: string
+): number {
+
+  const lastLine =
+    heroLines.lineCount ===
+    2
+      ? [
+          heroLines.line2,
+          year,
+        ]
+          .filter(Boolean)
+          .join(" ")
+      : [
+          heroLines.line1,
+          year,
+        ]
+          .filter(Boolean)
+          .join(" ");
+
+
+  const longest =
+    Math.max(
+      heroLines.line1.length,
+      lastLine.length
+    );
+
+
+  if (
+    longest <= 10
+  ) {
+    return 94;
+  }
+
+
+  if (
+    longest <= 14
+  ) {
+    return 86;
+  }
+
+
+  if (
+    longest <= 18
+  ) {
+    return 78;
+  }
+
+
+  if (
+    longest <= 22
+  ) {
+    return 70;
+  }
+
+
+  if (
+    longest <= 27
+  ) {
+    return 63;
+  }
+
+
+  return 56;
+}
+
+
+/* =====================================================
+   BUILD META COVER
+   ===================================================== */
 
 export function buildGarage88MetaSquareHtml(
   car: MetaCoverCar,
   sourceImageUrl: string
 ): string {
+
   const heroTitle =
-    buildHeroTitle(car);
-
-  const year =
-    String(
-      car.year ?? ""
+    buildHeroTitle(
+      car
     );
 
-  const heroFontSize =
-    getHeroFontSize(
-      heroTitle
-    );
 
   const heroLines =
     splitHeroLines(
-      heroTitle,
+      heroTitle
+    );
+
+
+  const year =
+    car.year
+      ? String(
+          car.year
+        )
+      : "";
+
+
+  const heroFontSize =
+    getHeroFontSize(
+      heroLines,
       year
     );
+
 
   const credit =
     formatJt(
       car.credit_price
     );
 
+
   const km =
     formatKm(
       car.odometer
     );
 
+
   /*
-   * Header sengaja mengikuti area atas
-   * dari layout IG.
+   * PENTING:
+   *
+   * 1 BARIS:
+   * hero sekitar 180
+   * spec sekitar 300
+   *
+   * 2 BARIS:
+   * hero naik sedikit
+   * spec TURUN ke 365
+   *
+   * Ini yang memperbaiki overlap.
    */
 
   const headerTop =
-    heroLines.lineCount === 2
-      ? 155
+    heroLines.lineCount ===
+    2
+      ? 150
       : 180;
 
+
   const specTop =
-    heroLines.lineCount === 2
-      ? 325
-      : 290;
+    heroLines.lineCount ===
+    2
+      ? 365
+      : 300;
+
+
+  const dividerTop =
+    heroLines.lineCount ===
+    2
+      ? 420
+      : 355;
+
 
   return `
-<!doctype html>
+<!DOCTYPE html>
 
-<html lang="id">
+<html>
 
 <head>
 
 <meta charset="UTF-8" />
 
-<meta
-  name="viewport"
-  content="width=1080, initial-scale=1"
-/>
-
 <style>
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+  * {
+    box-sizing: border-box;
+  }
 
-html,
-body {
-  width: 1080px;
-  height: 1080px;
 
-  overflow: hidden;
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    width: 1080px;
+    height: 1080px;
+    overflow: hidden;
+    background: #ffffff;
+    font-family:
+      Arial,
+      Helvetica,
+      sans-serif;
+  }
 
-  font-family:
-    Arial,
-    Helvetica,
-    sans-serif;
 
-  background: #f4f4f2;
+  .cover {
+    position: relative;
+    width: 1080px;
+    height: 1080px;
+    overflow: hidden;
+    background: #ffffff;
+  }
 
-  color: #111;
-}
 
-.poster {
-  position: relative;
+  /* ===================================================
+     PHOTOROOM SOURCE
 
-  width: 1080px;
-  height: 1080px;
+     Crop square dari TOP,
+     supaya logo bawaan PhotoRoom tetap ada.
+     =================================================== */
 
-  overflow: hidden;
+  .source {
+    position: absolute;
+    inset: 0;
 
-  background: #f4f4f2;
-}
+    width: 1080px;
+    height: 1080px;
 
+    object-fit: cover;
+    object-position: center top;
 
-/* ==================================
-   PHOTOROOM POLOS
+    z-index: 1;
+  }
 
-   Source asli 1080 x 1350.
 
-   Kita crop menjadi 1080 x 1080
-   DARI ATAS supaya logo Garage88
-   tetap ikut.
-   ================================== */
+  /* ===================================================
+     HEADER
+     =================================================== */
 
-.source {
-  position: absolute;
+  .header-block {
+    position: absolute;
 
-  inset: 0;
+    z-index: 5;
 
-  width: 1080px;
-  height: 1080px;
+    top: ${headerTop}px;
 
-  object-fit: cover;
+    left: 58px;
+    right: 58px;
 
-  object-position:
-    center top;
+    text-align: center;
+  }
 
-  z-index: 1;
-}
 
+  .hero {
+    width: 100%;
 
-/* ==================================
-   HERO
-   ================================== */
+    font-family:
+      "Arial Black",
+      Arial,
+      Helvetica,
+      sans-serif;
 
-.header-block {
-  position: absolute;
+    font-size:
+      ${heroFontSize}px;
 
-  z-index: 5;
+    font-weight: 900;
 
-  top: ${headerTop}px;
+    line-height: .88;
 
-  left: 55px;
-  right: 55px;
+    letter-spacing: -4px;
 
-  text-align: center;
-}
+    color: #000000;
 
-.hero {
-  width: 100%;
+    text-transform: uppercase;
+  }
 
-  text-transform: uppercase;
 
-  font-family:
-    Arial Black,
-    Arial,
-    Helvetica,
-    sans-serif;
+  .hero-line {
+    display: block;
 
-  font-size:
-    ${heroFontSize}px;
+    width: 100%;
 
-  font-weight: 1000;
+    white-space: nowrap;
 
-  line-height: .9;
+    text-align: center;
+  }
 
-  letter-spacing: -3px;
 
-  color: #050505;
-}
+  /*
+   * Satu baris:
+   *
+   * ALPHARD G 2021
+   */
 
-.hero-line {
-  display: block;
-}
+  .hero-line-single {
+    display: flex;
 
-.hero-line-bottom {
-  display: flex;
+    align-items: baseline;
+    justify-content: center;
 
-  align-items: baseline;
+    gap: 22px;
 
-  justify-content: center;
+    white-space: nowrap;
+  }
 
-  gap: 12px;
 
-  margin-top: 3px;
-}
+  /*
+   * Dua baris:
+   *
+   * ALPHARD G
+   * ATPM 2021
+   *
+   * Tahun SELALU ikut line terakhir.
+   */
 
+  .hero-line-bottom {
+    display: flex;
 
-/* Tahun sama besar.
-   Hanya beda warna,
-   sama seperti IG Cover.
-*/
+    align-items: baseline;
+    justify-content: center;
 
-.year-inline {
-  display: inline-block;
+    gap: 22px;
 
-  font-family: inherit;
+    white-space: nowrap;
 
-  font-size: 1em;
+    margin-top: 4px;
+  }
 
-  font-weight: inherit;
 
-  line-height: inherit;
+  .year-inline {
+    display: inline-block;
 
-  letter-spacing: inherit;
+    flex: 0 0 auto;
 
-  color: #7f8ea3;
+    font-family: inherit;
 
-  white-space: nowrap;
-}
+    font-size: 1em;
 
+    font-weight: inherit;
 
-/* ==================================
-   OTR + KM
-   ================================== */
+    line-height: inherit;
 
-.spec-bar {
-  position: absolute;
+    letter-spacing: inherit;
 
-  z-index: 6;
+    color: #7f8ea3;
 
-  top: ${specTop}px;
+    white-space: nowrap;
+  }
 
-  left: 125px;
-  right: 125px;
 
-  height: 74px;
+  /* ===================================================
+     OTR + KM
+     =================================================== */
 
-  display: flex;
+  .spec-row {
+    position: absolute;
 
-  align-items: center;
+    z-index: 6;
 
-  justify-content: center;
+    top: ${specTop}px;
 
-  gap: 34px;
-}
+    left: 110px;
+    right: 110px;
 
-.spec-item {
-  display: flex;
+    height: 52px;
 
-  align-items: baseline;
+    display: flex;
 
-  gap: 11px;
-}
+    align-items: center;
+    justify-content: center;
 
-.spec-label {
-  font-size: 23px;
+    gap: 55px;
 
-  font-weight: 600;
+    color: #111111;
+  }
 
-  line-height: 1;
 
-  color: #555;
-}
+  .spec-item {
+    display: flex;
 
-.spec-value {
-  font-family:
-    Arial Black,
-    Arial,
-    Helvetica,
-    sans-serif;
+    align-items: baseline;
 
-  font-size: 43px;
+    gap: 10px;
 
-  font-weight: 1000;
+    white-space: nowrap;
+  }
 
-  line-height: 1;
 
-  letter-spacing: -1px;
+  .spec-label {
+    font-size: 22px;
 
-  color: #080808;
+    font-weight: 800;
 
-  white-space: nowrap;
-}
+    color: #555555;
 
-.spec-divider {
-  width: 1px;
+    line-height: 1;
+  }
 
-  height: 42px;
 
-  background:
-    rgba(0,0,0,.25);
-}
+  .spec-value {
+    font-size: 46px;
 
+    font-weight: 900;
 
-/* ==================================
-   SMALL DIVIDER
-   ================================== */
+    line-height: 1;
 
-.line {
-  position: absolute;
+    letter-spacing: -2px;
 
-  z-index: 5;
+    color: #000000;
+  }
 
-  top: ${specTop + 79}px;
 
-  left: 170px;
-  right: 170px;
+  /* ===================================================
+     DIVIDER
+     =================================================== */
 
-  height: 1px;
+  .divider {
+    position: absolute;
 
-  background:
-    rgba(0,0,0,.14);
-}
+    z-index: 5;
+
+    top: ${dividerTop}px;
+
+    left: 170px;
+    right: 170px;
+
+    height: 1px;
+
+    background:
+      rgba(
+        0,
+        0,
+        0,
+        .17
+      );
+  }
 
 </style>
 
@@ -642,78 +819,113 @@ body {
 
 <body>
 
-
-<div class="poster">
-
-
-  <!-- PHOTOROOM -->
-
-  <img
-    class="source"
-    src="${esc(sourceImageUrl)}"
-    alt=""
-  />
+  <div class="cover">
 
 
-  <!-- HEADER -->
-
-  <section class="header-block">
-
-    <div class="hero">
-      ${heroLines.html}
-    </div>
-
-  </section>
+    <img
+      class="source"
+      src="${esc(sourceImageUrl)}"
+    />
 
 
-  <!-- OTR + KM -->
+    <div class="header-block">
 
-  <section class="spec-bar">
+      <div class="hero">
 
-
-    <div class="spec-item">
-
-      <span class="spec-label">
-        OTR
-      </span>
-
-      <span class="spec-value">
         ${
-          credit
-            ? `${esc(credit)}JT`
-            : "-"
+          heroLines.lineCount === 2
+
+            ? `
+
+              <div class="hero-line">
+                ${esc(heroLines.line1)}
+              </div>
+
+
+              <div class="hero-line hero-line-bottom">
+
+                <span>
+                  ${esc(heroLines.line2)}
+                </span>
+
+                ${
+                  year
+                    ? `
+                      <span class="year-inline">
+                        ${esc(year)}
+                      </span>
+                    `
+                    : ""
+                }
+
+              </div>
+
+            `
+
+            : `
+
+              <div class="hero-line hero-line-single">
+
+                <span>
+                  ${esc(heroLines.line1)}
+                </span>
+
+                ${
+                  year
+                    ? `
+                      <span class="year-inline">
+                        ${esc(year)}
+                      </span>
+                    `
+                    : ""
+                }
+
+              </div>
+
+            `
         }
-      </span>
+
+      </div>
 
     </div>
 
 
 
-    <div class="spec-divider"></div>
+    <div class="spec-row">
+
+      <div class="spec-item">
+
+        <span class="spec-label">
+          OTR
+        </span>
+
+        <span class="spec-value">
+          ${esc(credit)}
+        </span>
+
+      </div>
 
 
+      <div class="spec-item">
 
-    <div class="spec-item">
+        <span class="spec-label">
+          KM
+        </span>
 
-      <span class="spec-label">
-        KM
-      </span>
+        <span class="spec-value">
+          ${esc(km)}
+        </span>
 
-      <span class="spec-value">
-        ${esc(km)}
-      </span>
+      </div>
 
     </div>
 
 
-  </section>
+
+    <div class="divider"></div>
 
 
-  <div class="line"></div>
-
-
-</div>
-
+  </div>
 
 </body>
 
