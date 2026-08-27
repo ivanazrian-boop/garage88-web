@@ -52,5 +52,6 @@ export interface Car {
 
   images: CarImage[];
   cover_hero_title: string | null;
+  cover_needs_regenerate: boolean;
 
 }

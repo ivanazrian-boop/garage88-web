@@ -612,6 +612,9 @@ export const POST:
           cover_hero_title:
             resolvedHero,
 
+          cover_needs_regenerate:
+            false,
+
           ig_image_url:
             igUrl,
 

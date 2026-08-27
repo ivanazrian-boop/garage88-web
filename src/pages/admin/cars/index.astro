@@ -1,31 +1,40 @@
 ---
 import MainLayout from "../../../layouts/MainLayout.astro";
+
 import {
   getCars,
   searchCars,
 } from "../../../services/cars.service";
 
-const key = Astro.url.searchParams.get("key");
 
-const ADMIN_KEY = "garage88";
+const key =
+  Astro.url.searchParams.get("key");
+
+
+const ADMIN_KEY =
+  "garage88";
+
 
 if (key !== ADMIN_KEY) {
   return Astro.redirect("/");
 }
 
+
 const q =
   Astro.url.searchParams.get("q") ?? "";
+
 
 const status =
   Astro.url.searchParams.get("status") ?? "READY";
 
+
 const cover =
   Astro.url.searchParams.get("cover") ?? "ALL";
+
 
 const branch =
   Astro.url.searchParams.get("branch") ?? "ALL";
 
-const UNASSIGNED_BRANCH = "__UNASSIGNED__";
 
 const BRANCHES = [
   "AHA Gallery",
@@ -39,17 +48,15 @@ const BRANCHES = [
   "AHA ADEX",
 ];
 
+
 const cars =
   q
     ? await searchCars(q)
     : await getCars();
 
+
 const filteredCars =
   cars.filter((car) => {
-
-    // ==============================
-    // STATUS
-    // ==============================
 
     if (
       status !== "ALL" &&
@@ -59,10 +66,6 @@ const filteredCars =
     }
 
 
-    // ==============================
-    // COVER
-    // ==============================
-
     if (
       cover === "META_BLANK" &&
       car.meta_image_url &&
@@ -70,6 +73,7 @@ const filteredCars =
     ) {
       return false;
     }
+
 
     if (
       cover === "IG_BLANK" &&
@@ -80,20 +84,16 @@ const filteredCars =
     }
 
 
-    // ==============================
-    // CABANG
-    // ==============================
+    if (
+      cover === "PHOTOROOM_BLANK" &&
+      car.cover_source_image_url &&
+      car.cover_source_image_url.trim() !== ""
+    ) {
+      return false;
+    }
+
 
     if (
-      branch === UNASSIGNED_BRANCH
-    ) {
-      if (
-        car.branch &&
-        car.branch.trim() !== ""
-      ) {
-        return false;
-      }
-    } else if (
       branch !== "ALL" &&
       car.branch !== branch
     ) {
@@ -103,54 +103,129 @@ const filteredCars =
 
     return true;
   });
+
+
+const cacheVersion =
+  Date.now();
 ---
+
 
 <MainLayout title="Stock Admin | Garage88">
 
-  <section class="min-h-screen bg-slate-100 py-12">
+  <section
+    class="
+      min-h-screen
+      bg-slate-100
+      py-12
+    "
+  >
 
-    <div class="mx-auto max-w-7xl px-6">
+    <div
+      class="
+        mx-auto
+        max-w-7xl
+        px-6
+      "
+    >
 
-      <!-- ============================== -->
+
+      <!-- ================================================= -->
       <!-- HEADER -->
-      <!-- ============================== -->
+      <!-- ================================================= -->
 
-      <div class="flex items-center justify-between">
+      <div
+        class="
+          flex
+          flex-col
+          gap-5
+          lg:flex-row
+          lg:items-center
+          lg:justify-between
+        "
+      >
 
         <div>
 
-          <h1 class="text-3xl font-bold">
+          <h1
+            class="
+              text-3xl
+              font-bold
+              text-slate-900
+            "
+          >
             Garage88 Stock Management
           </h1>
 
-          <p class="mt-2 text-slate-500">
+
+          <p
+            class="
+              mt-2
+              text-slate-500
+            "
+          >
             {filteredCars.length} Unit Mobil
           </p>
 
         </div>
 
-        <a
-          href={`/admin/cars/new?key=${ADMIN_KEY}`}
+
+
+        <div
           class="
-            rounded-xl
-            bg-red-600
-            px-6
-            py-3
-            font-semibold
-            text-white
-            hover:bg-red-700
+            flex
+            flex-wrap
+            gap-3
           "
         >
-          + Tambah Mobil
-        </a>
+
+
+          <!-- BULK HERO -->
+
+          <a
+            href={`/admin/cars/hero?key=${ADMIN_KEY}`}
+            class="
+              rounded-xl
+              bg-blue-600
+              px-6
+              py-3
+              font-semibold
+              text-white
+              transition
+              hover:bg-blue-700
+            "
+          >
+            Bulk Hero
+          </a>
+
+
+
+          <!-- TAMBAH MOBIL -->
+
+          <a
+            href={`/admin/cars/new?key=${ADMIN_KEY}`}
+            class="
+              rounded-xl
+              bg-red-600
+              px-6
+              py-3
+              font-semibold
+              text-white
+              transition
+              hover:bg-red-700
+            "
+          >
+            + Tambah Mobil
+          </a>
+
+        </div>
 
       </div>
 
 
 
-      <!-- ============================== -->
+      <!-- ================================================= -->
       <!-- FILTER -->
-      <!-- ============================== -->
+      <!-- ================================================= -->
 
       <form
         method="GET"
@@ -170,12 +245,14 @@ const filteredCars =
           value={ADMIN_KEY}
         />
 
+
         <input
           type="text"
           name="q"
           value={q}
           placeholder="Cari Toyota, Fortuner, Zenix..."
           class="
+            min-w-0
             flex-1
             rounded-xl
             border
@@ -184,8 +261,13 @@ const filteredCars =
             px-5
             py-3
             text-slate-900
+            outline-none
+            focus:border-red-600
+            focus:ring-2
+            focus:ring-red-100
           "
         />
+
 
 
         <!-- STATUS -->
@@ -199,7 +281,9 @@ const filteredCars =
             bg-white
             px-4
             py-3
-            text-slate-900
+            text-sm
+            font-semibold
+            text-slate-700
           "
         >
 
@@ -210,12 +294,14 @@ const filteredCars =
             READY
           </option>
 
+
           <option
             value="BOOKED"
             selected={status === "BOOKED"}
           >
             BOOKED
           </option>
+
 
           <option
             value="ALL"
@@ -227,12 +313,13 @@ const filteredCars =
         </select>
 
 
-        <!-- COVER -->
+
+        <!-- COVER FILTER -->
 
         <select
           name="cover"
           class="
-            min-w-[180px]
+            min-w-[190px]
             rounded-xl
             border
             border-slate-300
@@ -252,12 +339,22 @@ const filteredCars =
             ALL COVER
           </option>
 
+
+          <option
+            value="PHOTOROOM_BLANK"
+            selected={cover === "PHOTOROOM_BLANK"}
+          >
+            PHOTOROOM BLANK
+          </option>
+
+
           <option
             value="META_BLANK"
             selected={cover === "META_BLANK"}
           >
             META COVER BLANK
           </option>
+
 
           <option
             value="IG_BLANK"
@@ -269,7 +366,8 @@ const filteredCars =
         </select>
 
 
-        <!-- CABANG -->
+
+        <!-- BRANCH -->
 
         <select
           name="branch"
@@ -294,27 +392,26 @@ const filteredCars =
             ALL CABANG
           </option>
 
-          <option
-            value={UNASSIGNED_BRANCH}
-            selected={branch === UNASSIGNED_BRANCH}
-          >
-            BELUM ADA CABANG
-          </option>
 
           {
-            BRANCHES.map((branchName) => (
+            BRANCHES.map(
+              (branchName) => (
 
-              <option
-                value={branchName}
-                selected={branch === branchName}
-              >
-                {branchName}
-              </option>
+                <option
+                  value={branchName}
+                  selected={
+                    branch === branchName
+                  }
+                >
+                  {branchName}
+                </option>
 
-            ))
+              )
+            )
           }
 
         </select>
+
 
 
         <button
@@ -338,9 +435,9 @@ const filteredCars =
 
 
 
-      <!-- ============================== -->
+      <!-- ================================================= -->
       <!-- CAR GRID -->
-      <!-- ============================== -->
+      <!-- ================================================= -->
 
       <div
         class="
@@ -357,14 +454,28 @@ const filteredCars =
 
             filteredCars.map((car) => {
 
+
+              /* ==========================================
+                 MAIN IMAGE
+                 ========================================== */
+
               const image =
                 car.images?.length
                   ? [...car.images]
                       .sort(
                         (a, b) =>
-                          a.sort_order - b.sort_order
+                          (a.sort_order ?? 0) -
+                          (b.sort_order ?? 0)
                       )[0].image_url
                   : "https://placehold.co/800x450?text=Garage88";
+
+
+              const heroTitle =
+                String(
+                  car.cover_hero_title ??
+                  ""
+                );
+
 
               return (
 
@@ -377,9 +488,10 @@ const filteredCars =
                   "
                 >
 
-                  <!-- ============================== -->
+
+                  <!-- ====================================== -->
                   <!-- MAIN IMAGE -->
-                  <!-- ============================== -->
+                  <!-- ====================================== -->
 
                   <img
                     src={image}
@@ -392,12 +504,13 @@ const filteredCars =
                   />
 
 
+
                   <div class="p-5">
 
 
-                    <!-- ============================== -->
+                    <!-- ==================================== -->
                     <!-- CAR HEADER -->
-                    <!-- ============================== -->
+                    <!-- ==================================== -->
 
                     <div
                       class="
@@ -408,22 +521,41 @@ const filteredCars =
                       "
                     >
 
-                      <div class="min-w-0">
+                      <div
+                        class="
+                          min-w-0
+                        "
+                      >
 
-                        <h2 class="text-xl font-bold">
+                        <h2
+                          class="
+                            text-xl
+                            font-bold
+                            text-slate-900
+                          "
+                        >
                           {car.brand} {car.model}
                         </h2>
 
-                        <p class="text-sm text-slate-500">
+
+                        <p
+                          class="
+                            mt-1
+                            text-sm
+                            text-slate-500
+                          "
+                        >
                           {car.variant}
                         </p>
 
                       </div>
 
 
+
                       <span
                         class:list={[
                           "shrink-0 rounded-full px-3 py-1 text-xs font-semibold",
+
                           car.status === "READY"
                             ? "bg-green-100 text-green-700"
                             : "bg-red-100 text-red-700"
@@ -436,9 +568,9 @@ const filteredCars =
 
 
 
-                    <!-- ============================== -->
+                    <!-- ==================================== -->
                     <!-- COVER AREA -->
-                    <!-- ============================== -->
+                    <!-- ==================================== -->
 
                     <div
                       class="
@@ -450,9 +582,9 @@ const filteredCars =
                     >
 
 
-                      <!-- ============================== -->
+                      <!-- ================================== -->
                       <!-- PHOTOROOM POLOS -->
-                      <!-- ============================== -->
+                      <!-- ================================== -->
 
                       <div class="min-w-0">
 
@@ -484,7 +616,7 @@ const filteredCars =
                             car.cover_source_image_url ? (
 
                               <img
-                                src={`${car.cover_source_image_url}?v=${Date.now()}`}
+                                src={`${car.cover_source_image_url}?v=${cacheVersion}`}
                                 alt="PhotoRoom Polos"
                                 class="
                                   h-28
@@ -543,7 +675,7 @@ const filteredCars =
                           car.cover_source_image_url && (
 
                             <a
-                              href={`${car.cover_source_image_url}?v=${Date.now()}`}
+                              href={`${car.cover_source_image_url}?v=${cacheVersion}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               class="
@@ -566,9 +698,9 @@ const filteredCars =
 
 
 
-                      <!-- ============================== -->
+                      <!-- ================================== -->
                       <!-- META COVER -->
-                      <!-- ============================== -->
+                      <!-- ================================== -->
 
                       <div class="min-w-0">
 
@@ -600,7 +732,7 @@ const filteredCars =
                             car.meta_image_url ? (
 
                               <img
-                                src={`${car.meta_image_url}?v=${Date.now()}`}
+                                src={`${car.meta_image_url}?v=${cacheVersion}`}
                                 alt="Meta Cover"
                                 class="
                                   h-28
@@ -656,7 +788,7 @@ const filteredCars =
                           car.meta_image_url && (
 
                             <a
-                              href={`${car.meta_image_url}?v=${Date.now()}`}
+                              href={`${car.meta_image_url}?v=${cacheVersion}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               class="
@@ -679,9 +811,9 @@ const filteredCars =
 
 
 
-                      <!-- ============================== -->
+                      <!-- ================================== -->
                       <!-- IG COVER -->
-                      <!-- ============================== -->
+                      <!-- ================================== -->
 
                       <div class="min-w-0">
 
@@ -713,7 +845,7 @@ const filteredCars =
                             car.ig_image_url ? (
 
                               <img
-                                src={`${car.ig_image_url}?v=${Date.now()}`}
+                                src={`${car.ig_image_url}?v=${cacheVersion}`}
                                 alt="IG Cover"
                                 class="
                                   h-28
@@ -769,7 +901,7 @@ const filteredCars =
                           car.ig_image_url && (
 
                             <a
-                              href={`${car.ig_image_url}?v=${Date.now()}`}
+                              href={`${car.ig_image_url}?v=${cacheVersion}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               class="
@@ -794,33 +926,31 @@ const filteredCars =
 
 
 
-                    <!-- ============================== -->
+                    <!-- ==================================== -->
                     <!-- CAR INFO -->
-                    <!-- ============================== -->
+                    <!-- ==================================== -->
 
                     <div
                       class="
                         mt-4
                         space-y-1
                         text-sm
+                        text-slate-700
                       "
                     >
 
                       <p>
                         Tahun:
-                        <b>{car.year}</b>
+                        <b>
+                          {car.year}
+                        </b>
                       </p>
 
 
                       <p>
                         Cabang:
                         <b>
-                          {
-                            car.branch &&
-                            car.branch.trim() !== ""
-                              ? car.branch
-                              : "BELUM ADA CABANG"
-                          }
+                          {car.branch ?? "-"}
                         </b>
                       </p>
 
@@ -861,124 +991,131 @@ const filteredCars =
 
                     </div>
 
-<!-- ============================== -->
-<!-- COVER HERO TITLE -->
-<!-- ============================== -->
-
-<div class="mt-5">
-
-  <div
-    class="
-      mb-2
-      flex
-      items-center
-      justify-between
-      gap-3
-    "
-  >
-
-    <p
-      class="
-        text-xs
-        font-bold
-        uppercase
-        tracking-wide
-        text-slate-500
-      "
-    >
-      Hero Cover
-    </p>
-
-    {
-      car.cover_hero_title ? (
-
-        <span
-          class="
-            rounded-full
-            bg-blue-50
-            px-2
-            py-1
-            text-[9px]
-            font-bold
-            text-blue-600
-          "
-        >
-          CUSTOM / SAVED
-        </span>
-
-      ) : (
-
-        <span
-          class="
-            rounded-full
-            bg-slate-100
-            px-2
-            py-1
-            text-[9px]
-            font-bold
-            text-slate-500
-          "
-        >
-          AUTO
-        </span>
-
-      )
-    }
-
-  </div>
 
 
-  <input
-    type="text"
+                    <!-- ==================================== -->
+                    <!-- HERO COVER -->
+                    <!-- ==================================== -->
 
-    data-hero-title={car.id}
+                    <div
+                      class="
+                        mt-5
+                        rounded-xl
+                        border
+                        border-slate-200
+                        bg-slate-50
+                        p-3
+                      "
+                    >
 
-    value={
-      car.cover_hero_title ??
-      ""
-    }
+                      <div
+                        class="
+                          mb-2
+                          flex
+                          items-center
+                          justify-between
+                          gap-3
+                        "
+                      >
 
-    placeholder="AUTO saat Generate"
-
-    autocomplete="off"
-
-    class="
-      w-full
-      rounded-xl
-      border
-      border-slate-300
-      bg-white
-      px-4
-      py-3
-      text-sm
-      font-bold
-      uppercase
-      text-slate-900
-      outline-none
-      transition
-      focus:border-blue-500
-      focus:ring-2
-      focus:ring-blue-100
-    "
-  />
+                        <p
+                          class="
+                            text-xs
+                            font-bold
+                            uppercase
+                            tracking-wide
+                            text-slate-500
+                          "
+                        >
+                          Hero Cover
+                        </p>
 
 
-  <p
-    class="
-      mt-1
-      text-[10px]
-      leading-relaxed
-      text-slate-400
-    "
-  >
-    Kosongkan untuk kembali menggunakan Hero otomatis.
-  </p>
+                        {
+                          heroTitle ? (
 
-</div>
+                            <span
+                              class="
+                                rounded-full
+                                bg-blue-100
+                                px-2
+                                py-1
+                                text-[9px]
+                                font-bold
+                                text-blue-700
+                              "
+                            >
+                              SAVED
+                            </span>
 
-                    <!-- ============================== -->
+                          ) : (
+
+                            <span
+                              class="
+                                rounded-full
+                                bg-slate-200
+                                px-2
+                                py-1
+                                text-[9px]
+                                font-bold
+                                text-slate-500
+                              "
+                            >
+                              AUTO
+                            </span>
+
+                          )
+                        }
+
+                      </div>
+
+
+                      <input
+                        type="text"
+                        value={heroTitle}
+                        data-hero-title={car.id}
+                        placeholder="AUTO saat Generate"
+                        autocomplete="off"
+                        class="
+                          w-full
+                          rounded-xl
+                          border
+                          border-slate-300
+                          bg-white
+                          px-3
+                          py-3
+                          text-sm
+                          font-bold
+                          uppercase
+                          text-slate-900
+                          outline-none
+                          transition
+                          focus:border-blue-500
+                          focus:ring-2
+                          focus:ring-blue-100
+                        "
+                      />
+
+
+                      <p
+                        class="
+                          mt-2
+                          text-[10px]
+                          leading-relaxed
+                          text-slate-400
+                        "
+                      >
+                        Edit lalu klik Generate Ulang.
+                        Kosongkan untuk kembali ke Hero otomatis.
+                      </p>
+
+                    </div>
+
+
+
+                    <!-- ==================================== -->
                     <!-- ACTION BUTTONS -->
-                    <!-- ============================== -->
+                    <!-- ==================================== -->
 
                     <div
                       class="
@@ -989,20 +1126,25 @@ const filteredCars =
                       "
                     >
 
+
                       <a
                         href={`/admin/cars/photos?id=${car.id}&key=${ADMIN_KEY}`}
                         class="
                           rounded-xl
                           border
+                          border-slate-300
                           py-3
                           text-center
                           text-sm
                           font-semibold
+                          text-slate-700
+                          transition
                           hover:bg-slate-50
                         "
                       >
                         Foto
                       </a>
+
 
 
                       <a
@@ -1015,6 +1157,7 @@ const filteredCars =
                           text-sm
                           font-semibold
                           text-white
+                          transition
                           hover:bg-slate-700
                         "
                       >
@@ -1022,8 +1165,15 @@ const filteredCars =
                       </a>
 
 
+
                       <button
+                        type="button"
                         data-generate-id={car.id}
+                        data-original-label={
+                          car.meta_image_url
+                            ? "Generate Ulang"
+                            : "Generate"
+                        }
                         class="
                           cursor-pointer
                           rounded-xl
@@ -1049,6 +1199,7 @@ const filteredCars =
                       </button>
 
 
+
                       <a
                         href={`/admin/cars/delete?id=${car.id}&key=${ADMIN_KEY}`}
                         onclick="return confirm('Hapus mobil ini?')"
@@ -1060,6 +1211,7 @@ const filteredCars =
                           text-sm
                           font-semibold
                           text-white
+                          transition
                           hover:bg-red-700
                         "
                       >
@@ -1067,7 +1219,6 @@ const filteredCars =
                       </a>
 
                     </div>
-
 
                   </div>
 
@@ -1089,12 +1240,24 @@ const filteredCars =
               "
             >
 
-              <h2 class="text-xl font-bold">
+              <h2
+                class="
+                  text-xl
+                  font-bold
+                  text-slate-900
+                "
+              >
                 Mobil tidak ditemukan
               </h2>
 
-              <p class="mt-2 text-slate-500">
-                Coba gunakan filter atau kata kunci lain.
+
+              <p
+                class="
+                  mt-2
+                  text-slate-500
+                "
+              >
+                Coba gunakan kata kunci atau filter lain.
               </p>
 
             </div>
@@ -1112,12 +1275,15 @@ const filteredCars =
 
   <script>
 
-    // ==============================
-    // UPLOAD PHOTOROOM POLOS
-    // ==============================
+
+    /* =====================================================
+       UPLOAD PHOTOROOM POLOS
+       ===================================================== */
 
     document
-      .querySelectorAll("[data-cover-source-upload]")
+      .querySelectorAll<HTMLInputElement>(
+        "[data-cover-source-upload]"
+      )
       .forEach((input) => {
 
         input.addEventListener(
@@ -1125,28 +1291,32 @@ const filteredCars =
           async () => {
 
             const file =
-              (input as HTMLInputElement)
-                .files?.[0];
+              input.files?.[0];
+
 
             if (!file) {
               return;
             }
 
+
             const id =
-              (input as HTMLElement)
-                .dataset.coverSourceUpload;
+              input.dataset.coverSourceUpload;
+
 
             if (!id) {
               return;
             }
 
+
             const formData =
               new FormData();
+
 
             formData.append(
               "file",
               file
             );
+
 
             try {
 
@@ -1159,13 +1329,16 @@ const filteredCars =
                   }
                 );
 
+
               const result =
                 await response.text();
+
 
               console.log(
                 "UPLOAD PHOTOROOM:",
                 result
               );
+
 
               if (response.ok) {
 
@@ -1173,17 +1346,24 @@ const filteredCars =
                   "PhotoRoom polos berhasil diupload"
                 );
 
+
                 location.reload();
 
               } else {
 
-                alert(result);
+                alert(
+                  result
+                );
 
               }
 
+
             } catch (error) {
 
-              console.error(error);
+              console.error(
+                error
+              );
+
 
               alert(
                 "Gagal upload PhotoRoom"
@@ -1198,12 +1378,14 @@ const filteredCars =
 
 
 
-    // ==============================
-    // UPLOAD MANUAL META COVER
-    // ==============================
+    /* =====================================================
+       UPLOAD MANUAL META COVER
+       ===================================================== */
 
     document
-      .querySelectorAll("[data-cover-upload]")
+      .querySelectorAll<HTMLInputElement>(
+        "[data-cover-upload]"
+      )
       .forEach((input) => {
 
         input.addEventListener(
@@ -1211,28 +1393,32 @@ const filteredCars =
           async () => {
 
             const file =
-              (input as HTMLInputElement)
-                .files?.[0];
+              input.files?.[0];
+
 
             if (!file) {
               return;
             }
 
+
             const id =
-              (input as HTMLElement)
-                .dataset.coverUpload;
+              input.dataset.coverUpload;
+
 
             if (!id) {
               return;
             }
 
+
             const formData =
               new FormData();
+
 
             formData.append(
               "file",
               file
             );
+
 
             try {
 
@@ -1245,13 +1431,16 @@ const filteredCars =
                   }
                 );
 
+
               const result =
                 await response.text();
+
 
               console.log(
                 "UPLOAD META:",
                 result
               );
+
 
               if (response.ok) {
 
@@ -1259,17 +1448,24 @@ const filteredCars =
                   "Meta Cover berhasil diganti"
                 );
 
+
                 location.reload();
 
               } else {
 
-                alert(result);
+                alert(
+                  result
+                );
 
               }
 
+
             } catch (error) {
 
-              console.error(error);
+              console.error(
+                error
+              );
+
 
               alert(
                 "Gagal upload Meta Cover"
@@ -1284,12 +1480,14 @@ const filteredCars =
 
 
 
-    // ==============================
-    // UPLOAD MANUAL IG COVER
-    // ==============================
+    /* =====================================================
+       UPLOAD MANUAL IG COVER
+       ===================================================== */
 
     document
-      .querySelectorAll("[data-ig-upload]")
+      .querySelectorAll<HTMLInputElement>(
+        "[data-ig-upload]"
+      )
       .forEach((input) => {
 
         input.addEventListener(
@@ -1297,28 +1495,32 @@ const filteredCars =
           async () => {
 
             const file =
-              (input as HTMLInputElement)
-                .files?.[0];
+              input.files?.[0];
+
 
             if (!file) {
               return;
             }
 
+
             const id =
-              (input as HTMLElement)
-                .dataset.igUpload;
+              input.dataset.igUpload;
+
 
             if (!id) {
               return;
             }
 
+
             const formData =
               new FormData();
+
 
             formData.append(
               "file",
               file
             );
+
 
             try {
 
@@ -1331,13 +1533,16 @@ const filteredCars =
                   }
                 );
 
+
               const result =
                 await response.text();
+
 
               console.log(
                 "UPLOAD IG:",
                 result
               );
+
 
               if (response.ok) {
 
@@ -1345,17 +1550,24 @@ const filteredCars =
                   "IG Cover berhasil diganti"
                 );
 
+
                 location.reload();
 
               } else {
 
-                alert(result);
+                alert(
+                  result
+                );
 
               }
 
+
             } catch (error) {
 
-              console.error(error);
+              console.error(
+                error
+              );
+
 
               alert(
                 "Gagal upload IG Cover"
@@ -1370,12 +1582,15 @@ const filteredCars =
 
 
 
-    // ==============================
-    // GENERATE COVER
-    // ==============================
+    /* =====================================================
+       GENERATE IG + META COVER
+       + SAVE HERO TITLE
+       ===================================================== */
 
     document
-      .querySelectorAll("[data-generate-id]")
+      .querySelectorAll<HTMLButtonElement>(
+        "[data-generate-id]"
+      )
       .forEach((button) => {
 
         button.addEventListener(
@@ -1383,94 +1598,123 @@ const filteredCars =
           async () => {
 
             const id =
-              (button as HTMLElement)
-                .dataset.generateId;
+              button.dataset.generateId;
+
 
             if (!id) {
               return;
             }
 
-            const btn =
-              button as HTMLButtonElement;
+
+            const originalLabel =
+              button.dataset.originalLabel ??
+              "Generate";
+
+
+            /*
+             * Ambil Hero Cover dari card mobil
+             * yang tombolnya sedang ditekan.
+             */
 
             const heroInput =
-  document.querySelector(
-    `[data-hero-title="${id}"]`
-  ) as HTMLInputElement | null;
+              document.querySelector<HTMLInputElement>(
+                `[data-hero-title="${id}"]`
+              );
 
 
-const heroTitle =
-  heroInput?.value ??
-  "";
+            const heroTitle =
+              heroInput?.value ??
+              "";
 
-            btn.innerText =
+
+            button.innerText =
               "Generating...";
 
-            btn.disabled =
+
+            button.disabled =
               true;
+
 
             try {
 
-             const response =
-  await fetch(
-    `/api/generate-covers/${id}`,
-    {
-      method: "POST",
+              const response =
+                await fetch(
+                  `/api/generate-covers/${id}`,
+                  {
 
-      headers: {
-        "Content-Type":
-          "application/json",
-      },
+                    method:
+                      "POST",
 
-      body:
-        JSON.stringify({
-          hero_title:
-            heroTitle,
-        }),
-    }
-  );
+                    headers: {
+                      "Content-Type":
+                        "application/json",
+                    },
+
+                    body:
+                      JSON.stringify({
+                        hero_title:
+                          heroTitle,
+                      }),
+
+                  }
+                );
+
 
               const text =
                 await response.text();
+
 
               console.log(
                 "GENERATE RESPONSE:",
                 text
               );
 
+
               if (response.ok) {
 
                 alert(
-                  "IG Cover + Meta Cover berhasil dibuat"
+                  "Hero + IG Cover + Meta Cover berhasil dibuat"
                 );
+
 
                 location.reload();
 
-              } else {
-
-                alert(text);
-
-                btn.disabled =
-                  false;
-
-                btn.innerText =
-                  "Generate";
+                return;
 
               }
 
+
+              alert(
+                text
+              );
+
+
+              button.disabled =
+                false;
+
+
+              button.innerText =
+                originalLabel;
+
+
             } catch (error) {
 
-              console.error(error);
+              console.error(
+                error
+              );
+
 
               alert(
                 "Gagal generate cover"
               );
 
-              btn.disabled =
+
+              button.disabled =
                 false;
 
-              btn.innerText =
-                "Generate";
+
+              button.innerText =
+                originalLabel;
 
             }
 
