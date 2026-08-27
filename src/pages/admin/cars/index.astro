@@ -861,7 +861,120 @@ const filteredCars =
 
                     </div>
 
+<!-- ============================== -->
+<!-- COVER HERO TITLE -->
+<!-- ============================== -->
 
+<div class="mt-5">
+
+  <div
+    class="
+      mb-2
+      flex
+      items-center
+      justify-between
+      gap-3
+    "
+  >
+
+    <p
+      class="
+        text-xs
+        font-bold
+        uppercase
+        tracking-wide
+        text-slate-500
+      "
+    >
+      Hero Cover
+    </p>
+
+    {
+      car.cover_hero_title ? (
+
+        <span
+          class="
+            rounded-full
+            bg-blue-50
+            px-2
+            py-1
+            text-[9px]
+            font-bold
+            text-blue-600
+          "
+        >
+          CUSTOM / SAVED
+        </span>
+
+      ) : (
+
+        <span
+          class="
+            rounded-full
+            bg-slate-100
+            px-2
+            py-1
+            text-[9px]
+            font-bold
+            text-slate-500
+          "
+        >
+          AUTO
+        </span>
+
+      )
+    }
+
+  </div>
+
+
+  <input
+    type="text"
+
+    data-hero-title={car.id}
+
+    value={
+      car.cover_hero_title ??
+      ""
+    }
+
+    placeholder="AUTO saat Generate"
+
+    autocomplete="off"
+
+    class="
+      w-full
+      rounded-xl
+      border
+      border-slate-300
+      bg-white
+      px-4
+      py-3
+      text-sm
+      font-bold
+      uppercase
+      text-slate-900
+      outline-none
+      transition
+      focus:border-blue-500
+      focus:ring-2
+      focus:ring-blue-100
+    "
+  />
+
+
+  <p
+    class="
+      mt-1
+      text-[10px]
+      leading-relaxed
+      text-slate-400
+    "
+  >
+    Kosongkan untuk kembali menggunakan Hero otomatis.
+  </p>
+
+</div>
 
                     <!-- ============================== -->
                     <!-- ACTION BUTTONS -->
@@ -1280,6 +1393,16 @@ const filteredCars =
             const btn =
               button as HTMLButtonElement;
 
+            const heroInput =
+  document.querySelector(
+    `[data-hero-title="${id}"]`
+  ) as HTMLInputElement | null;
+
+
+const heroTitle =
+  heroInput?.value ??
+  "";
+
             btn.innerText =
               "Generating...";
 
@@ -1288,13 +1411,24 @@ const filteredCars =
 
             try {
 
-              const response =
-                await fetch(
-                  `/api/generate-covers/${id}`,
-                  {
-                    method: "POST",
-                  }
-                );
+             const response =
+  await fetch(
+    `/api/generate-covers/${id}`,
+    {
+      method: "POST",
+
+      headers: {
+        "Content-Type":
+          "application/json",
+      },
+
+      body:
+        JSON.stringify({
+          hero_title:
+            heroTitle,
+        }),
+    }
+  );
 
               const text =
                 await response.text();

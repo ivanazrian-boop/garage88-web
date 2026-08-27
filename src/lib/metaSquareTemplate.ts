@@ -8,6 +8,7 @@ type MetaCoverCar = {
   credit_price?: number | null;
   cash_price?: number | null;
   dp?: number | null;
+  cover_hero_title?: string | null;
 };
 
 function esc(value: unknown): string {
@@ -152,6 +153,17 @@ function cleanVariantForHero(
 function buildHeroTitle(
   car: MetaCoverCar
 ): string {
+
+  const manualHero =
+    String(
+      car.cover_hero_title ?? ""
+    ).trim();
+
+  if (manualHero) {
+    return manualHero.toUpperCase();
+  }
+
+
   const model =
     String(car.model ?? "")
       .trim()

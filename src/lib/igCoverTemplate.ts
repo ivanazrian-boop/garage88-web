@@ -8,6 +8,7 @@ type IgCoverCar = {
   credit_price?: number | null;
   cash_price?: number | null;
   dp?: number | null;
+  cover_hero_title?: string | null;
 };
 
 function esc(value: unknown): string {
@@ -200,7 +201,7 @@ function cleanVariantForSide(
   );
 }
 
-function buildHeroTitle(
+export function buildGarage88AutoHeroTitle(
   car: IgCoverCar
 ): string {
   const model =
@@ -220,6 +221,25 @@ function buildHeroTitle(
     .filter(Boolean)
     .join(" ")
     .trim();
+}
+
+
+function buildHeroTitle(
+  car: IgCoverCar
+): string {
+
+  const manualHero =
+    String(
+      car.cover_hero_title ?? ""
+    ).trim();
+
+  if (manualHero) {
+    return manualHero.toUpperCase();
+  }
+
+  return buildGarage88AutoHeroTitle(
+    car
+  );
 }
 
 function getHeroFontSize(

@@ -51,5 +51,6 @@ export interface Car {
   ig_image_url: string | null;
 
   images: CarImage[];
+  cover_hero_title: string | null;
 
 }
