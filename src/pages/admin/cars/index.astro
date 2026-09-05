@@ -109,7 +109,6 @@ const cacheVersion =
   Date.now();
 ---
 
-
 <MainLayout title="Stock Admin | Garage88">
 
   <section
@@ -169,7 +168,6 @@ const cacheVersion =
         </div>
 
 
-
         <div
           class="
             flex
@@ -198,6 +196,24 @@ const cacheVersion =
           </a>
 
 
+          <!-- MANAGE FEATURED & BOOKED -->
+
+          <a
+            href={`/admin/cars/manage?key=${ADMIN_KEY}`}
+            class="
+              rounded-xl
+              bg-slate-900
+              px-6
+              py-3
+              font-semibold
+              text-white
+              transition
+              hover:bg-slate-700
+            "
+          >
+            Manage Featured & Booked
+          </a>
+
 
           <!-- TAMBAH MOBIL -->
 
@@ -220,7 +236,6 @@ const cacheVersion =
         </div>
 
       </div>
-
 
 
       <!-- ================================================= -->
@@ -269,7 +284,6 @@ const cacheVersion =
         />
 
 
-
         <!-- STATUS -->
 
         <select
@@ -311,7 +325,6 @@ const cacheVersion =
           </option>
 
         </select>
-
 
 
         <!-- COVER FILTER -->
@@ -366,7 +379,6 @@ const cacheVersion =
         </select>
 
 
-
         <!-- BRANCH -->
 
         <select
@@ -413,7 +425,6 @@ const cacheVersion =
         </select>
 
 
-
         <button
           type="submit"
           class="
@@ -432,7 +443,6 @@ const cacheVersion =
         </button>
 
       </form>
-
 
 
       <!-- ================================================= -->
@@ -504,7 +514,6 @@ const cacheVersion =
                   />
 
 
-
                   <div class="p-5">
 
 
@@ -551,7 +560,6 @@ const cacheVersion =
                       </div>
 
 
-
                       <span
                         class:list={[
                           "shrink-0 rounded-full px-3 py-1 text-xs font-semibold",
@@ -565,7 +573,6 @@ const cacheVersion =
                       </span>
 
                     </div>
-
 
 
                     <!-- ==================================== -->
@@ -697,7 +704,6 @@ const cacheVersion =
                       </div>
 
 
-
                       <!-- ================================== -->
                       <!-- META COVER -->
                       <!-- ================================== -->
@@ -808,7 +814,6 @@ const cacheVersion =
                         }
 
                       </div>
-
 
 
                       <!-- ================================== -->
@@ -925,7 +930,6 @@ const cacheVersion =
                     </div>
 
 
-
                     <!-- ==================================== -->
                     <!-- CAR INFO -->
                     <!-- ==================================== -->
@@ -990,7 +994,6 @@ const cacheVersion =
                       </p>
 
                     </div>
-
 
 
                     <!-- ==================================== -->
@@ -1112,7 +1115,6 @@ const cacheVersion =
                     </div>
 
 
-
                     <!-- ==================================== -->
                     <!-- ACTION BUTTONS -->
                     <!-- ==================================== -->
@@ -1146,7 +1148,6 @@ const cacheVersion =
                       </a>
 
 
-
                       <a
                         href={`/admin/cars/edit?id=${car.id}&key=${ADMIN_KEY}`}
                         class="
@@ -1163,7 +1164,6 @@ const cacheVersion =
                       >
                         Edit
                       </a>
-
 
 
                       <button
@@ -1197,7 +1197,6 @@ const cacheVersion =
                         }
 
                       </button>
-
 
 
                       <a
@@ -1270,7 +1269,6 @@ const cacheVersion =
     </div>
 
   </section>
-
 
 
   <script>
@@ -1377,7 +1375,6 @@ const cacheVersion =
       });
 
 
-
     /* =====================================================
        UPLOAD MANUAL META COVER
        ===================================================== */
@@ -1477,7 +1474,6 @@ const cacheVersion =
         );
 
       });
-
 
 
     /* =====================================================
@@ -1581,7 +1577,6 @@ const cacheVersion =
       });
 
 
-
     /* =====================================================
        GENERATE IG + META COVER
        + SAVE HERO TITLE
@@ -1610,11 +1605,6 @@ const cacheVersion =
               button.dataset.originalLabel ??
               "Generate";
 
-
-            /*
-             * Ambil Hero Cover dari card mobil
-             * yang tombolnya sedang ditekan.
-             */
 
             const heroInput =
               document.querySelector<HTMLInputElement>(
