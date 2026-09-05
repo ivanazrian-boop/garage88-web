@@ -192,6 +192,42 @@ if (Astro.request.method === "POST") {
 
 
     /* ===============================================
+       SET SOLD
+       =============================================== */
+
+    else if (
+      action ===
+      "set_sold"
+    ) {
+      const { error } =
+        await supabase
+          .from("cars")
+          .update({
+            status: "SOLD",
+            updated_at:
+              new Date().toISOString(),
+          })
+          .in(
+            "id",
+            selectedIds
+          );
+
+      if (error) {
+        console.error(error);
+
+        message =
+          error.message;
+
+        messageType =
+          "error";
+      } else {
+        message =
+          `${selectedIds.length} unit berhasil di-set SOLD.`;
+      }
+    }
+
+
+    /* ===============================================
        DELETE SELECTED
        =============================================== */
 
@@ -321,9 +357,7 @@ function formatPrice(
 >
 
 
-  <!-- ================================================= -->
   <!-- HEADER -->
-  <!-- ================================================= -->
 
   <div
     class="
@@ -345,7 +379,7 @@ function formatPrice(
           text-slate-900
         "
       >
-        Manage Featured & Booked
+        Manage Featured & Status
       </h1>
 
       <p
@@ -383,9 +417,7 @@ function formatPrice(
   </div>
 
 
-  <!-- ================================================= -->
   <!-- MESSAGE -->
-  <!-- ================================================= -->
 
   {
     message && (
@@ -404,9 +436,7 @@ function formatPrice(
   }
 
 
-  <!-- ================================================= -->
   <!-- FILTER -->
-  <!-- ================================================= -->
 
   <div
     class="
@@ -422,8 +452,6 @@ function formatPrice(
     "
   >
 
-
-    <!-- SEARCH -->
 
     <div
       class="
@@ -475,8 +503,6 @@ function formatPrice(
     </div>
 
 
-    <!-- STATUS -->
-
     <div>
 
       <label
@@ -524,8 +550,6 @@ function formatPrice(
     </div>
 
 
-    <!-- FEATURED -->
-
     <div>
 
       <label
@@ -568,8 +592,6 @@ function formatPrice(
 
     </div>
 
-
-    <!-- CABANG -->
 
     <div>
 
@@ -620,8 +642,6 @@ function formatPrice(
     </div>
 
 
-    <!-- RESET -->
-
     <div
       class="
         flex
@@ -653,9 +673,7 @@ function formatPrice(
   </div>
 
 
-  <!-- ================================================= -->
   <!-- BULK FORM -->
-  <!-- ================================================= -->
 
   <form
     method="POST"
@@ -669,9 +687,7 @@ function formatPrice(
   >
 
 
-    <!-- ================================================= -->
     <!-- ACTION BAR -->
-    <!-- ================================================= -->
 
     <div
       class="
@@ -842,6 +858,24 @@ function formatPrice(
         <button
           type="submit"
           name="action"
+          value="set_sold"
+          class="
+            rounded-xl
+            bg-purple-600
+            px-4
+            py-2.5
+            font-bold
+            text-white
+            hover:bg-purple-700
+          "
+        >
+          Set SOLD
+        </button>
+
+
+        <button
+          type="submit"
+          name="action"
           value="delete_selected"
           id="deleteSelectedButton"
           class="
@@ -862,9 +896,7 @@ function formatPrice(
     </div>
 
 
-    <!-- ================================================= -->
     <!-- TABLE -->
-    <!-- ================================================= -->
 
     <div class="overflow-x-auto">
 
@@ -891,67 +923,31 @@ function formatPrice(
             "
           >
 
-            <th
-              class="
-                w-14
-                px-4
-                py-4
-              "
-            >
+            <th class="w-14 px-4 py-4">
               ✓
             </th>
 
-            <th
-              class="
-                px-4
-                py-4
-              "
-            >
+            <th class="px-4 py-4">
               Unit
             </th>
 
-            <th
-              class="
-                px-4
-                py-4
-              "
-            >
+            <th class="px-4 py-4">
               Cabang
             </th>
 
-            <th
-              class="
-                px-4
-                py-4
-              "
-            >
+            <th class="px-4 py-4">
               Status
             </th>
 
-            <th
-              class="
-                px-4
-                py-4
-              "
-            >
+            <th class="px-4 py-4">
               Featured
             </th>
 
-            <th
-              class="
-                px-4
-                py-4
-              "
-            >
+            <th class="px-4 py-4">
               Harga
             </th>
 
-            <th
-              class="
-                px-4
-                py-4
-              "
-            >
+            <th class="px-4 py-4">
               Action
             </th>
 
@@ -1001,15 +997,7 @@ function formatPrice(
                   data-branch={branchValue}
                 >
 
-
-                  <!-- CHECK -->
-
-                  <td
-                    class="
-                      px-4
-                      py-4
-                    "
-                  >
+                  <td class="px-4 py-4">
 
                     <input
                       type="checkbox"
@@ -1025,14 +1013,7 @@ function formatPrice(
                   </td>
 
 
-                  <!-- UNIT -->
-
-                  <td
-                    class="
-                      px-4
-                      py-4
-                    "
-                  >
+                  <td class="px-4 py-4">
 
                     <div
                       class="
@@ -1106,8 +1087,6 @@ function formatPrice(
                   </td>
 
 
-                  <!-- CABANG -->
-
                   <td
                     class="
                       px-4
@@ -1135,14 +1114,7 @@ function formatPrice(
                   </td>
 
 
-                  <!-- STATUS -->
-
-                  <td
-                    class="
-                      px-4
-                      py-4
-                    "
-                  >
+                  <td class="px-4 py-4">
 
                     <span
                       class:list={[
@@ -1154,7 +1126,10 @@ function formatPrice(
                           : car.status === "BOOKED"
                             ? "bg-orange-100 text-orange-700"
 
-                            : "bg-slate-200 text-slate-700",
+                            : car.status === "SOLD"
+                              ? "bg-purple-100 text-purple-700"
+
+                              : "bg-slate-200 text-slate-700",
                       ]}
                     >
                       {car.status ?? "-"}
@@ -1163,14 +1138,7 @@ function formatPrice(
                   </td>
 
 
-                  <!-- FEATURED -->
-
-                  <td
-                    class="
-                      px-4
-                      py-4
-                    "
-                  >
+                  <td class="px-4 py-4">
 
                     {
                       car.featured
@@ -1205,8 +1173,6 @@ function formatPrice(
                   </td>
 
 
-                  <!-- PRICE -->
-
                   <td
                     class="
                       px-4
@@ -1223,11 +1189,7 @@ function formatPrice(
                       </strong>
                     </div>
 
-                    <div
-                      class="
-                        mt-1
-                      "
-                    >
+                    <div class="mt-1">
                       Cash:
                       <strong>
                         {formatPrice(car.cash_price)}
@@ -1237,14 +1199,7 @@ function formatPrice(
                   </td>
 
 
-                  <!-- ACTION -->
-
-                  <td
-                    class="
-                      px-4
-                      py-4
-                    "
-                  >
+                  <td class="px-4 py-4">
 
                     <a
                       href={`/admin/cars/edit?id=${car.id}&key=${ADMIN_KEY}`}
@@ -1278,8 +1233,6 @@ function formatPrice(
     </div>
 
 
-    <!-- EMPTY -->
-
     <div
       id="emptyState"
       class="
@@ -1301,10 +1254,6 @@ function formatPrice(
 
 <script is:inline>
 
-  /* =====================================================
-     NORMALIZE SEARCH
-     ===================================================== */
-
   function normalizeSearch(value) {
     return String(value || "")
       .toLowerCase()
@@ -1319,10 +1268,6 @@ function formatPrice(
       .trim();
   }
 
-
-  /* =====================================================
-     ELEMENTS
-     ===================================================== */
 
   const searchInput =
     document.getElementById(
@@ -1380,10 +1325,6 @@ function formatPrice(
     );
 
 
-  /* =====================================================
-     ROW HELPERS
-     ===================================================== */
-
   function getRows() {
     return Array.from(
       document.querySelectorAll(
@@ -1402,10 +1343,6 @@ function formatPrice(
   }
 
 
-  /* =====================================================
-     FILTER
-     ===================================================== */
-
   function applyFilters() {
 
     const rawSearch =
@@ -1413,12 +1350,10 @@ function formatPrice(
         searchInput?.value || ""
       );
 
-
     const searchTokens =
       rawSearch
         .split(" ")
         .filter(Boolean);
-
 
     const status =
       String(
@@ -1426,20 +1361,17 @@ function formatPrice(
         "ALL"
       );
 
-
     const featured =
       String(
         featuredFilter?.value ||
         "ALL"
       );
 
-
     const branch =
       String(
         branchFilter?.value ||
         "ALL"
       );
-
 
     let currentVisibleCount =
       0;
@@ -1454,20 +1386,17 @@ function formatPrice(
             ""
           );
 
-
         const rowStatus =
           String(
             row.dataset.status ||
             ""
           );
 
-
         const rowFeatured =
           String(
             row.dataset.featured ||
             "NO"
           );
-
 
         const rowBranch =
           String(
@@ -1485,21 +1414,17 @@ function formatPrice(
               )
           );
 
-
         const matchStatus =
           status === "ALL" ||
           rowStatus === status;
-
 
         const matchFeatured =
           featured === "ALL" ||
           rowFeatured === featured;
 
-
         const matchBranch =
           branch === "ALL" ||
           rowBranch === branch;
-
 
         const visible =
           matchSearch &&
@@ -1507,12 +1432,10 @@ function formatPrice(
           matchFeatured &&
           matchBranch;
 
-
         row.style.display =
           visible
             ? ""
             : "none";
-
 
         if (visible) {
           currentVisibleCount++;
@@ -1547,10 +1470,6 @@ function formatPrice(
   }
 
 
-  /* =====================================================
-     SELECTED COUNT
-     ===================================================== */
-
   function updateSelectedCount() {
 
     const checked =
@@ -1569,10 +1488,6 @@ function formatPrice(
 
   }
 
-
-  /* =====================================================
-     FILTER EVENTS
-     ===================================================== */
 
   searchInput?.addEventListener(
     "input",
@@ -1598,10 +1513,6 @@ function formatPrice(
   );
 
 
-  /* =====================================================
-     RESET
-     ===================================================== */
-
   clearFilterButton?.addEventListener(
     "click",
     () => {
@@ -1618,16 +1529,11 @@ function formatPrice(
       branchFilter.value =
         "ALL";
 
-
       applyFilters();
 
     }
   );
 
-
-  /* =====================================================
-     SELECT ALL VISIBLE
-     ===================================================== */
 
   selectAll?.addEventListener(
     "change",
@@ -1635,7 +1541,6 @@ function formatPrice(
 
       const checked =
         selectAll.checked;
-
 
       getRows().forEach(
         (row) => {
@@ -1647,12 +1552,10 @@ function formatPrice(
             return;
           }
 
-
           const checkbox =
             row.querySelector(
               ".car-checkbox"
             );
-
 
           if (checkbox) {
             checkbox.checked =
@@ -1662,16 +1565,11 @@ function formatPrice(
         }
       );
 
-
       updateSelectedCount();
 
     }
   );
 
-
-  /* =====================================================
-     CHECKBOX
-     ===================================================== */
 
   getCheckboxes().forEach(
     (checkbox) => {
@@ -1684,10 +1582,6 @@ function formatPrice(
     }
   );
 
-
-  /* =====================================================
-     DELETE CONFIRMATION
-     ===================================================== */
 
   deleteSelectedButton?.addEventListener(
     "click",
@@ -1707,11 +1601,9 @@ function formatPrice(
 
         event.preventDefault();
 
-
         alert(
           "Pilih unit yang mau dihapus dulu."
         );
-
 
         return;
 
@@ -1731,10 +1623,6 @@ function formatPrice(
     }
   );
 
-
-  /* =====================================================
-     OTHER BULK ACTION VALIDATION
-     ===================================================== */
 
   bulkForm?.addEventListener(
     "submit",
@@ -1767,7 +1655,6 @@ function formatPrice(
 
         event.preventDefault();
 
-
         alert(
           "Pilih minimal satu unit dulu."
         );
@@ -1777,10 +1664,6 @@ function formatPrice(
     }
   );
 
-
-  /* =====================================================
-     INITIAL FILTER
-     ===================================================== */
 
   applyFilters();
 
