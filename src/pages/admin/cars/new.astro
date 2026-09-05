@@ -37,8 +37,11 @@ if (Astro.request.method === "POST") {
     slug,
 
     brand,
+
     model,
+
     variant,
+
     year,
 
     branch:
@@ -65,6 +68,9 @@ if (Astro.request.method === "POST") {
     dp:
       Number(formData.get("dp")) || null,
 
+    cash_only:
+      formData.get("cash_only") === "on",
+
     plate_number:
       formData.get("plate_number")?.toString() || null,
 
@@ -90,6 +96,7 @@ if (Astro.request.method === "POST") {
 
   if (error) {
     console.error(error);
+
     message = error.message;
   } else {
     return Astro.redirect(
@@ -190,6 +197,7 @@ Tambah Mobil
   name="branch"
   class="rounded-xl border p-4"
 >
+
   <option value="">
     Cabang
   </option>
@@ -229,6 +237,7 @@ Tambah Mobil
   <option value="AHA ADEX">
     AHA ADEX
   </option>
+
 </select>
 
 <select
@@ -236,6 +245,7 @@ Tambah Mobil
   name="fuel"
   class="rounded-xl border p-4"
 >
+
   <option value="">
     Fuel
   </option>
@@ -255,6 +265,7 @@ Tambah Mobil
   <option value="Electric Vehicle">
     Electric Vehicle
   </option>
+
 </select>
 
 <select
@@ -262,6 +273,7 @@ Tambah Mobil
   name="transmission"
   class="rounded-xl border p-4"
 >
+
   <option value="">
     Transmisi
   </option>
@@ -273,6 +285,7 @@ Tambah Mobil
   <option value="MT">
     MT
   </option>
+
 </select>
 
 <input
@@ -315,6 +328,49 @@ Tambah Mobil
 
 </div>
 
+
+<!-- CASH ONLY -->
+
+<div
+  class="
+    rounded-xl
+    border
+    border-amber-200
+    bg-amber-50
+    p-4
+  "
+>
+
+  <label class="flex cursor-pointer items-center gap-3">
+
+    <input
+      type="checkbox"
+      name="cash_only"
+      class="
+        h-5
+        w-5
+        rounded
+        border-slate-300
+      "
+    />
+
+    <div>
+
+      <p class="font-bold text-slate-900">
+        Cash Only
+      </p>
+
+      <p class="text-sm text-slate-500">
+        Centang jika unit hanya dijual cash
+      </p>
+
+    </div>
+
+  </label>
+
+</div>
+
+
 <textarea
   id="description"
   name="description"
@@ -345,6 +401,7 @@ Simpan Mobil
 </form>
 
 </div>
+
 </section>
 
 
@@ -360,7 +417,6 @@ function jtToNumber(value) {
    ========================================================= */
 
 const BRANCH_ALIASES = [
-
   {
     name: "AHA Gajah Mada Cipondoh",
     aliases: [
@@ -444,23 +500,19 @@ const BRANCH_ALIASES = [
       "adex"
     ]
   }
-
 ];
 
 
 function normalizeBranchText(value) {
-
   return String(value || "")
     .toLowerCase()
     .replace(/[._\-–—]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-
 }
 
 
 function findCanonicalBranch(value) {
-
   const normalized =
     normalizeBranchText(value);
 
@@ -468,11 +520,8 @@ function findCanonicalBranch(value) {
     return "";
   }
 
-
   for (const branch of BRANCH_ALIASES) {
-
     for (const alias of branch.aliases) {
-
       const normalizedAlias =
         normalizeBranchText(alias);
 
@@ -482,18 +531,14 @@ function findCanonicalBranch(value) {
       ) {
         return branch.name;
       }
-
     }
-
   }
 
   return "";
-
 }
 
 
 function extractBranchFromTitle(title) {
-
   const matches =
     [
       ...title.matchAll(
@@ -501,65 +546,41 @@ function extractBranchFromTitle(title) {
       )
     ];
 
-
   for (const match of matches) {
-
     const branch =
       findCanonicalBranch(
         match[1]
       );
 
     if (branch) {
-
       return {
         branch,
         matchedText: match[0]
       };
-
     }
-
   }
-
 
   return {
     branch: "",
     matchedText: ""
   };
-
 }
 
 
-/*
-  Menghapus:
-  - Group A
-  - Grup B
-  - Grub C
-  - - Group A
-  - – Grup B
-*/
 function removeGroupInfo(value) {
-
   return String(value || "")
     .replace(
       /\s*[-–—]?\s*(?:group|grup|grub)\s+[a-z0-9]+\b/gi,
       ""
     );
-
 }
 
 
-/*
-  Cabang hanya boleh masuk field branch.
-  Kalau ada nama cabang dalam tanda kurung,
-  bagian tersebut dibuang dari description.
-*/
 function removeBranchParentheses(value) {
-
   return String(value || "")
     .replace(
       /\(\s*([^)]+?)\s*\)/g,
       function(fullMatch, inside) {
-
         const branch =
           findCanonicalBranch(inside);
 
@@ -568,21 +589,17 @@ function removeBranchParentheses(value) {
         }
 
         return fullMatch;
-
       }
     );
-
 }
 
 
 function cleanDescription(value) {
-
   let result =
     removeBranchParentheses(value);
 
   result =
     removeGroupInfo(result);
-
 
   result =
     result
@@ -597,11 +614,8 @@ function cleanDescription(value) {
       .replace(/\n{3,}/g, "\n\n")
       .trim();
 
-
   return result;
-
 }
-
 
 
 /* =========================================================
@@ -609,22 +623,16 @@ function cleanDescription(value) {
    ========================================================= */
 
 function parseTelegram() {
-
   const text =
     document
       .getElementById("telegramInput")
       .value
       .trim();
 
-
   if (!text) {
-
     alert("Paste Telegram dulu");
-
     return;
-
   }
-
 
   const firstLine =
     text
@@ -632,16 +640,12 @@ function parseTelegram() {
       .trim();
 
 
-
-  // =================
   // CABANG
-  // =================
 
   const branchResult =
     extractBranchFromTitle(
       firstLine
     );
-
 
   document
     .getElementById("branch")
@@ -649,25 +653,18 @@ function parseTelegram() {
       branchResult.branch || "";
 
 
-
-  // =================
   // CLEAN FIRST LINE
-  // =================
 
   let cleanFirstLine =
     firstLine;
 
-
   if (branchResult.matchedText) {
-
     cleanFirstLine =
       cleanFirstLine.replace(
         branchResult.matchedText,
         ""
       );
-
   }
-
 
   cleanFirstLine =
     removeGroupInfo(
@@ -677,31 +674,22 @@ function parseTelegram() {
       .trim();
 
 
-
-  // =================
   // YEAR
-  // =================
 
   const year =
     cleanFirstLine.match(
       /\b20\d{2}\b/
     );
 
-
   if (year) {
-
     document
       .getElementById("year")
       .value =
         year[0];
-
   }
 
 
-
-  // =================
   // BRAND
-  // =================
 
   const brands = [
     "Toyota",
@@ -717,12 +705,9 @@ function parseTelegram() {
     "BYD"
   ];
 
-
   let brand = "";
 
-
   for (const b of brands) {
-
     if (
       cleanFirstLine
         .toLowerCase()
@@ -730,15 +715,10 @@ function parseTelegram() {
           b.toLowerCase()
         )
     ) {
-
       brand = b;
-
       break;
-
     }
-
   }
-
 
   document
     .getElementById("brand")
@@ -746,10 +726,7 @@ function parseTelegram() {
       brand;
 
 
-
-  // =================
   // COLOR
-  // =================
 
   const colors = [
     "Putih",
@@ -764,9 +741,7 @@ function parseTelegram() {
     "Metallic"
   ];
 
-
   for (const c of colors) {
-
     if (
       cleanFirstLine
         .toLowerCase()
@@ -774,93 +749,71 @@ function parseTelegram() {
           c.toLowerCase()
         )
     ) {
-
       document
         .getElementById("color")
         .value =
           c;
 
       break;
-
     }
-
   }
 
 
-
-  // =================
   // FUEL
-  // =================
 
   if (
     text
       .toLowerCase()
       .includes("hybrid")
   ) {
-
     document
       .getElementById("fuel")
       .value =
         "Hybrid";
-
   }
   else if (
     text
       .toLowerCase()
       .includes("diesel")
   ) {
-
     document
       .getElementById("fuel")
       .value =
         "Diesel";
-
   }
   else {
-
     document
       .getElementById("fuel")
       .value =
         "Bensin";
-
   }
 
 
-
-  // =================
   // TRANSMISSION
-  // =================
 
   if (
     cleanFirstLine.match(
       /\bAT\b/i
     )
   ) {
-
     document
       .getElementById("transmission")
       .value =
         "AT";
-
   }
   else if (
     cleanFirstLine.match(
       /\bMT\b/i
     )
   ) {
-
     document
       .getElementById("transmission")
       .value =
         "MT";
-
   }
 
 
-
-  // =================
   // MODEL + VARIANT
-  // =================
 
   let cleanTitle =
     cleanFirstLine
@@ -874,9 +827,7 @@ function parseTelegram() {
       )
       .trim();
 
-
   if (brand) {
-
     cleanTitle =
       cleanTitle
         .replace(
@@ -887,120 +838,87 @@ function parseTelegram() {
           ""
         )
         .trim();
-
   }
-
 
   const words =
     cleanTitle
       .split(/\s+/)
       .filter(Boolean);
 
-
   if (words.length) {
-
     document
       .getElementById("model")
       .value =
         words[0];
-
   }
 
-
   if (words.length > 1) {
-
     document
       .getElementById("variant")
       .value =
         words
           .slice(1)
           .join(" ");
-
   }
 
 
-
-  // =================
   // KM
-  // PRIORITAS
-  // =================
 
   let km =
     text.match(
       /(?:odometer|km)\s*[:\-]?\s*(\d+)\s*rb/i
     );
 
-
   if (!km) {
-
     km =
       text.match(
         /low km\s*(\d+)\s*rb/i
       );
-
   }
 
-
   if (km) {
-
     document
       .getElementById("odometer")
       .value =
         Number(km[1]) * 1000;
-
   }
 
 
-
-  // =================
   // CASH
-  // =================
 
   const cash =
     text.match(
       /cash\s+(\d+)\s*(jt|juta)/i
     );
 
-
   if (cash) {
-
     document
       .getElementById("cash_price")
       .value =
         jtToNumber(
           cash[1]
         );
-
   }
 
 
-
-  // =================
   // OTR CREDIT
-  // =================
 
   const otr =
     text.match(
       /(?:otr|harga kredit)\s+(\d+)\s*(jt|juta)/i
     );
 
-
   if (otr) {
-
     document
       .getElementById("credit_price")
       .value =
         jtToNumber(
           otr[1]
         );
-
   }
 
 
-
-  // =================
   // DP TERKECIL
-  // =================
 
   const dpMatches =
     [
@@ -1009,44 +927,29 @@ function parseTelegram() {
       )
     ];
 
-
   let dpValues = [];
-
 
   dpMatches.forEach(
     item => {
-
       dpValues.push(
         jtToNumber(
           item[1]
         )
       );
-
     }
   );
 
-
   if (dpValues.length) {
-
     document
       .getElementById("dp")
       .value =
         Math.min(
           ...dpValues
         );
-
   }
 
 
-
-  // =================
   // DESCRIPTION
-  // =================
-  //
-  // CABANG dihapus dari description.
-  // GROUP / GRUP / GRUB juga dihapus.
-  // Informasi mobil lainnya tetap dipertahankan.
-  //
 
   document
     .getElementById("description")
@@ -1061,7 +964,6 @@ function parseTelegram() {
       ? `Data berhasil dikonversi\nCabang: ${branchResult.branch}`
       : "Data berhasil dikonversi\nCabang belum dikenali, pilih manual."
   );
-
 }
 
 </script>

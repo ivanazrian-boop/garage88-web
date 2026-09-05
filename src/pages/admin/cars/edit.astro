@@ -27,6 +27,7 @@ if (!car) {
   );
 }
 
+
 // UPDATE
 
 if (Astro.request.method === "POST") {
@@ -72,6 +73,9 @@ if (Astro.request.method === "POST") {
     dp:
       Number(formData.get("dp")) || null,
 
+    cash_only:
+      formData.get("cash_only") === "on",
+
     plate_number:
       formData.get("plate_number")?.toString() || null,
 
@@ -92,13 +96,13 @@ if (Astro.request.method === "POST") {
 
   };
 
-  const { error:updateError } =
+  const { error: updateError } =
     await supabase
       .from("cars")
       .update(updateData)
       .eq("id", id);
 
-  if(updateError){
+  if (updateError) {
 
     console.error(updateError);
 
@@ -110,6 +114,9 @@ if (Astro.request.method === "POST") {
     message =
       "Mobil berhasil diupdate";
 
+    // Supaya tampilan checkbox langsung mengikuti hasil save
+    car.cash_only =
+      updateData.cash_only;
   }
 
 }
@@ -216,63 +223,63 @@ Cabang
 
 <option
 value="AHA Gallery"
-selected={car.branch==="AHA Gallery"}
+selected={car.branch === "AHA Gallery"}
 >
 AHA Gallery
 </option>
 
 <option
 value="AHA Nusantara"
-selected={car.branch==="AHA Nusantara"}
+selected={car.branch === "AHA Nusantara"}
 >
 AHA Nusantara
 </option>
 
 <option
 value="AHA Gajah Mada Cipondoh"
-selected={car.branch==="AHA Gajah Mada Cipondoh"}
+selected={car.branch === "AHA Gajah Mada Cipondoh"}
 >
 AHA Gajah Mada Cipondoh
 </option>
 
 <option
 value="AHA Gajah Mada Cipete"
-selected={car.branch==="AHA Gajah Mada Cipete"}
+selected={car.branch === "AHA Gajah Mada Cipete"}
 >
 AHA Gajah Mada Cipete
 </option>
 
 <option
 value="Garage88 Kebayoran"
-selected={car.branch==="Garage88 Kebayoran"}
+selected={car.branch === "Garage88 Kebayoran"}
 >
 Garage88 Kebayoran
 </option>
 
 <option
 value="Garage88 Basura"
-selected={car.branch==="Garage88 Basura"}
+selected={car.branch === "Garage88 Basura"}
 >
 Garage88 Basura
 </option>
 
 <option
 value="Garage88 Joglo"
-selected={car.branch==="Garage88 Joglo"}
+selected={car.branch === "Garage88 Joglo"}
 >
 Garage88 Joglo
 </option>
 
 <option
 value="Garage88 Ciater"
-selected={car.branch==="Garage88 Ciater"}
+selected={car.branch === "Garage88 Ciater"}
 >
 Garage88 Ciater
 </option>
 
 <option
 value="AHA ADEX"
-selected={car.branch==="AHA ADEX"}
+selected={car.branch === "AHA ADEX"}
 >
 AHA ADEX
 </option>
@@ -284,19 +291,31 @@ name="fuel"
 class="rounded-xl border p-4"
 >
 
-<option selected={car.fuel==="Bensin"}>
+<option
+value="Bensin"
+selected={car.fuel === "Bensin"}
+>
 Bensin
 </option>
 
-<option selected={car.fuel==="Diesel"}>
+<option
+value="Diesel"
+selected={car.fuel === "Diesel"}
+>
 Diesel
 </option>
 
-<option selected={car.fuel==="Hybrid"}>
+<option
+value="Hybrid"
+selected={car.fuel === "Hybrid"}
+>
 Hybrid
 </option>
 
-<option selected={car.fuel==="Electric Vehicle"}>
+<option
+value="Electric Vehicle"
+selected={car.fuel === "Electric Vehicle"}
+>
 Electric Vehicle
 </option>
 
@@ -307,11 +326,17 @@ name="transmission"
 class="rounded-xl border p-4"
 >
 
-<option selected={car.transmission==="AT"}>
+<option
+value="AT"
+selected={car.transmission === "AT"}
+>
 AT
 </option>
 
-<option selected={car.transmission==="MT"}>
+<option
+value="MT"
+selected={car.transmission === "MT"}
+>
 MT
 </option>
 
@@ -365,6 +390,50 @@ class="rounded-xl border p-4"
 
 </div>
 
+
+<!-- CASH ONLY -->
+
+<div
+class="
+rounded-xl
+border
+border-amber-200
+bg-amber-50
+p-4
+"
+>
+
+<label class="flex cursor-pointer items-center gap-3">
+
+<input
+type="checkbox"
+name="cash_only"
+checked={car.cash_only === true}
+class="
+h-5
+w-5
+rounded
+border-slate-300
+"
+/>
+
+<div>
+
+<p class="font-bold text-slate-900">
+Cash Only
+</p>
+
+<p class="text-sm text-slate-500">
+Centang jika unit hanya dijual cash
+</p>
+
+</div>
+
+</label>
+
+</div>
+
+
 <textarea
 name="description"
 rows="5"
@@ -386,21 +455,21 @@ class="mt-2 w-full rounded-xl border p-4"
 
 <option
 value="READY"
-selected={car.status==="READY"}
+selected={car.status === "READY"}
 >
 READY
 </option>
 
 <option
 value="BOOKED"
-selected={car.status==="BOOKED"}
+selected={car.status === "BOOKED"}
 >
 BOOKED
 </option>
 
 <option
 value="SOLD"
-selected={car.status==="SOLD"}
+selected={car.status === "SOLD"}
 >
 SOLD
 </option>

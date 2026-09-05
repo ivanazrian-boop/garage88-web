@@ -7,6 +7,7 @@ type CoverCar = {
   credit_price?: number | null;
   cash_price?: number | null;
   dp?: number | null;
+  cash_only?: boolean | null;
 };
 
 export type CoverFormat = "ig" | "meta";
@@ -30,6 +31,50 @@ function formatJt(value?: number | null): string {
     : jt.toLocaleString("id-ID", {
         maximumFractionDigits: 1,
       });
+}
+
+function formatPriceShort(
+  value?: number | null
+): {
+  value: string;
+  unit: string;
+} {
+  if (!value) {
+    return {
+      value: "-",
+      unit: "",
+    };
+  }
+
+  if (value >= 1_000_000_000) {
+    const miliar =
+      value / 1_000_000_000;
+
+    return {
+      value:
+        miliar.toLocaleString(
+          "id-ID",
+          {
+            maximumFractionDigits: 2,
+          }
+        ),
+      unit: "M",
+    };
+  }
+
+  const juta =
+    value / 1_000_000;
+
+  return {
+    value:
+      juta.toLocaleString(
+        "id-ID",
+        {
+          maximumFractionDigits: 1,
+        }
+      ),
+    unit: "JT",
+  };
 }
 
 function formatKm(value?: number | null): string {
@@ -97,13 +142,11 @@ export function buildGarage88CoverHtml(
   const height =
     square ? 1080 : 1350;
 
-  // IG:
-  // DP + credit + footer.
-  //
-  // META:
-  // hanya OTR dari credit_price.
   const showMonetaryInfo =
     !square;
+
+  const cashOnly =
+    car.cash_only === true;
 
   const brand =
     String(
@@ -124,12 +167,12 @@ export function buildGarage88CoverHtml(
   );
 
   const credit =
-    formatJt(
+    formatPriceShort(
       car.credit_price
     );
 
   const cash =
-    formatJt(
+    formatPriceShort(
       car.cash_price
     );
 
@@ -142,6 +185,18 @@ export function buildGarage88CoverHtml(
     formatKm(
       car.odometer
     );
+
+  const mainPrice =
+    cashOnly
+      ? cash
+      : credit;
+
+  const mainPriceLabel =
+    cashOnly
+      ? "CASH ONLY"
+      : square
+        ? "OTR"
+        : "HARGA KREDIT";
 
   const v =
     square
@@ -184,8 +239,6 @@ export function buildGarage88CoverHtml(
       : {
           heroH: 810,
 
-          // Playground:
-          // heroPhoto y = -93
           heroOffsetY: -25,
 
           heroSeamTop: 665,
@@ -1247,36 +1300,52 @@ body{
       <span class="dp-icon"></span>
 
       <span>
-        DP MULAI ${esc(dp)} JT - KM ${esc(km)}
+        ${
+          cashOnly
+            ? `CASH ONLY - KM ${esc(km)}`
+            : `DP MULAI ${esc(dp)} JT - KM ${esc(km)}`
+        }
       </span>
 
     </div>
 
 
     <div class="price-label">
-      HARGA KREDIT
+      ${esc(mainPriceLabel)}
     </div>
 
     <div class="price-value">
-      ${esc(credit)}
+      ${esc(mainPrice.value)}
+      ${
+        mainPrice.unit
+          ? `
       <span class="jt">
-        JT
+        ${esc(mainPrice.unit)}
       </span>
+      `
+          : ""
+      }
     </div>
 
     `
-        : car.credit_price
+        : mainPrice.value !== "-"
           ? `
 
     <div class="price-label">
-      OTR
+      ${esc(mainPriceLabel)}
     </div>
 
     <div class="price-value">
-      ${esc(credit)}
+      ${esc(mainPrice.value)}
+      ${
+        mainPrice.unit
+          ? `
       <span class="jt">
-        JT
+        ${esc(mainPrice.unit)}
       </span>
+      `
+          : ""
+      }
     </div>
 
     `
@@ -1305,7 +1374,11 @@ body{
         </div>
 
         <div class="value">
-          ${esc(credit)} JT
+          ${
+            cashOnly
+              ? "-"
+              : `${esc(credit.value)} ${esc(credit.unit)}`
+          }
         </div>
 
       </div>
@@ -1326,7 +1399,8 @@ body{
         </div>
 
         <div class="value">
-          ${esc(cash)} JT
+          ${esc(cash.value)}
+          ${esc(cash.unit)}
         </div>
 
       </div>
@@ -1347,7 +1421,11 @@ body{
         </div>
 
         <div class="value">
-          ${esc(dp)} JT
+          ${
+            cashOnly
+              ? "-"
+              : `${esc(dp)} JT`
+          }
         </div>
 
       </div>
