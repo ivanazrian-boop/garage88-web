@@ -1,0 +1,1129 @@
+---
+import MainLayout from "../../../layouts/MainLayout.astro";
+import { supabase } from "../../../lib/supabase";
+
+const key = Astro.url.searchParams.get("key");
+const ADMIN_KEY = "garage88";
+
+if (key !== ADMIN_KEY) {
+  return Astro.redirect("/");
+}
+
+let message = "";
+let messageType: "success" | "error" = "success";
+
+if (Astro.request.method === "POST") {
+  const formData = await Astro.request.formData();
+
+  const action =
+    formData.get("action")?.toString() || "";
+
+  const selectedIds =
+    formData
+      .getAll("selected_ids")
+      .map((value) => value.toString())
+      .filter(Boolean);
+
+  if (selectedIds.length === 0) {
+    message = "Belum ada unit yang dipilih.";
+    messageType = "error";
+  } else {
+    if (action === "set_featured") {
+      const { error } =
+        await supabase
+          .from("cars")
+          .update({
+            featured: true,
+            updated_at: new Date().toISOString(),
+          })
+          .in("id", selectedIds);
+
+      if (error) {
+        console.error(error);
+
+        message = error.message;
+        messageType = "error";
+      } else {
+        message =
+          `${selectedIds.length} unit berhasil dijadikan Featured.`;
+      }
+    }
+
+    else if (action === "remove_featured") {
+      const { error } =
+        await supabase
+          .from("cars")
+          .update({
+            featured: false,
+            updated_at: new Date().toISOString(),
+          })
+          .in("id", selectedIds);
+
+      if (error) {
+        console.error(error);
+
+        message = error.message;
+        messageType = "error";
+      } else {
+        message =
+          `${selectedIds.length} unit berhasil dihapus dari Featured.`;
+      }
+    }
+
+    else if (action === "delete_selected") {
+      const { error } =
+        await supabase
+          .from("cars")
+          .delete()
+          .in("id", selectedIds);
+
+      if (error) {
+        console.error(error);
+
+        message = error.message;
+        messageType = "error";
+      } else {
+        message =
+          `${selectedIds.length} unit berhasil dihapus.`;
+      }
+    }
+  }
+}
+
+const { data: cars, error } =
+  await supabase
+    .from("cars")
+    .select(`
+      id,
+      brand,
+      model,
+      variant,
+      year,
+      branch,
+      status,
+      featured,
+      ig_image_url,
+      meta_image_url,
+      credit_price,
+      cash_price,
+      created_at
+    `)
+    .order("featured", {
+      ascending: false,
+    })
+    .order("created_at", {
+      ascending: false,
+    });
+
+if (error) {
+  console.error(error);
+
+  message = error.message;
+  messageType = "error";
+}
+
+const carList = cars ?? [];
+
+function formatPrice(
+  value?: number | null
+) {
+  if (
+    value === null ||
+    value === undefined
+  ) {
+    return "-";
+  }
+
+  return new Intl.NumberFormat(
+    "id-ID",
+    {
+      style: "currency",
+      currency: "IDR",
+      maximumFractionDigits: 0,
+    }
+  ).format(value);
+}
+---
+
+<MainLayout title="Manage Stock | Garage88 Admin">
+
+<section class="min-h-screen bg-slate-100 py-10">
+
+<div class="mx-auto max-w-7xl px-5">
+
+  <div
+    class="
+      flex
+      flex-col
+      gap-4
+      md:flex-row
+      md:items-center
+      md:justify-between
+    "
+  >
+
+    <div>
+
+      <h1 class="text-3xl font-bold text-slate-900">
+        Manage Featured & Booked
+      </h1>
+
+      <p class="mt-2 text-slate-500">
+        Bulk update Featured dan hapus unit Booked dengan cepat.
+      </p>
+
+    </div>
+
+    <a
+      href={`/admin/cars?key=${ADMIN_KEY}`}
+      class="
+        inline-flex
+        items-center
+        justify-center
+        rounded-xl
+        border
+        border-slate-300
+        bg-white
+        px-5
+        py-3
+        font-semibold
+        text-slate-700
+        hover:bg-slate-50
+      "
+    >
+      ← Kembali ke Stock
+    </a>
+
+  </div>
+
+
+  {
+    message && (
+      <div
+        class:list={[
+          "mt-6 rounded-xl p-4 font-semibold",
+          messageType === "success"
+            ? "bg-green-100 text-green-700"
+            : "bg-red-100 text-red-700",
+        ]}
+      >
+        {message}
+      </div>
+    )
+  }
+
+
+  <!-- FILTER -->
+
+  <div
+    class="
+      mt-8
+      grid
+      gap-4
+      rounded-2xl
+      bg-white
+      p-5
+      shadow-sm
+      md:grid-cols-4
+    "
+  >
+
+    <div>
+
+      <label
+        class="
+          mb-2
+          block
+          text-sm
+          font-semibold
+          text-slate-600
+        "
+      >
+        Search
+      </label>
+
+      <input
+        id="searchInput"
+        type="text"
+        placeholder="Alphard, Zenix, 2021..."
+        class="
+          w-full
+          rounded-xl
+          border
+          border-slate-300
+          px-4
+          py-3
+        "
+      />
+
+    </div>
+
+
+    <div>
+
+      <label
+        class="
+          mb-2
+          block
+          text-sm
+          font-semibold
+          text-slate-600
+        "
+      >
+        Status
+      </label>
+
+      <select
+        id="statusFilter"
+        class="
+          w-full
+          rounded-xl
+          border
+          border-slate-300
+          px-4
+          py-3
+        "
+      >
+
+        <option value="ALL">
+          ALL STATUS
+        </option>
+
+        <option value="READY">
+          READY
+        </option>
+
+        <option value="BOOKED">
+          BOOKED
+        </option>
+
+        <option value="SOLD">
+          SOLD
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div>
+
+      <label
+        class="
+          mb-2
+          block
+          text-sm
+          font-semibold
+          text-slate-600
+        "
+      >
+        Featured
+      </label>
+
+      <select
+        id="featuredFilter"
+        class="
+          w-full
+          rounded-xl
+          border
+          border-slate-300
+          px-4
+          py-3
+        "
+      >
+
+        <option value="ALL">
+          ALL FEATURED
+        </option>
+
+        <option value="YES">
+          FEATURED
+        </option>
+
+        <option value="NO">
+          NOT FEATURED
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div class="flex items-end">
+
+      <button
+        type="button"
+        id="clearFilterButton"
+        class="
+          w-full
+          rounded-xl
+          bg-slate-200
+          px-4
+          py-3
+          font-semibold
+          text-slate-700
+          hover:bg-slate-300
+        "
+      >
+        Reset Filter
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- BULK FORM -->
+
+  <form
+    method="POST"
+    id="bulkForm"
+    class="
+      mt-6
+      rounded-2xl
+      bg-white
+      shadow-sm
+    "
+  >
+
+    <!-- ACTION BAR -->
+
+    <div
+      class="
+        sticky
+        top-0
+        z-20
+        flex
+        flex-col
+        gap-3
+        border-b
+        border-slate-200
+        bg-white
+        p-4
+        md:flex-row
+        md:items-center
+        md:justify-between
+      "
+    >
+
+      <div class="flex items-center gap-3">
+
+        <label
+          class="
+            flex
+            cursor-pointer
+            items-center
+            gap-2
+            font-semibold
+            text-slate-700
+          "
+        >
+
+          <input
+            id="selectAll"
+            type="checkbox"
+            class="h-5 w-5"
+          />
+
+          Select All Visible
+
+        </label>
+
+        <span
+          id="selectedCount"
+          class="
+            rounded-lg
+            bg-slate-100
+            px-3
+            py-1
+            text-sm
+            font-semibold
+            text-slate-600
+          "
+        >
+          0 selected
+        </span>
+
+      </div>
+
+
+      <div
+        class="
+          flex
+          flex-wrap
+          gap-2
+        "
+      >
+
+        <button
+          type="submit"
+          name="action"
+          value="set_featured"
+          class="
+            rounded-xl
+            bg-amber-400
+            px-4
+            py-2.5
+            font-bold
+            text-slate-900
+            hover:bg-amber-500
+          "
+        >
+          ⭐ Set Featured
+        </button>
+
+        <button
+          type="submit"
+          name="action"
+          value="remove_featured"
+          class="
+            rounded-xl
+            bg-slate-700
+            px-4
+            py-2.5
+            font-bold
+            text-white
+            hover:bg-slate-800
+          "
+        >
+          Remove Featured
+        </button>
+
+        <button
+          type="submit"
+          name="action"
+          value="delete_selected"
+          id="deleteSelectedButton"
+          class="
+            rounded-xl
+            bg-red-600
+            px-4
+            py-2.5
+            font-bold
+            text-white
+            hover:bg-red-700
+          "
+        >
+          🗑 Delete Selected
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <!-- TABLE -->
+
+    <div class="overflow-x-auto">
+
+      <table class="w-full min-w-[1000px]">
+
+        <thead class="bg-slate-50">
+
+          <tr
+            class="
+              text-left
+              text-sm
+              uppercase
+              tracking-wide
+              text-slate-500
+            "
+          >
+
+            <th class="w-14 px-4 py-4">
+              ✓
+            </th>
+
+            <th class="px-4 py-4">
+              Unit
+            </th>
+
+            <th class="px-4 py-4">
+              Cabang
+            </th>
+
+            <th class="px-4 py-4">
+              Status
+            </th>
+
+            <th class="px-4 py-4">
+              Featured
+            </th>
+
+            <th class="px-4 py-4">
+              Harga
+            </th>
+
+            <th class="px-4 py-4">
+              Action
+            </th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody>
+
+          {
+            carList.map((car) => {
+
+              const searchText = [
+                car.brand,
+                car.model,
+                car.variant,
+                car.year,
+                car.branch,
+                car.status,
+              ]
+                .filter(Boolean)
+                .join(" ")
+                .toLowerCase();
+
+              return (
+
+                <tr
+                  class="
+                    car-row
+                    border-t
+                    border-slate-100
+                    hover:bg-slate-50
+                  "
+                  data-search={searchText}
+                  data-status={car.status ?? ""}
+                  data-featured={
+                    car.featured
+                      ? "YES"
+                      : "NO"
+                  }
+                >
+
+                  <td class="px-4 py-4">
+
+                    <input
+                      type="checkbox"
+                      name="selected_ids"
+                      value={car.id}
+                      class="
+                        car-checkbox
+                        h-5
+                        w-5
+                      "
+                    />
+
+                  </td>
+
+
+                  <td class="px-4 py-4">
+
+                    <div class="flex items-center gap-4">
+
+                      {
+                        car.ig_image_url
+                          ? (
+                            <img
+                              src={car.ig_image_url}
+                              alt=""
+                              class="
+                                h-20
+                                w-16
+                                rounded-lg
+                                border
+                                object-cover
+                              "
+                            />
+                          )
+                          : (
+                            <div
+                              class="
+                                flex
+                                h-20
+                                w-16
+                                items-center
+                                justify-center
+                                rounded-lg
+                                bg-slate-200
+                                text-xs
+                                text-slate-500
+                              "
+                            >
+                              No IMG
+                            </div>
+                          )
+                      }
+
+                      <div>
+
+                        <div
+                          class="
+                            font-bold
+                            text-slate-900
+                          "
+                        >
+                          {car.brand} {car.model}
+                        </div>
+
+                        <div
+                          class="
+                            mt-1
+                            text-sm
+                            text-slate-500
+                          "
+                        >
+                          {car.variant ?? "-"} {car.year ?? ""}
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                  </td>
+
+
+                  <td
+                    class="
+                      px-4
+                      py-4
+                      text-sm
+                      text-slate-600
+                    "
+                  >
+                    {car.branch ?? "BELUM ADA CABANG"}
+                  </td>
+
+
+                  <td class="px-4 py-4">
+
+                    <span
+                      class:list={[
+                        "inline-flex rounded-full px-3 py-1 text-xs font-bold",
+                        car.status === "READY"
+                          ? "bg-green-100 text-green-700"
+                          : car.status === "BOOKED"
+                            ? "bg-orange-100 text-orange-700"
+                            : "bg-slate-200 text-slate-700",
+                      ]}
+                    >
+                      {car.status ?? "-"}
+                    </span>
+
+                  </td>
+
+
+                  <td class="px-4 py-4">
+
+                    {
+                      car.featured
+                        ? (
+                          <span
+                            class="
+                              inline-flex
+                              rounded-full
+                              bg-amber-100
+                              px-3
+                              py-1
+                              text-xs
+                              font-bold
+                              text-amber-700
+                            "
+                          >
+                            ⭐ FEATURED
+                          </span>
+                        )
+                        : (
+                          <span
+                            class="
+                              text-sm
+                              text-slate-400
+                            "
+                          >
+                            -
+                          </span>
+                        )
+                    }
+
+                  </td>
+
+
+                  <td
+                    class="
+                      px-4
+                      py-4
+                      text-sm
+                      text-slate-700
+                    "
+                  >
+
+                    <div>
+                      Kredit:
+                      <strong>
+                        {formatPrice(car.credit_price)}
+                      </strong>
+                    </div>
+
+                    <div class="mt-1">
+                      Cash:
+                      <strong>
+                        {formatPrice(car.cash_price)}
+                      </strong>
+                    </div>
+
+                  </td>
+
+
+                  <td class="px-4 py-4">
+
+                    <a
+                      href={`/admin/cars/edit?id=${car.id}&key=${ADMIN_KEY}`}
+                      class="
+                        rounded-lg
+                        bg-blue-600
+                        px-3
+                        py-2
+                        text-sm
+                        font-semibold
+                        text-white
+                        hover:bg-blue-700
+                      "
+                    >
+                      Edit
+                    </a>
+
+                  </td>
+
+                </tr>
+
+              );
+
+            })
+          }
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+
+    <div
+      id="emptyState"
+      class="
+        hidden
+        p-10
+        text-center
+        text-slate-500
+      "
+    >
+      Tidak ada unit sesuai filter.
+    </div>
+
+  </form>
+
+</div>
+
+</section>
+
+
+<script is:inline>
+  const searchInput =
+    document.getElementById(
+      "searchInput"
+    );
+
+  const statusFilter =
+    document.getElementById(
+      "statusFilter"
+    );
+
+  const featuredFilter =
+    document.getElementById(
+      "featuredFilter"
+    );
+
+  const clearFilterButton =
+    document.getElementById(
+      "clearFilterButton"
+    );
+
+  const selectAll =
+    document.getElementById(
+      "selectAll"
+    );
+
+  const selectedCount =
+    document.getElementById(
+      "selectedCount"
+    );
+
+  const deleteSelectedButton =
+    document.getElementById(
+      "deleteSelectedButton"
+    );
+
+  const bulkForm =
+    document.getElementById(
+      "bulkForm"
+    );
+
+  const emptyState =
+    document.getElementById(
+      "emptyState"
+    );
+
+
+  function getRows() {
+    return Array.from(
+      document.querySelectorAll(
+        ".car-row"
+      )
+    );
+  }
+
+
+  function getCheckboxes() {
+    return Array.from(
+      document.querySelectorAll(
+        ".car-checkbox"
+      )
+    );
+  }
+
+
+  function applyFilters() {
+    const search =
+      String(
+        searchInput?.value || ""
+      )
+        .toLowerCase()
+        .trim();
+
+    const status =
+      String(
+        statusFilter?.value || "ALL"
+      );
+
+    const featured =
+      String(
+        featuredFilter?.value || "ALL"
+      );
+
+    let visibleCount = 0;
+
+    getRows().forEach(
+      (row) => {
+        const searchText =
+          String(
+            row.dataset.search || ""
+          );
+
+        const rowStatus =
+          String(
+            row.dataset.status || ""
+          );
+
+        const rowFeatured =
+          String(
+            row.dataset.featured || "NO"
+          );
+
+        const matchSearch =
+          !search ||
+          searchText.includes(search);
+
+        const matchStatus =
+          status === "ALL" ||
+          rowStatus === status;
+
+        const matchFeatured =
+          featured === "ALL" ||
+          rowFeatured === featured;
+
+        const visible =
+          matchSearch &&
+          matchStatus &&
+          matchFeatured;
+
+        row.style.display =
+          visible
+            ? ""
+            : "none";
+
+        if (visible) {
+          visibleCount++;
+        }
+      }
+    );
+
+    if (emptyState) {
+      emptyState.classList.toggle(
+        "hidden",
+        visibleCount > 0
+      );
+    }
+
+    if (selectAll) {
+      selectAll.checked = false;
+    }
+
+    updateSelectedCount();
+  }
+
+
+  function updateSelectedCount() {
+    const checked =
+      getCheckboxes()
+        .filter(
+          (checkbox) =>
+            checkbox.checked
+        )
+        .length;
+
+    if (selectedCount) {
+      selectedCount.textContent =
+        `${checked} selected`;
+    }
+  }
+
+
+  searchInput?.addEventListener(
+    "input",
+    applyFilters
+  );
+
+  statusFilter?.addEventListener(
+    "change",
+    applyFilters
+  );
+
+  featuredFilter?.addEventListener(
+    "change",
+    applyFilters
+  );
+
+
+  clearFilterButton?.addEventListener(
+    "click",
+    () => {
+      searchInput.value = "";
+      statusFilter.value = "ALL";
+      featuredFilter.value = "ALL";
+
+      applyFilters();
+    }
+  );
+
+
+  selectAll?.addEventListener(
+    "change",
+    () => {
+      const checked =
+        selectAll.checked;
+
+      getRows().forEach(
+        (row) => {
+          if (
+            row.style.display ===
+            "none"
+          ) {
+            return;
+          }
+
+          const checkbox =
+            row.querySelector(
+              ".car-checkbox"
+            );
+
+          if (checkbox) {
+            checkbox.checked =
+              checked;
+          }
+        }
+      );
+
+      updateSelectedCount();
+    }
+  );
+
+
+  getCheckboxes().forEach(
+    (checkbox) => {
+      checkbox.addEventListener(
+        "change",
+        updateSelectedCount
+      );
+    }
+  );
+
+
+  deleteSelectedButton?.addEventListener(
+    "click",
+    (event) => {
+      const selected =
+        getCheckboxes()
+          .filter(
+            (checkbox) =>
+              checkbox.checked
+          );
+
+      if (
+        selected.length === 0
+      ) {
+        event.preventDefault();
+
+        alert(
+          "Pilih unit yang mau dihapus dulu."
+        );
+
+        return;
+      }
+
+      const confirmed =
+        confirm(
+          `Hapus permanen ${selected.length} unit?\n\nTindakan ini tidak bisa dibatalkan.`
+        );
+
+      if (!confirmed) {
+        event.preventDefault();
+      }
+    }
+  );
+
+
+  bulkForm?.addEventListener(
+    "submit",
+    (event) => {
+      const submitter =
+        event.submitter;
+
+      if (
+        submitter &&
+        submitter.value ===
+          "delete_selected"
+      ) {
+        return;
+      }
+
+      const selected =
+        getCheckboxes()
+          .filter(
+            (checkbox) =>
+              checkbox.checked
+          );
+
+      if (
+        selected.length === 0
+      ) {
+        event.preventDefault();
+
+        alert(
+          "Pilih minimal satu unit dulu."
+        );
+      }
+    }
+  );
+
+
+  applyFilters();
+</script>
+
+</MainLayout>
