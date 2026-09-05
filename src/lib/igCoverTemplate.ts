@@ -16,6 +16,8 @@ export type IgCoverCar = {
   cash_price?: number | null;
   dp?: number | null;
 
+  cash_only?: boolean | null;
+
   cover_hero_title?: string | null;
 };
 
@@ -46,22 +48,56 @@ function normalizeText(value: unknown): string {
    PRICE FORMAT
    ===================================================== */
 
-function formatPriceNumber(value?: number | null): string {
+function formatPriceNumber(
+  value?: number | null
+): {
+  value: string;
+  unit: string;
+} {
   if (
     value === null ||
     value === undefined ||
     !Number.isFinite(value)
   ) {
-    return "-";
+    return {
+      value: "-",
+      unit: "",
+    };
   }
 
-  const jt = value / 1_000_000;
+  if (value >= 1_000_000_000) {
+    const miliar =
+      value / 1_000_000_000;
 
-  return Number.isInteger(jt)
-    ? String(jt)
-    : jt.toLocaleString("id-ID", {
-        maximumFractionDigits: 1,
-      });
+    return {
+      value:
+        miliar.toLocaleString(
+          "id-ID",
+          {
+            maximumFractionDigits: 2,
+          }
+        ),
+
+      unit: "M",
+    };
+  }
+
+  const jt =
+    value / 1_000_000;
+
+  return {
+    value:
+      Number.isInteger(jt)
+        ? String(jt)
+        : jt.toLocaleString(
+            "id-ID",
+            {
+              maximumFractionDigits: 1,
+            }
+          ),
+
+    unit: "JT",
+  };
 }
 
 /* =====================================================
@@ -301,9 +337,23 @@ export function buildGarage88IgCoverHtml(
   const headerTop =
     heroLines.lineCount === 2 ? 190 : 215;
 
-  const dp = formatPriceNumber(car.dp);
-  const credit = formatPriceNumber(car.credit_price);
-  const cash = formatPriceNumber(car.cash_price);
+  const cashOnly =
+    car.cash_only === true;
+
+  const dp =
+    formatPriceNumber(car.dp);
+
+  const credit =
+    formatPriceNumber(car.credit_price);
+
+  const cash =
+    formatPriceNumber(car.cash_price);
+
+  const mainPrice =
+    cashOnly
+      ? cash
+      : credit;
+
   const km = formatKm(car.odometer);
 
   const mileageStatus = getMileageStatus(car);
@@ -319,12 +369,22 @@ export function buildGarage88IgCoverHtml(
   const color = normalizeText(car.color).toUpperCase();
 
   const footerItems = [
-    car.credit_price ? `HARGA CREDIT ${credit} JT` : "",
-    car.cash_price ? `HARGA CASH ${cash} JT` : "",
-    car.dp ? `DP ${dp} JT` : "",
+    !cashOnly && car.credit_price
+      ? `HARGA CREDIT ${credit.value} ${credit.unit}`
+      : "",
+
+    car.cash_price
+      ? `HARGA CASH ${cash.value} ${cash.unit}`
+      : "",
+
+    !cashOnly && car.dp
+      ? `DP ${dp.value} ${dp.unit}`
+      : "",
+
     car.odometer !== null && car.odometer !== undefined
       ? `KM ${km}`
       : "",
+
     mileageStatus,
   ].filter(Boolean);
 
@@ -758,7 +818,9 @@ export function buildGarage88IgCoverHtml(
   </div>
 
   <div class="spec-row">
+
     <div class="spec-item">
+
       <div class="spec-icon">
         <svg
           viewBox="0 0 24 24"
@@ -776,12 +838,30 @@ export function buildGarage88IgCoverHtml(
       </div>
 
       <div class="spec-copy">
-        <div class="spec-label">DP MULAI</div>
-        <div class="spec-value">${esc(dp)}JT</div>
+
+        <div class="spec-label">
+          ${
+            cashOnly
+              ? "CASH ONLY"
+              : "DP MULAI"
+          }
+        </div>
+
+        <div class="spec-value">
+          ${
+            cashOnly
+              ? "-"
+              : `${esc(dp.value)}${esc(dp.unit)}`
+          }
+        </div>
+
       </div>
+
     </div>
 
+
     <div class="spec-item">
+
       <div class="spec-icon">
         <svg
           viewBox="0 0 24 24"
@@ -802,16 +882,21 @@ export function buildGarage88IgCoverHtml(
         <div class="spec-label">KM</div>
         <div class="spec-value">${esc(km)}</div>
       </div>
+
     </div>
 
+
     <div class="status-wrap">
+
       ${
         mileageStatus
           ? `
             <div class="status-stack">
+
               <div class="status-badge">
                 ${esc(mileageStatus)}
               </div>
+
               ${
                 isLowUsage
                   ? `
@@ -821,39 +906,74 @@ export function buildGarage88IgCoverHtml(
                   `
                   : ""
               }
+
             </div>
           `
           : `
             <div class="status-empty"></div>
           `
       }
+
     </div>
+
   </div>
+
 
   <div class="main-divider"></div>
 
+
   <div class="bottom-grid">
+
     <div class="price-block">
-      <div class="otr-label">OTR</div>
+
+      <div class="otr-label">
+        ${
+          cashOnly
+            ? "CASH ONLY"
+            : "OTR"
+        }
+      </div>
 
       <div class="otr-price">
-        <span class="otr-number">${esc(credit)}</span>
-        <span class="otr-jt">JT</span>
+
+        <span class="otr-number">
+          ${esc(mainPrice.value)}
+        </span>
+
+        ${
+          mainPrice.unit
+            ? `
+              <span class="otr-jt">
+                ${esc(mainPrice.unit)}
+              </span>
+            `
+            : ""
+        }
+
       </div>
 
       ${
+        !cashOnly &&
         car.cash_price
           ? `
             <div class="cash">
-              Cash <strong>${esc(cash)}JT</strong>
+              Cash
+              <strong>
+                ${esc(cash.value)} ${esc(cash.unit)}
+              </strong>
             </div>
           `
           : ""
       }
+
     </div>
 
+
     <div class="car-info">
-      <div class="car-brand">${esc(brand)}</div>
+
+      <div class="car-brand">
+        ${esc(brand)}
+      </div>
 
       <div class="car-name">
         ${esc(fullNameWithYear)}
@@ -868,16 +988,29 @@ export function buildGarage88IgCoverHtml(
           `
           : ""
       }
+
     </div>
+
   </div>
+
 
   <div class="footer-divider"></div>
 
+
   <div class="footer">
-    <div class="footer-top">${esc(footerTop)}</div>
-    <div class="footer-bottom">${esc(footerBottom)}</div>
+
+    <div class="footer-top">
+      ${esc(footerTop)}
+    </div>
+
+    <div class="footer-bottom">
+      ${esc(footerBottom)}
+    </div>
+
   </div>
+
 </div>
+
 </body>
 </html>
 `;

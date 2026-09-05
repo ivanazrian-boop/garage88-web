@@ -9,6 +9,8 @@ type MetaCoverCar = {
   cash_price?: number | null;
   dp?: number | null;
 
+  cash_only?: boolean | null;
+
   cover_hero_title?:
     string | null;
 };
@@ -52,7 +54,7 @@ function esc(
    FORMAT
    ===================================================== */
 
-function formatJt(
+function formatPriceShort(
   value?: number | null
 ): string {
 
@@ -62,6 +64,25 @@ function formatJt(
     !Number.isFinite(value)
   ) {
     return "-";
+  }
+
+
+  if (
+    value >=
+    1_000_000_000
+  ) {
+
+    const miliar =
+      value /
+      1_000_000_000;
+
+
+    return `${miliar.toLocaleString(
+      "id-ID",
+      {
+        maximumFractionDigits: 2,
+      }
+    )} M`;
   }
 
 
@@ -238,16 +259,6 @@ function buildHeroTitle(
 
 /* =====================================================
    SPLIT HERO
-
-   Kita balance berdasarkan panjang karakter.
-
-   Contoh:
-
-   IONIQ 5 SIGNATURE
-   LONG RANGE
-
-   ALPHARD G
-   ATPM
    ===================================================== */
 
 function splitHeroLines(
@@ -281,10 +292,6 @@ function splitHeroLines(
   }
 
 
-  /*
-   * Title pendek tetap satu baris.
-   */
-
   if (
     title.length <= 11
   ) {
@@ -302,11 +309,6 @@ function splitHeroLines(
 
   }
 
-
-  /*
-   * Cari pembagian dua baris
-   * yang paling seimbang.
-   */
 
   let bestIndex =
     1;
@@ -387,11 +389,6 @@ function splitHeroLines(
 
 /* =====================================================
    HERO FONT SIZE
-
-   Yang dihitung bukan hanya Hero,
-   tapi line kedua + tahun juga.
-
-   Jadi tidak overflow ke kanan.
    ===================================================== */
 
 function getHeroFontSize(
@@ -502,9 +499,21 @@ export function buildGarage88MetaSquareHtml(
     );
 
 
-  const credit =
-    formatJt(
-      car.credit_price
+  const cashOnly =
+    car.cash_only === true;
+
+
+  const priceLabel =
+    cashOnly
+      ? "CASH ONLY"
+      : "OTR";
+
+
+  const mainPrice =
+    formatPriceShort(
+      cashOnly
+        ? car.cash_price
+        : car.credit_price
     );
 
 
@@ -513,20 +522,6 @@ export function buildGarage88MetaSquareHtml(
       car.odometer
     );
 
-
-  /*
-   * PENTING:
-   *
-   * 1 BARIS:
-   * hero sekitar 180
-   * spec sekitar 300
-   *
-   * 2 BARIS:
-   * hero naik sedikit
-   * spec TURUN ke 365
-   *
-   * Ini yang memperbaiki overlap.
-   */
 
   const headerTop =
     heroLines.lineCount ===
@@ -591,9 +586,6 @@ export function buildGarage88MetaSquareHtml(
 
   /* ===================================================
      PHOTOROOM SOURCE
-
-     Crop square dari TOP,
-     supaya logo bawaan PhotoRoom tetap ada.
      =================================================== */
 
   .source {
@@ -663,12 +655,6 @@ export function buildGarage88MetaSquareHtml(
   }
 
 
-  /*
-   * Satu baris:
-   *
-   * ALPHARD G 2021
-   */
-
   .hero-line-single {
     display: flex;
 
@@ -680,15 +666,6 @@ export function buildGarage88MetaSquareHtml(
     white-space: nowrap;
   }
 
-
-  /*
-   * Dua baris:
-   *
-   * ALPHARD G
-   * ATPM 2021
-   *
-   * Tahun SELALU ikut line terakhir.
-   */
 
   .hero-line-bottom {
     display: flex;
@@ -726,7 +703,7 @@ export function buildGarage88MetaSquareHtml(
 
 
   /* ===================================================
-     OTR + KM
+     PRICE + KM
      =================================================== */
 
   .spec-row {
@@ -896,11 +873,11 @@ export function buildGarage88MetaSquareHtml(
       <div class="spec-item">
 
         <span class="spec-label">
-          OTR
+          ${esc(priceLabel)}
         </span>
 
         <span class="spec-value">
-          ${esc(credit)}
+          ${esc(mainPrice)}
         </span>
 
       </div>
