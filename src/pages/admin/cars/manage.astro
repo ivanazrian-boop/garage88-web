@@ -120,6 +120,78 @@ if (Astro.request.method === "POST") {
 
 
     /* ===============================================
+       SET BOOKED
+       =============================================== */
+
+    else if (
+      action ===
+      "set_booked"
+    ) {
+      const { error } =
+        await supabase
+          .from("cars")
+          .update({
+            status: "BOOKED",
+            updated_at:
+              new Date().toISOString(),
+          })
+          .in(
+            "id",
+            selectedIds
+          );
+
+      if (error) {
+        console.error(error);
+
+        message =
+          error.message;
+
+        messageType =
+          "error";
+      } else {
+        message =
+          `${selectedIds.length} unit berhasil di-set BOOKED.`;
+      }
+    }
+
+
+    /* ===============================================
+       SET READY
+       =============================================== */
+
+    else if (
+      action ===
+      "set_ready"
+    ) {
+      const { error } =
+        await supabase
+          .from("cars")
+          .update({
+            status: "READY",
+            updated_at:
+              new Date().toISOString(),
+          })
+          .in(
+            "id",
+            selectedIds
+          );
+
+      if (error) {
+        console.error(error);
+
+        message =
+          error.message;
+
+        messageType =
+          "error";
+      } else {
+        message =
+          `${selectedIds.length} unit berhasil di-set READY.`;
+      }
+    }
+
+
+    /* ===============================================
        DELETE SELECTED
        =============================================== */
 
@@ -282,7 +354,7 @@ function formatPrice(
           text-slate-500
         "
       >
-        Bulk update Featured dan hapus unit Booked dengan cepat.
+        Bulk update Featured, status, dan hapus unit dengan cepat.
       </p>
 
     </div>
@@ -734,6 +806,42 @@ function formatPrice(
         <button
           type="submit"
           name="action"
+          value="set_booked"
+          class="
+            rounded-xl
+            bg-orange-500
+            px-4
+            py-2.5
+            font-bold
+            text-white
+            hover:bg-orange-600
+          "
+        >
+          Set BOOKED
+        </button>
+
+
+        <button
+          type="submit"
+          name="action"
+          value="set_ready"
+          class="
+            rounded-xl
+            bg-green-600
+            px-4
+            py-2.5
+            font-bold
+            text-white
+            hover:bg-green-700
+          "
+        >
+          Set READY
+        </button>
+
+
+        <button
+          type="submit"
+          name="action"
           value="delete_selected"
           id="deleteSelectedButton"
           class="
@@ -856,11 +964,6 @@ function formatPrice(
 
           {
             carList.map((car) => {
-
-              /*
-               * Search text dibuat panjang supaya
-               * pencarian beberapa kata lebih mudah.
-               */
 
               const searchText = [
                 car.brand,
@@ -1311,19 +1414,6 @@ function formatPrice(
       );
 
 
-    /*
-     * TELEGRAM STYLE SEARCH
-     *
-     * "alphard 2021"
-     *
-     * menjadi:
-     *
-     * ["alphard", "2021"]
-     *
-     * Semua kata harus ada pada row,
-     * tapi tidak harus berdempetan.
-     */
-
     const searchTokens =
       rawSearch
         .split(" ")
@@ -1385,10 +1475,6 @@ function formatPrice(
             "__UNASSIGNED__"
           );
 
-
-        /*
-         * Semua keyword harus ditemukan.
-         */
 
         const matchSearch =
           searchTokens.length === 0 ||
