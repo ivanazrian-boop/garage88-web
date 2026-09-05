@@ -9,11 +9,29 @@ if (key !== ADMIN_KEY) {
   return Astro.redirect("/");
 }
 
+const BRANCHES = [
+  "AHA Gallery",
+  "AHA Nusantara",
+  "AHA Gajah Mada Cipondoh",
+  "AHA Gajah Mada Cipete",
+  "Garage88 Kebayoran",
+  "Garage88 Basura",
+  "Garage88 Joglo",
+  "Garage88 Ciater",
+  "AHA ADEX",
+];
+
 let message = "";
 let messageType: "success" | "error" = "success";
 
+
+/* =====================================================
+   BULK ACTION
+   ===================================================== */
+
 if (Astro.request.method === "POST") {
-  const formData = await Astro.request.formData();
+  const formData =
+    await Astro.request.formData();
 
   const action =
     formData.get("action")?.toString() || "";
@@ -25,63 +43,107 @@ if (Astro.request.method === "POST") {
       .filter(Boolean);
 
   if (selectedIds.length === 0) {
-    message = "Belum ada unit yang dipilih.";
-    messageType = "error";
+    message =
+      "Belum ada unit yang dipilih.";
+
+    messageType =
+      "error";
   } else {
+
+    /* ===============================================
+       SET FEATURED
+       =============================================== */
+
     if (action === "set_featured") {
       const { error } =
         await supabase
           .from("cars")
           .update({
             featured: true,
-            updated_at: new Date().toISOString(),
+            updated_at:
+              new Date().toISOString(),
           })
-          .in("id", selectedIds);
+          .in(
+            "id",
+            selectedIds
+          );
 
       if (error) {
         console.error(error);
 
-        message = error.message;
-        messageType = "error";
+        message =
+          error.message;
+
+        messageType =
+          "error";
       } else {
         message =
           `${selectedIds.length} unit berhasil dijadikan Featured.`;
       }
     }
 
-    else if (action === "remove_featured") {
+
+    /* ===============================================
+       REMOVE FEATURED
+       =============================================== */
+
+    else if (
+      action ===
+      "remove_featured"
+    ) {
       const { error } =
         await supabase
           .from("cars")
           .update({
             featured: false,
-            updated_at: new Date().toISOString(),
+            updated_at:
+              new Date().toISOString(),
           })
-          .in("id", selectedIds);
+          .in(
+            "id",
+            selectedIds
+          );
 
       if (error) {
         console.error(error);
 
-        message = error.message;
-        messageType = "error";
+        message =
+          error.message;
+
+        messageType =
+          "error";
       } else {
         message =
           `${selectedIds.length} unit berhasil dihapus dari Featured.`;
       }
     }
 
-    else if (action === "delete_selected") {
+
+    /* ===============================================
+       DELETE SELECTED
+       =============================================== */
+
+    else if (
+      action ===
+      "delete_selected"
+    ) {
       const { error } =
         await supabase
           .from("cars")
           .delete()
-          .in("id", selectedIds);
+          .in(
+            "id",
+            selectedIds
+          );
 
       if (error) {
         console.error(error);
 
-        message = error.message;
-        messageType = "error";
+        message =
+          error.message;
+
+        messageType =
+          "error";
       } else {
         message =
           `${selectedIds.length} unit berhasil dihapus.`;
@@ -90,7 +152,15 @@ if (Astro.request.method === "POST") {
   }
 }
 
-const { data: cars, error } =
+
+/* =====================================================
+   GET CARS
+   ===================================================== */
+
+const {
+  data: cars,
+  error,
+} =
   await supabase
     .from("cars")
     .select(`
@@ -108,21 +178,36 @@ const { data: cars, error } =
       cash_price,
       created_at
     `)
-    .order("featured", {
-      ascending: false,
-    })
-    .order("created_at", {
-      ascending: false,
-    });
+    .order(
+      "featured",
+      {
+        ascending: false,
+      }
+    )
+    .order(
+      "created_at",
+      {
+        ascending: false,
+      }
+    );
 
 if (error) {
   console.error(error);
 
-  message = error.message;
-  messageType = "error";
+  message =
+    error.message;
+
+  messageType =
+    "error";
 }
 
-const carList = cars ?? [];
+const carList =
+  cars ?? [];
+
+
+/* =====================================================
+   PRICE
+   ===================================================== */
 
 function formatPrice(
   value?: number | null
@@ -147,9 +232,26 @@ function formatPrice(
 
 <MainLayout title="Manage Stock | Garage88 Admin">
 
-<section class="min-h-screen bg-slate-100 py-10">
+<section
+  class="
+    min-h-screen
+    bg-slate-100
+    py-10
+  "
+>
 
-<div class="mx-auto max-w-7xl px-5">
+<div
+  class="
+    mx-auto
+    max-w-7xl
+    px-5
+  "
+>
+
+
+  <!-- ================================================= -->
+  <!-- HEADER -->
+  <!-- ================================================= -->
 
   <div
     class="
@@ -164,15 +266,27 @@ function formatPrice(
 
     <div>
 
-      <h1 class="text-3xl font-bold text-slate-900">
+      <h1
+        class="
+          text-3xl
+          font-bold
+          text-slate-900
+        "
+      >
         Manage Featured & Booked
       </h1>
 
-      <p class="mt-2 text-slate-500">
+      <p
+        class="
+          mt-2
+          text-slate-500
+        "
+      >
         Bulk update Featured dan hapus unit Booked dengan cepat.
       </p>
 
     </div>
+
 
     <a
       href={`/admin/cars?key=${ADMIN_KEY}`}
@@ -197,11 +311,16 @@ function formatPrice(
   </div>
 
 
+  <!-- ================================================= -->
+  <!-- MESSAGE -->
+  <!-- ================================================= -->
+
   {
     message && (
       <div
         class:list={[
           "mt-6 rounded-xl p-4 font-semibold",
+
           messageType === "success"
             ? "bg-green-100 text-green-700"
             : "bg-red-100 text-red-700",
@@ -213,7 +332,9 @@ function formatPrice(
   }
 
 
+  <!-- ================================================= -->
   <!-- FILTER -->
+  <!-- ================================================= -->
 
   <div
     class="
@@ -224,11 +345,19 @@ function formatPrice(
       bg-white
       p-5
       shadow-sm
-      md:grid-cols-4
+      md:grid-cols-2
+      lg:grid-cols-5
     "
   >
 
-    <div>
+
+    <!-- SEARCH -->
+
+    <div
+      class="
+        md:col-span-2
+      "
+    >
 
       <label
         class="
@@ -239,13 +368,14 @@ function formatPrice(
           text-slate-600
         "
       >
-        Search
+        Search Unit
       </label>
 
       <input
         id="searchInput"
         type="text"
-        placeholder="Alphard, Zenix, 2021..."
+        placeholder="Contoh: alphard 2021 / elgrand 2007"
+        autocomplete="off"
         class="
           w-full
           rounded-xl
@@ -253,11 +383,27 @@ function formatPrice(
           border-slate-300
           px-4
           py-3
+          outline-none
+          focus:border-blue-500
+          focus:ring-2
+          focus:ring-blue-100
         "
       />
 
+      <p
+        class="
+          mt-1
+          text-[11px]
+          text-slate-400
+        "
+      >
+        Bisa cari beberapa kata sekaligus.
+      </p>
+
     </div>
 
+
+    <!-- STATUS -->
 
     <div>
 
@@ -306,6 +452,8 @@ function formatPrice(
     </div>
 
 
+    <!-- FEATURED -->
+
     <div>
 
       <label
@@ -349,7 +497,67 @@ function formatPrice(
     </div>
 
 
-    <div class="flex items-end">
+    <!-- CABANG -->
+
+    <div>
+
+      <label
+        class="
+          mb-2
+          block
+          text-sm
+          font-semibold
+          text-slate-600
+        "
+      >
+        Cabang
+      </label>
+
+      <select
+        id="branchFilter"
+        class="
+          w-full
+          rounded-xl
+          border
+          border-slate-300
+          px-4
+          py-3
+        "
+      >
+
+        <option value="ALL">
+          ALL CABANG
+        </option>
+
+        <option value="__UNASSIGNED__">
+          BELUM ADA CABANG
+        </option>
+
+        {
+          BRANCHES.map(
+            (branchName) => (
+              <option value={branchName}>
+                {branchName}
+              </option>
+            )
+          )
+        }
+
+      </select>
+
+    </div>
+
+
+    <!-- RESET -->
+
+    <div
+      class="
+        flex
+        items-end
+        md:col-span-2
+        lg:col-span-1
+      "
+    >
 
       <button
         type="button"
@@ -373,7 +581,9 @@ function formatPrice(
   </div>
 
 
+  <!-- ================================================= -->
   <!-- BULK FORM -->
+  <!-- ================================================= -->
 
   <form
     method="POST"
@@ -386,7 +596,10 @@ function formatPrice(
     "
   >
 
+
+    <!-- ================================================= -->
     <!-- ACTION BAR -->
+    <!-- ================================================= -->
 
     <div
       class="
@@ -406,7 +619,14 @@ function formatPrice(
       "
     >
 
-      <div class="flex items-center gap-3">
+      <div
+        class="
+          flex
+          flex-wrap
+          items-center
+          gap-3
+        "
+      >
 
         <label
           class="
@@ -422,12 +642,32 @@ function formatPrice(
           <input
             id="selectAll"
             type="checkbox"
-            class="h-5 w-5"
+            class="
+              h-5
+              w-5
+            "
           />
 
           Select All Visible
 
         </label>
+
+
+        <span
+          id="visibleCount"
+          class="
+            rounded-lg
+            bg-blue-50
+            px-3
+            py-1
+            text-sm
+            font-semibold
+            text-blue-700
+          "
+        >
+          {carList.length} visible
+        </span>
+
 
         <span
           id="selectedCount"
@@ -472,6 +712,7 @@ function formatPrice(
           ⭐ Set Featured
         </button>
 
+
         <button
           type="submit"
           name="action"
@@ -488,6 +729,7 @@ function formatPrice(
         >
           Remove Featured
         </button>
+
 
         <button
           type="submit"
@@ -512,13 +754,24 @@ function formatPrice(
     </div>
 
 
+    <!-- ================================================= -->
     <!-- TABLE -->
+    <!-- ================================================= -->
 
     <div class="overflow-x-auto">
 
-      <table class="w-full min-w-[1000px]">
+      <table
+        class="
+          w-full
+          min-w-[1050px]
+        "
+      >
 
-        <thead class="bg-slate-50">
+        <thead
+          class="
+            bg-slate-50
+          "
+        >
 
           <tr
             class="
@@ -530,31 +783,67 @@ function formatPrice(
             "
           >
 
-            <th class="w-14 px-4 py-4">
+            <th
+              class="
+                w-14
+                px-4
+                py-4
+              "
+            >
               ✓
             </th>
 
-            <th class="px-4 py-4">
+            <th
+              class="
+                px-4
+                py-4
+              "
+            >
               Unit
             </th>
 
-            <th class="px-4 py-4">
+            <th
+              class="
+                px-4
+                py-4
+              "
+            >
               Cabang
             </th>
 
-            <th class="px-4 py-4">
+            <th
+              class="
+                px-4
+                py-4
+              "
+            >
               Status
             </th>
 
-            <th class="px-4 py-4">
+            <th
+              class="
+                px-4
+                py-4
+              "
+            >
               Featured
             </th>
 
-            <th class="px-4 py-4">
+            <th
+              class="
+                px-4
+                py-4
+              "
+            >
               Harga
             </th>
 
-            <th class="px-4 py-4">
+            <th
+              class="
+                px-4
+                py-4
+              "
+            >
               Action
             </th>
 
@@ -568,6 +857,11 @@ function formatPrice(
           {
             carList.map((car) => {
 
+              /*
+               * Search text dibuat panjang supaya
+               * pencarian beberapa kata lebih mudah.
+               */
+
               const searchText = [
                 car.brand,
                 car.model,
@@ -579,6 +873,11 @@ function formatPrice(
                 .filter(Boolean)
                 .join(" ")
                 .toLowerCase();
+
+              const branchValue =
+                car.branch?.trim()
+                  ? car.branch
+                  : "__UNASSIGNED__";
 
               return (
 
@@ -596,9 +895,18 @@ function formatPrice(
                       ? "YES"
                       : "NO"
                   }
+                  data-branch={branchValue}
                 >
 
-                  <td class="px-4 py-4">
+
+                  <!-- CHECK -->
+
+                  <td
+                    class="
+                      px-4
+                      py-4
+                    "
+                  >
 
                     <input
                       type="checkbox"
@@ -614,9 +922,22 @@ function formatPrice(
                   </td>
 
 
-                  <td class="px-4 py-4">
+                  <!-- UNIT -->
 
-                    <div class="flex items-center gap-4">
+                  <td
+                    class="
+                      px-4
+                      py-4
+                    "
+                  >
+
+                    <div
+                      class="
+                        flex
+                        items-center
+                        gap-4
+                      "
+                    >
 
                       {
                         car.ig_image_url
@@ -652,6 +973,7 @@ function formatPrice(
                           )
                       }
 
+
                       <div>
 
                         <div
@@ -662,6 +984,7 @@ function formatPrice(
                         >
                           {car.brand} {car.model}
                         </div>
+
 
                         <div
                           class="
@@ -680,6 +1003,8 @@ function formatPrice(
                   </td>
 
 
+                  <!-- CABANG -->
+
                   <td
                     class="
                       px-4
@@ -688,19 +1013,44 @@ function formatPrice(
                       text-slate-600
                     "
                   >
-                    {car.branch ?? "BELUM ADA CABANG"}
+
+                    {
+                      car.branch?.trim()
+                        ? car.branch
+                        : (
+                          <span
+                            class="
+                              font-semibold
+                              text-red-500
+                            "
+                          >
+                            BELUM ADA CABANG
+                          </span>
+                        )
+                    }
+
                   </td>
 
 
-                  <td class="px-4 py-4">
+                  <!-- STATUS -->
+
+                  <td
+                    class="
+                      px-4
+                      py-4
+                    "
+                  >
 
                     <span
                       class:list={[
                         "inline-flex rounded-full px-3 py-1 text-xs font-bold",
+
                         car.status === "READY"
                           ? "bg-green-100 text-green-700"
+
                           : car.status === "BOOKED"
                             ? "bg-orange-100 text-orange-700"
+
                             : "bg-slate-200 text-slate-700",
                       ]}
                     >
@@ -710,7 +1060,14 @@ function formatPrice(
                   </td>
 
 
-                  <td class="px-4 py-4">
+                  <!-- FEATURED -->
+
+                  <td
+                    class="
+                      px-4
+                      py-4
+                    "
+                  >
 
                     {
                       car.featured
@@ -745,6 +1102,8 @@ function formatPrice(
                   </td>
 
 
+                  <!-- PRICE -->
+
                   <td
                     class="
                       px-4
@@ -761,7 +1120,11 @@ function formatPrice(
                       </strong>
                     </div>
 
-                    <div class="mt-1">
+                    <div
+                      class="
+                        mt-1
+                      "
+                    >
                       Cash:
                       <strong>
                         {formatPrice(car.cash_price)}
@@ -771,7 +1134,14 @@ function formatPrice(
                   </td>
 
 
-                  <td class="px-4 py-4">
+                  <!-- ACTION -->
+
+                  <td
+                    class="
+                      px-4
+                      py-4
+                    "
+                  >
 
                     <a
                       href={`/admin/cars/edit?id=${car.id}&key=${ADMIN_KEY}`}
@@ -805,6 +1175,8 @@ function formatPrice(
     </div>
 
 
+    <!-- EMPTY -->
+
     <div
       id="emptyState"
       class="
@@ -825,6 +1197,30 @@ function formatPrice(
 
 
 <script is:inline>
+
+  /* =====================================================
+     NORMALIZE SEARCH
+     ===================================================== */
+
+  function normalizeSearch(value) {
+    return String(value || "")
+      .toLowerCase()
+      .replace(
+        /[^a-z0-9]+/g,
+        " "
+      )
+      .replace(
+        /\s+/g,
+        " "
+      )
+      .trim();
+  }
+
+
+  /* =====================================================
+     ELEMENTS
+     ===================================================== */
+
   const searchInput =
     document.getElementById(
       "searchInput"
@@ -838,6 +1234,11 @@ function formatPrice(
   const featuredFilter =
     document.getElementById(
       "featuredFilter"
+    );
+
+  const branchFilter =
+    document.getElementById(
+      "branchFilter"
     );
 
   const clearFilterButton =
@@ -855,6 +1256,11 @@ function formatPrice(
       "selectedCount"
     );
 
+  const visibleCount =
+    document.getElementById(
+      "visibleCount"
+    );
+
   const deleteSelectedButton =
     document.getElementById(
       "deleteSelectedButton"
@@ -870,6 +1276,10 @@ function formatPrice(
       "emptyState"
     );
 
+
+  /* =====================================================
+     ROW HELPERS
+     ===================================================== */
 
   function getRows() {
     return Array.from(
@@ -889,87 +1299,174 @@ function formatPrice(
   }
 
 
+  /* =====================================================
+     FILTER
+     ===================================================== */
+
   function applyFilters() {
-    const search =
-      String(
+
+    const rawSearch =
+      normalizeSearch(
         searchInput?.value || ""
-      )
-        .toLowerCase()
-        .trim();
+      );
+
+
+    /*
+     * TELEGRAM STYLE SEARCH
+     *
+     * "alphard 2021"
+     *
+     * menjadi:
+     *
+     * ["alphard", "2021"]
+     *
+     * Semua kata harus ada pada row,
+     * tapi tidak harus berdempetan.
+     */
+
+    const searchTokens =
+      rawSearch
+        .split(" ")
+        .filter(Boolean);
+
 
     const status =
       String(
-        statusFilter?.value || "ALL"
+        statusFilter?.value ||
+        "ALL"
       );
+
 
     const featured =
       String(
-        featuredFilter?.value || "ALL"
+        featuredFilter?.value ||
+        "ALL"
       );
 
-    let visibleCount = 0;
+
+    const branch =
+      String(
+        branchFilter?.value ||
+        "ALL"
+      );
+
+
+    let currentVisibleCount =
+      0;
+
 
     getRows().forEach(
       (row) => {
+
         const searchText =
-          String(
-            row.dataset.search || ""
+          normalizeSearch(
+            row.dataset.search ||
+            ""
           );
+
 
         const rowStatus =
           String(
-            row.dataset.status || ""
+            row.dataset.status ||
+            ""
           );
+
 
         const rowFeatured =
           String(
-            row.dataset.featured || "NO"
+            row.dataset.featured ||
+            "NO"
           );
 
+
+        const rowBranch =
+          String(
+            row.dataset.branch ||
+            "__UNASSIGNED__"
+          );
+
+
+        /*
+         * Semua keyword harus ditemukan.
+         */
+
         const matchSearch =
-          !search ||
-          searchText.includes(search);
+          searchTokens.length === 0 ||
+          searchTokens.every(
+            (token) =>
+              searchText.includes(
+                token
+              )
+          );
+
 
         const matchStatus =
           status === "ALL" ||
           rowStatus === status;
 
+
         const matchFeatured =
           featured === "ALL" ||
           rowFeatured === featured;
 
+
+        const matchBranch =
+          branch === "ALL" ||
+          rowBranch === branch;
+
+
         const visible =
           matchSearch &&
           matchStatus &&
-          matchFeatured;
+          matchFeatured &&
+          matchBranch;
+
 
         row.style.display =
           visible
             ? ""
             : "none";
 
+
         if (visible) {
-          visibleCount++;
+          currentVisibleCount++;
         }
+
       }
     );
+
+
+    if (visibleCount) {
+      visibleCount.textContent =
+        `${currentVisibleCount} visible`;
+    }
+
 
     if (emptyState) {
       emptyState.classList.toggle(
         "hidden",
-        visibleCount > 0
+        currentVisibleCount > 0
       );
     }
 
+
     if (selectAll) {
-      selectAll.checked = false;
+      selectAll.checked =
+        false;
     }
 
+
     updateSelectedCount();
+
   }
 
 
+  /* =====================================================
+     SELECTED COUNT
+     ===================================================== */
+
   function updateSelectedCount() {
+
     const checked =
       getCheckboxes()
         .filter(
@@ -978,22 +1475,30 @@ function formatPrice(
         )
         .length;
 
+
     if (selectedCount) {
       selectedCount.textContent =
         `${checked} selected`;
     }
+
   }
 
+
+  /* =====================================================
+     FILTER EVENTS
+     ===================================================== */
 
   searchInput?.addEventListener(
     "input",
     applyFilters
   );
 
+
   statusFilter?.addEventListener(
     "change",
     applyFilters
   );
+
 
   featuredFilter?.addEventListener(
     "change",
@@ -1001,26 +1506,54 @@ function formatPrice(
   );
 
 
+  branchFilter?.addEventListener(
+    "change",
+    applyFilters
+  );
+
+
+  /* =====================================================
+     RESET
+     ===================================================== */
+
   clearFilterButton?.addEventListener(
     "click",
     () => {
-      searchInput.value = "";
-      statusFilter.value = "ALL";
-      featuredFilter.value = "ALL";
+
+      searchInput.value =
+        "";
+
+      statusFilter.value =
+        "ALL";
+
+      featuredFilter.value =
+        "ALL";
+
+      branchFilter.value =
+        "ALL";
+
 
       applyFilters();
+
     }
   );
 
 
+  /* =====================================================
+     SELECT ALL VISIBLE
+     ===================================================== */
+
   selectAll?.addEventListener(
     "change",
     () => {
+
       const checked =
         selectAll.checked;
 
+
       getRows().forEach(
         (row) => {
+
           if (
             row.style.display ===
             "none"
@@ -1028,36 +1561,52 @@ function formatPrice(
             return;
           }
 
+
           const checkbox =
             row.querySelector(
               ".car-checkbox"
             );
 
+
           if (checkbox) {
             checkbox.checked =
               checked;
           }
+
         }
       );
 
+
       updateSelectedCount();
+
     }
   );
 
 
+  /* =====================================================
+     CHECKBOX
+     ===================================================== */
+
   getCheckboxes().forEach(
     (checkbox) => {
+
       checkbox.addEventListener(
         "change",
         updateSelectedCount
       );
+
     }
   );
 
 
+  /* =====================================================
+     DELETE CONFIRMATION
+     ===================================================== */
+
   deleteSelectedButton?.addEventListener(
     "click",
     (event) => {
+
       const selected =
         getCheckboxes()
           .filter(
@@ -1065,35 +1614,49 @@ function formatPrice(
               checkbox.checked
           );
 
+
       if (
         selected.length === 0
       ) {
+
         event.preventDefault();
+
 
         alert(
           "Pilih unit yang mau dihapus dulu."
         );
 
+
         return;
+
       }
+
 
       const confirmed =
         confirm(
           `Hapus permanen ${selected.length} unit?\n\nTindakan ini tidak bisa dibatalkan.`
         );
 
+
       if (!confirmed) {
         event.preventDefault();
       }
+
     }
   );
 
 
+  /* =====================================================
+     OTHER BULK ACTION VALIDATION
+     ===================================================== */
+
   bulkForm?.addEventListener(
     "submit",
     (event) => {
+
       const submitter =
         event.submitter;
+
 
       if (
         submitter &&
@@ -1103,6 +1666,7 @@ function formatPrice(
         return;
       }
 
+
       const selected =
         getCheckboxes()
           .filter(
@@ -1110,20 +1674,30 @@ function formatPrice(
               checkbox.checked
           );
 
+
       if (
         selected.length === 0
       ) {
+
         event.preventDefault();
+
 
         alert(
           "Pilih minimal satu unit dulu."
         );
+
       }
+
     }
   );
 
 
+  /* =====================================================
+     INITIAL FILTER
+     ===================================================== */
+
   applyFilters();
+
 </script>
 
 </MainLayout>
