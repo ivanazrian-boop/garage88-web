@@ -1,0 +1,843 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+import { supabase } from "../lib/supabase";
+
+const { data, error } =
+  await supabase
+    .from("cars")
+    .select(`
+      id,
+      brand,
+      model,
+      variant,
+      year,
+      color,
+      branch,
+      status,
+      odometer,
+      credit_price,
+      cash_price,
+      dp,
+      description,
+      ig_image_url,
+      created_at
+    `)
+    .in(
+      "status",
+      [
+        "READY",
+        "BOOKED"
+      ]
+    )
+    .order(
+      "created_at",
+      {
+        ascending: false
+      }
+    );
+
+if (error) {
+  console.error(
+    "Support Page:",
+    error
+  );
+}
+
+const cars =
+  data ?? [];
+
+function carTitle(car: any) {
+  return [
+    car.brand,
+    car.model,
+    car.variant,
+    car.year,
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function searchableText(car: any) {
+  return [
+    car.brand,
+    car.model,
+    car.variant,
+    car.year,
+    car.color,
+    car.branch,
+    car.status,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
+function cleanDescription(
+  value: unknown
+) {
+  return String(
+    value ?? ""
+  )
+    .replace(
+      /\r\n/g,
+      "\n"
+    )
+    .trim();
+}
+---
+
+<MainLayout title="Garage88 Support">
+
+  <section
+    class="
+      min-h-screen
+      bg-slate-100
+      pb-16
+    "
+  >
+
+    <!-- ================================================= -->
+    <!-- HEADER -->
+    <!-- ================================================= -->
+
+    <div
+      class="
+        sticky
+        top-0
+        z-50
+        border-b
+        border-slate-200
+        bg-white
+        px-4
+        py-4
+      "
+    >
+
+      <div
+        class="
+          mx-auto
+          max-w-xl
+        "
+      >
+
+        <h1
+          class="
+            text-xl
+            font-extrabold
+            text-slate-900
+          "
+        >
+          Garage88 Support
+        </h1>
+
+
+        <input
+          id="searchInput"
+          type="search"
+          autocomplete="off"
+          placeholder="Cari mobil..."
+          class="
+            mt-3
+            w-full
+            rounded-2xl
+            border
+            border-slate-300
+            bg-slate-50
+            px-4
+            py-3.5
+            text-base
+            text-slate-900
+            outline-none
+            focus:border-blue-500
+            focus:bg-white
+            focus:ring-2
+            focus:ring-blue-100
+          "
+        />
+
+
+        <p
+          id="resultCount"
+          class="
+            mt-2
+            text-xs
+            text-slate-400
+          "
+        >
+          {cars.length} unit
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- LIST -->
+    <!-- ================================================= -->
+
+    <div
+      class="
+        mx-auto
+        max-w-xl
+        space-y-3
+        px-3
+        py-4
+      "
+    >
+
+      {
+        cars.map((car) => {
+
+          const title =
+            carTitle(car);
+
+          const searchText =
+            searchableText(car);
+
+          const description =
+            cleanDescription(
+              car.description
+            );
+
+          return (
+
+            <div
+              class="
+                car-item
+                rounded-2xl
+                bg-white
+                p-3
+                shadow-sm
+              "
+              data-search={searchText}
+            >
+
+              <div
+                class="
+                  flex
+                  gap-3
+                "
+              >
+
+                <!-- COVER -->
+
+                {
+                  car.ig_image_url ? (
+
+                    <img
+                      src={car.ig_image_url}
+                      alt={title}
+                      loading="lazy"
+                      class="
+                        h-28
+                        w-24
+                        shrink-0
+                        rounded-xl
+                        border
+                        border-slate-200
+                        object-cover
+                      "
+                    />
+
+                  ) : (
+
+                    <div
+                      class="
+                        flex
+                        h-28
+                        w-24
+                        shrink-0
+                        items-center
+                        justify-center
+                        rounded-xl
+                        bg-slate-100
+                        text-center
+                        text-[10px]
+                        font-bold
+                        text-slate-400
+                      "
+                    >
+                      NO IG
+                      <br />
+                      COVER
+                    </div>
+
+                  )
+                }
+
+
+                <!-- INFO -->
+
+                <div
+                  class="
+                    min-w-0
+                    flex-1
+                  "
+                >
+
+                  <div
+                    class="
+                      text-sm
+                      font-extrabold
+                      leading-snug
+                      text-slate-900
+                    "
+                  >
+                    {title}
+                  </div>
+
+
+                  <div
+                    class="
+                      mt-1
+                      text-xs
+                      text-slate-500
+                    "
+                  >
+                    {car.color ?? "-"}
+                  </div>
+
+
+                  <div
+                    class="
+                      mt-2
+                      flex
+                      flex-wrap
+                      gap-1.5
+                    "
+                  >
+
+                    <span
+                      class:list={[
+                        "rounded-full px-2 py-1 text-[9px] font-bold",
+
+                        car.status === "READY"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-orange-100 text-orange-700"
+                      ]}
+                    >
+                      {car.status}
+                    </span>
+
+
+                    {
+                      car.branch && (
+
+                        <span
+                          class="
+                            rounded-full
+                            bg-slate-100
+                            px-2
+                            py-1
+                            text-[9px]
+                            font-semibold
+                            text-slate-500
+                          "
+                        >
+                          {car.branch}
+                        </span>
+
+                      )
+                    }
+
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              <!-- ================================================= -->
+              <!-- BUTTON -->
+              <!-- ================================================= -->
+
+              <div
+                class="
+                  mt-3
+                  grid
+                  grid-cols-2
+                  gap-2
+                "
+              >
+
+                <button
+                  type="button"
+                  data-cover={car.ig_image_url ?? ""}
+                  class="
+                    copy-cover
+                    rounded-xl
+                    bg-blue-600
+                    px-3
+                    py-3
+                    text-xs
+                    font-bold
+                    text-white
+                    active:scale-[0.98]
+                  "
+                >
+                  Copy Cover
+                </button>
+
+
+                <button
+                  type="button"
+                  data-description={description}
+                  class="
+                    copy-description
+                    rounded-xl
+                    bg-slate-900
+                    px-3
+                    py-3
+                    text-xs
+                    font-bold
+                    text-white
+                    active:scale-[0.98]
+                  "
+                >
+                  Copy Deskripsi
+                </button>
+
+              </div>
+
+            </div>
+
+          );
+
+        })
+      }
+
+    </div>
+
+
+    <!-- EMPTY -->
+
+    <div
+      id="emptyState"
+      class="
+        hidden
+        px-6
+        py-16
+        text-center
+        text-sm
+        text-slate-500
+      "
+    >
+      Mobil tidak ditemukan.
+    </div>
+
+
+    <!-- TOAST -->
+
+    <div
+      id="toast"
+      class="
+        fixed
+        bottom-6
+        left-1/2
+        z-[100]
+        hidden
+        -translate-x-1/2
+        rounded-full
+        bg-slate-900
+        px-5
+        py-3
+        text-sm
+        font-bold
+        text-white
+        shadow-xl
+      "
+    >
+      Copied
+    </div>
+
+  </section>
+
+
+  <script is:inline>
+
+    // @ts-nocheck
+
+    const searchInput =
+      document.getElementById(
+        "searchInput"
+      );
+
+    const items =
+      Array.from(
+        document.querySelectorAll(
+          ".car-item"
+        )
+      );
+
+    const resultCount =
+      document.getElementById(
+        "resultCount"
+      );
+
+    const emptyState =
+      document.getElementById(
+        "emptyState"
+      );
+
+    const toast =
+      document.getElementById(
+        "toast"
+      );
+
+
+    /* =====================================================
+       NORMALIZE
+       ===================================================== */
+
+    function normalize(value) {
+
+      return String(
+        value || ""
+      )
+        .toLowerCase()
+        .replace(
+          /[^a-z0-9]+/g,
+          " "
+        )
+        .replace(
+          /\s+/g,
+          " "
+        )
+        .trim();
+
+    }
+
+
+    /* =====================================================
+       TOAST
+       ===================================================== */
+
+    let toastTimer;
+
+
+    function showToast(message) {
+
+      if (!toast) {
+        return;
+      }
+
+
+      toast.textContent =
+        message;
+
+
+      toast.classList.remove(
+        "hidden"
+      );
+
+
+      clearTimeout(
+        toastTimer
+      );
+
+
+      toastTimer =
+        setTimeout(
+          () => {
+
+            toast.classList.add(
+              "hidden"
+            );
+
+          },
+          1500
+        );
+
+    }
+
+
+    /* =====================================================
+       SEARCH LIKE TELEGRAM
+       ===================================================== */
+
+    function applySearch() {
+
+      const query =
+        normalize(
+          searchInput?.value
+        );
+
+
+      const words =
+        query
+          .split(" ")
+          .filter(Boolean);
+
+
+      let visible =
+        0;
+
+
+      items.forEach(
+        (item) => {
+
+          const searchable =
+            normalize(
+              item.dataset.search
+            );
+
+
+          const match =
+            words.length === 0 ||
+            words.every(
+              (word) =>
+                searchable.includes(
+                  word
+                )
+            );
+
+
+          item.style.display =
+            match
+              ? ""
+              : "none";
+
+
+          if (match) {
+            visible++;
+          }
+
+        }
+      );
+
+
+      if (resultCount) {
+
+        resultCount.textContent =
+          `${visible} unit`;
+
+      }
+
+
+      if (emptyState) {
+
+        emptyState.classList.toggle(
+          "hidden",
+          visible > 0
+        );
+
+      }
+
+    }
+
+
+    searchInput?.addEventListener(
+      "input",
+      applySearch
+    );
+
+
+    /* =====================================================
+       COPY DESCRIPTION
+       ===================================================== */
+
+    document
+      .querySelectorAll(
+        ".copy-description"
+      )
+      .forEach(
+        (button) => {
+
+          button.addEventListener(
+            "click",
+            async () => {
+
+              const description =
+                button.dataset.description ||
+                "";
+
+
+              if (!description) {
+
+                showToast(
+                  "Deskripsi kosong"
+                );
+
+                return;
+
+              }
+
+
+              try {
+
+                await navigator.clipboard
+                  .writeText(
+                    description
+                  );
+
+
+                showToast(
+                  "Deskripsi copied ✓"
+                );
+
+              } catch (error) {
+
+                console.error(
+                  error
+                );
+
+
+                showToast(
+                  "Gagal copy"
+                );
+
+              }
+
+            }
+          );
+
+        }
+      );
+
+
+    /* =====================================================
+       COPY COVER
+       ===================================================== */
+
+    document
+      .querySelectorAll(
+        ".copy-cover"
+      )
+      .forEach(
+        (button) => {
+
+          button.addEventListener(
+            "click",
+            async () => {
+
+              const url =
+                button.dataset.cover;
+
+
+              if (!url) {
+
+                showToast(
+                  "IG Cover belum ada"
+                );
+
+                return;
+
+              }
+
+
+              try {
+
+                const response =
+                  await fetch(
+                    url
+                  );
+
+
+                if (!response.ok) {
+
+                  throw new Error(
+                    "Image fetch failed"
+                  );
+
+                }
+
+
+                const sourceBlob =
+                  await response.blob();
+
+
+                const bitmap =
+                  await createImageBitmap(
+                    sourceBlob
+                  );
+
+
+                const canvas =
+                  document.createElement(
+                    "canvas"
+                  );
+
+
+                canvas.width =
+                  bitmap.width;
+
+
+                canvas.height =
+                  bitmap.height;
+
+
+                const context =
+                  canvas.getContext(
+                    "2d"
+                  );
+
+
+                context.drawImage(
+                  bitmap,
+                  0,
+                  0
+                );
+
+
+                const pngBlob =
+                  await new Promise(
+                    (resolve) => {
+
+                      canvas.toBlob(
+                        resolve,
+                        "image/png"
+                      );
+
+                    }
+                  );
+
+
+                await navigator.clipboard.write([
+                  new ClipboardItem({
+                    "image/png":
+                      pngBlob
+                  })
+                ]);
+
+
+                showToast(
+                  "Cover copied ✓"
+                );
+
+              } catch (error) {
+
+                console.error(
+                  error
+                );
+
+
+                /*
+                 * Kalau browser HP tidak support
+                 * image clipboard, buka cover.
+                 */
+
+                window.open(
+                  url,
+                  "_blank"
+                );
+
+
+                showToast(
+                  "Cover dibuka"
+                );
+
+              }
+
+            }
+          );
+
+        }
+      );
+
+
+    applySearch();
+
+  </script>
+
+</MainLayout>
