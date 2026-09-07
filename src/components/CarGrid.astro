@@ -58,42 +58,93 @@ cars.map((car)=>(
 {
 page < totalPages && (
 
-
-<div class="mt-12 text-center">
-
-
-<button
-
-id="load-more"
-
-data-page={page}
-
-data-total-pages={totalPages}
-
-data-query={query}
-
-data-price={price}
-
+<div
+id="infinite-scroll-zone"
 class="
-rounded-xl
-bg-red-600
-px-10
-py-4
-font-semibold
-text-white
-transition
-hover:bg-red-700
+mt-10
+flex
+min-h-[90px]
+items-center
+justify-center
+text-center
 "
-
 >
 
-Load More
+<div>
 
-</button>
+
+<div
+id="infinite-loader"
+class="
+hidden
+items-center
+justify-center
+gap-3
+text-sm
+font-semibold
+text-slate-500
+"
+>
+
+<span
+class="
+inline-block
+h-5
+w-5
+animate-spin
+rounded-full
+border-2
+border-slate-300
+border-t-red-600
+"
+>
+</span>
+
+<span>
+Loading unit berikutnya...
+</span>
+
+</div>
+
+
+<div
+id="scroll-sentinel"
+data-page={page}
+data-total-pages={totalPages}
+data-query={query}
+data-price={price}
+class="
+h-4
+w-full
+"
+>
+</div>
 
 
 </div>
 
+</div>
+
+)
+
+}
+
+
+
+{
+page >= totalPages && cars.length > 0 && (
+
+<div
+class="
+mt-10
+text-center
+text-sm
+font-medium
+text-slate-400
+"
+>
+Semua unit sudah ditampilkan
+</div>
 
 )
 
@@ -105,137 +156,406 @@ Load More
 
 <script is:inline>
 
+  // @ts-nocheck
 
-const button =
-document.getElementById(
-"load-more"
-);
+  const sentinel =
+    document.getElementById(
+      "scroll-sentinel"
+    );
 
 
+  const loader =
+    document.getElementById(
+      "infinite-loader"
+    );
 
-if(button){
 
+  const zone =
+    document.getElementById(
+      "infinite-scroll-zone"
+    );
 
-button.addEventListener(
-"click",
-async()=>{
 
+  const grid =
+    document.getElementById(
+      "car-grid"
+    );
 
-let page =
-Number(
-button.dataset.page
-);
 
+  let isLoading =
+    false;
 
 
-const totalPages =
-Number(
-button.dataset.totalPages
-);
+  let observer =
+    null;
 
 
 
-const query =
-button.dataset.query || "";
+  /* =====================================================
+     SHOW LOADER
+     ===================================================== */
 
+  function showLoader() {
 
+    if (!loader) {
+      return;
+    }
 
-const price =
-button.dataset.price || "";
 
+    loader.classList.remove(
+      "hidden"
+    );
 
 
-if(page >= totalPages){
+    loader.classList.add(
+      "flex"
+    );
 
-button.remove();
+  }
 
-return;
 
-}
 
+  /* =====================================================
+     HIDE LOADER
+     ===================================================== */
 
+  function hideLoader() {
 
-page++;
+    if (!loader) {
+      return;
+    }
 
 
+    loader.classList.add(
+      "hidden"
+    );
 
-button.innerText =
-"Loading...";
 
+    loader.classList.remove(
+      "flex"
+    );
 
+  }
 
-let url =
-`/api/cars-html?page=${page}`;
 
 
+  /* =====================================================
+     FINISH
+     ===================================================== */
 
-if(query){
+  function finishInfiniteScroll() {
 
-url +=
-`&q=${encodeURIComponent(query)}`;
+    if (observer) {
 
-}
+      observer.disconnect();
 
+    }
 
 
-if(price){
+    if (zone) {
 
-url +=
-`&price=${price}`;
+      zone.innerHTML =
+        `
+          <div
+            class="
+              py-4
+              text-center
+              text-sm
+              font-medium
+              text-slate-400
+            "
+          >
+            Semua unit sudah ditampilkan
+          </div>
+        `;
 
-}
+    }
 
+  }
 
 
 
-const response =
-await fetch(url);
+  /* =====================================================
+     LOAD NEXT PAGE
+     ===================================================== */
 
+  async function loadNextPage() {
 
+    if (
+      !sentinel ||
+      !grid ||
+      isLoading
+    ) {
+      return;
+    }
 
-const result =
-await response.json();
 
+    let page =
+      Number(
+        sentinel.dataset.page ||
+        1
+      );
 
 
-const grid =
-document.getElementById(
-"car-grid"
-);
+    const totalPages =
+      Number(
+        sentinel.dataset.totalPages ||
+        1
+      );
 
 
+    const query =
+      sentinel.dataset.query ||
+      "";
 
-grid.insertAdjacentHTML(
 
-"beforeend",
+    const price =
+      sentinel.dataset.price ||
+      "";
 
-result.html
 
-);
+    if (
+      page >=
+      totalPages
+    ) {
 
+      finishInfiniteScroll();
 
+      return;
 
-button.dataset.page =
-String(page);
+    }
 
 
+    isLoading =
+      true;
 
-button.innerText =
-"Load More";
 
+    showLoader();
 
 
-if(page >= totalPages){
+    const nextPage =
+      page + 1;
 
-button.remove();
 
-}
+    let url =
+      `/api/cars-html?page=${nextPage}`;
 
 
+    if (query) {
 
-});
+      url +=
+        `&q=${encodeURIComponent(query)}`;
 
-}
+    }
 
+
+    if (price) {
+
+      url +=
+        `&price=${encodeURIComponent(price)}`;
+
+    }
+
+
+    try {
+
+      const response =
+        await fetch(
+          url,
+          {
+            cache:
+              "no-store"
+          }
+        );
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          `HTTP ${response.status}`
+        );
+
+      }
+
+
+      const result =
+        await response.json();
+
+
+      if (
+        result.html &&
+        String(
+          result.html
+        ).trim()
+      ) {
+
+        grid.insertAdjacentHTML(
+          "beforeend",
+          result.html
+        );
+
+      }
+
+
+      page =
+        nextPage;
+
+
+      sentinel.dataset.page =
+        String(page);
+
+
+      if (
+        page >=
+        totalPages
+      ) {
+
+        finishInfiniteScroll();
+
+      }
+
+
+    } catch (error) {
+
+      console.error(
+        "Infinite scroll error:",
+        error
+      );
+
+
+      if (zone) {
+
+        zone.innerHTML =
+          `
+            <div
+              class="
+                py-4
+                text-center
+              "
+            >
+
+              <p
+                class="
+                  text-sm
+                  font-medium
+                  text-red-600
+                "
+              >
+                Gagal memuat unit berikutnya
+              </p>
+
+              <button
+                id="retry-infinite-scroll"
+                type="button"
+                class="
+                  mt-3
+                  rounded-xl
+                  bg-red-600
+                  px-5
+                  py-2.5
+                  text-sm
+                  font-semibold
+                  text-white
+                "
+              >
+                Coba Lagi
+              </button>
+
+            </div>
+          `;
+
+
+        const retryButton =
+          document.getElementById(
+            "retry-infinite-scroll"
+          );
+
+
+        retryButton?.addEventListener(
+          "click",
+          () => {
+
+            location.reload();
+
+          }
+        );
+
+      }
+
+
+      if (observer) {
+
+        observer.disconnect();
+
+      }
+
+    } finally {
+
+      isLoading =
+        false;
+
+
+      hideLoader();
+
+    }
+
+  }
+
+
+
+  /* =====================================================
+     OBSERVER
+     ===================================================== */
+
+  if (
+    sentinel &&
+    grid
+  ) {
+
+    observer =
+      new IntersectionObserver(
+        (entries) => {
+
+          const entry =
+            entries[0];
+
+
+          if (
+            !entry ||
+            !entry.isIntersecting ||
+            isLoading
+          ) {
+            return;
+          }
+
+
+          loadNextPage();
+
+        },
+        {
+
+          /*
+           * Mulai load sebelum benar-benar
+           * sampai bawah.
+           *
+           * Jadi terasa mulus dan user tidak
+           * melihat jeda.
+           */
+
+          rootMargin:
+            "700px 0px",
+
+          threshold:
+            0
+
+        }
+      );
+
+
+    observer.observe(
+      sentinel
+    );
+
+  }
 
 </script>
