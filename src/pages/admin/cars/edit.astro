@@ -1247,79 +1247,82 @@ Simpan Perubahan
      CLEAN TELEGRAM DESCRIPTION
      ===================================================== */
 
-  function cleanTelegramDescription(
-    text
-  ) {
+ function cleanTelegramDescription(
+  text
+) {
 
-    return String(
-      text || ""
+  return String(
+    text || ""
+  )
+
+    /*
+     * Hapus cabang + Group,
+     * TAPI jangan hapus newline setelahnya.
+     *
+     * Contoh:
+     * Abu (Garage88 Ciater) Group C
+     * - Engine...
+     *
+     * menjadi:
+     * Abu
+     * - Engine...
+     */
+
+    .replace(
+      /[ \t]*\([^)\n]*(?:garage\s*88|garage88|aha)[^)\n]*\)[ \t]*(?:group|grup|grub)[ \t]*[a-z0-9]+[ \t]*/gi,
+      ""
     )
 
-      /*
-       * Hapus pola seperti:
-       *
-       * (Garage 88 Ciater) Grup C
-       * (Garage88 Ciater) Group C
-       * (AHA Gallery) Grup B
-       * (AHA Nusantara) Grub A
-       * (AHA Gajah Mada Cipete) Group C
-       */
+    /*
+     * Cabang dalam kurung tanpa Group.
+     */
 
-      .replace(
-        /\s*\([^)\n]*(?:garage\s*88|garage88|aha)[^)\n]*\)\s*(?:group|grup|grub)\s*[a-z0-9]+\s*/gi,
-        " "
-      )
+    .replace(
+      /[ \t]*\([^)\n]*(?:garage\s*88|garage88|aha)[^)\n]*\)[ \t]*/gi,
+      ""
+    )
 
-      /*
-       * Hapus kalau cabang ada
-       * dalam kurung tanpa Group.
-       */
+    /*
+     * Group/Grup/Grub tersisa.
+     * Tidak memakan newline.
+     */
 
-      .replace(
-        /\s*\([^)\n]*(?:garage\s*88|garage88|aha)[^)\n]*\)\s*/gi,
-        " "
-      )
+    .replace(
+      /[ \t]*\b(?:group|grup|grub)[ \t]+[a-z0-9]+\b[ \t]*/gi,
+      ""
+    )
 
-      /*
-       * Hapus Group/Grup/Grub
-       * yang tersisa.
-       */
+    /*
+     * Rapikan spasi sebelum newline.
+     */
 
-      .replace(
-        /\b(?:group|grup|grub)\s+[a-z0-9]+\b/gi,
-        ""
-      )
+    .replace(
+      /[ \t]+\n/g,
+      "\n"
+    )
 
-      /*
-       * Rapikan spasi sebelum newline.
-       */
+    /*
+     * Rapikan spasi ganda,
+     * tapi HANYA dalam satu baris.
+     */
 
-      .replace(
-        /[ \t]+\n/g,
-        "\n"
-      )
+    .replace(
+      /[ \t]{2,}/g,
+      " "
+    )
 
-      /*
-       * Rapikan banyak spasi.
-       */
+    /*
+     * Maksimal 2 newline kosong.
+     */
 
-      .replace(
-        / {2,}/g,
-        " "
-      )
+    .replace(
+      /\n{3,}/g,
+      "\n\n"
+    )
 
-      /*
-       * Maksimal 2 newline.
-       */
+    .trim();
 
-      .replace(
-        /\n{3,}/g,
-        "\n\n"
-      )
-
-      .trim();
-
-  }
+}
 
 
   /* =====================================================
