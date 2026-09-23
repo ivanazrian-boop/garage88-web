@@ -3,7 +3,6 @@ import MainLayout from "../../../layouts/MainLayout.astro";
 import { supabase } from "../../../lib/supabase";
 
 const key = Astro.url.searchParams.get("key");
-
 const ADMIN_KEY = "garage88";
 
 if (key !== ADMIN_KEY) {
@@ -84,7 +83,7 @@ if (Astro.request.method === "POST") {
       "READY",
 
     featured:
-      formData.get("featured") === "on"
+      formData.get("featured") === "on",
   };
 
   const { data, error } =
@@ -118,9 +117,11 @@ Tambah Mobil
 
 {
   message && (
+
     <div class="mt-5 rounded-xl bg-red-100 p-4 text-red-700">
       {message}
     </div>
+
   )
 }
 
@@ -216,6 +217,10 @@ Tambah Mobil
 
   <option value="AHA Gajah Mada Cipete">
     AHA Gajah Mada Cipete
+  </option>
+
+  <option value="AHA Royal">
+    AHA Royal
   </option>
 
   <option value="Garage88 Kebayoran">
@@ -405,6 +410,7 @@ Simpan Mobil
 </section>
 
 
+
 <script is:inline>
 
 function jtToNumber(value) {
@@ -417,8 +423,10 @@ function jtToNumber(value) {
    ========================================================= */
 
 const BRANCH_ALIASES = [
+
   {
     name: "AHA Gajah Mada Cipondoh",
+
     aliases: [
       "aha gajah mada cipondoh",
       "gajah mada cipondoh",
@@ -429,6 +437,7 @@ const BRANCH_ALIASES = [
 
   {
     name: "AHA Gajah Mada Cipete",
+
     aliases: [
       "aha gajah mada cipete",
       "gajah mada cipete",
@@ -438,7 +447,17 @@ const BRANCH_ALIASES = [
   },
 
   {
+    name: "AHA Royal",
+
+    aliases: [
+      "aha royal",
+      "royal"
+    ]
+  },
+
+  {
     name: "Garage88 Kebayoran",
+
     aliases: [
       "garage88 kebayoran",
       "garage 88 kebayoran",
@@ -449,6 +468,7 @@ const BRANCH_ALIASES = [
 
   {
     name: "Garage88 Basura",
+
     aliases: [
       "garage88 basura",
       "garage 88 basura",
@@ -459,6 +479,7 @@ const BRANCH_ALIASES = [
 
   {
     name: "Garage88 Joglo",
+
     aliases: [
       "garage88 joglo",
       "garage 88 joglo",
@@ -469,6 +490,7 @@ const BRANCH_ALIASES = [
 
   {
     name: "Garage88 Ciater",
+
     aliases: [
       "garage88 ciater",
       "garage 88 ciater",
@@ -479,6 +501,7 @@ const BRANCH_ALIASES = [
 
   {
     name: "AHA Nusantara",
+
     aliases: [
       "aha nusantara",
       "nusantara"
@@ -487,6 +510,7 @@ const BRANCH_ALIASES = [
 
   {
     name: "AHA Gallery",
+
     aliases: [
       "aha gallery",
       "gallery"
@@ -495,24 +519,29 @@ const BRANCH_ALIASES = [
 
   {
     name: "AHA ADEX",
+
     aliases: [
       "aha adex",
       "adex"
     ]
   }
+
 ];
 
 
 function normalizeBranchText(value) {
+
   return String(value || "")
     .toLowerCase()
     .replace(/[._\-–—]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+
 }
 
 
 function findCanonicalBranch(value) {
+
   const normalized =
     normalizeBranchText(value);
 
@@ -521,7 +550,9 @@ function findCanonicalBranch(value) {
   }
 
   for (const branch of BRANCH_ALIASES) {
+
     for (const alias of branch.aliases) {
+
       const normalizedAlias =
         normalizeBranchText(alias);
 
@@ -531,14 +562,18 @@ function findCanonicalBranch(value) {
       ) {
         return branch.name;
       }
+
     }
+
   }
 
   return "";
+
 }
 
 
 function extractBranchFromTitle(title) {
+
   const matches =
     [
       ...title.matchAll(
@@ -547,54 +582,68 @@ function extractBranchFromTitle(title) {
     ];
 
   for (const match of matches) {
+
     const branch =
       findCanonicalBranch(
         match[1]
       );
 
     if (branch) {
+
       return {
         branch,
         matchedText: match[0]
       };
+
     }
+
   }
 
   return {
     branch: "",
     matchedText: ""
   };
+
 }
 
 
 function removeGroupInfo(value) {
+
   return String(value || "")
     .replace(
       /\s*[-–—]?\s*(?:group|grup|grub)\s+[a-z0-9]+\b/gi,
       ""
     );
+
 }
 
 
 function removeBranchParentheses(value) {
+
   return String(value || "")
     .replace(
       /\(\s*([^)]+?)\s*\)/g,
       function(fullMatch, inside) {
+
         const branch =
-          findCanonicalBranch(inside);
+          findCanonicalBranch(
+            inside
+          );
 
         if (branch) {
           return "";
         }
 
         return fullMatch;
+
       }
     );
+
 }
 
 
 function cleanDescription(value) {
+
   let result =
     removeBranchParentheses(value);
 
@@ -605,9 +654,11 @@ function cleanDescription(value) {
     result
       .split("\n")
       .map(function(line) {
+
         return line
           .replace(/\s+$/g, "")
           .trimEnd();
+
       })
       .join("\n")
       .replace(/[ \t]+\n/g, "\n")
@@ -615,6 +666,7 @@ function cleanDescription(value) {
       .trim();
 
   return result;
+
 }
 
 
@@ -623,6 +675,7 @@ function cleanDescription(value) {
    ========================================================= */
 
 function parseTelegram() {
+
   const text =
     document
       .getElementById("telegramInput")
@@ -630,8 +683,11 @@ function parseTelegram() {
       .trim();
 
   if (!text) {
+
     alert("Paste Telegram dulu");
+
     return;
+
   }
 
   const firstLine =
@@ -659,11 +715,13 @@ function parseTelegram() {
     firstLine;
 
   if (branchResult.matchedText) {
+
     cleanFirstLine =
       cleanFirstLine.replace(
         branchResult.matchedText,
         ""
       );
+
   }
 
   cleanFirstLine =
@@ -682,10 +740,12 @@ function parseTelegram() {
     );
 
   if (year) {
+
     document
       .getElementById("year")
       .value =
         year[0];
+
   }
 
 
@@ -708,6 +768,7 @@ function parseTelegram() {
   let brand = "";
 
   for (const b of brands) {
+
     if (
       cleanFirstLine
         .toLowerCase()
@@ -715,9 +776,13 @@ function parseTelegram() {
           b.toLowerCase()
         )
     ) {
+
       brand = b;
+
       break;
+
     }
+
   }
 
   document
@@ -742,6 +807,7 @@ function parseTelegram() {
   ];
 
   for (const c of colors) {
+
     if (
       cleanFirstLine
         .toLowerCase()
@@ -749,13 +815,16 @@ function parseTelegram() {
           c.toLowerCase()
         )
     ) {
+
       document
         .getElementById("color")
         .value =
           c;
 
       break;
+
     }
+
   }
 
 
@@ -766,26 +835,32 @@ function parseTelegram() {
       .toLowerCase()
       .includes("hybrid")
   ) {
+
     document
       .getElementById("fuel")
       .value =
         "Hybrid";
+
   }
   else if (
     text
       .toLowerCase()
       .includes("diesel")
   ) {
+
     document
       .getElementById("fuel")
       .value =
         "Diesel";
+
   }
   else {
+
     document
       .getElementById("fuel")
       .value =
         "Bensin";
+
   }
 
 
@@ -796,20 +871,24 @@ function parseTelegram() {
       /\bAT\b/i
     )
   ) {
+
     document
       .getElementById("transmission")
       .value =
         "AT";
+
   }
   else if (
     cleanFirstLine.match(
       /\bMT\b/i
     )
   ) {
+
     document
       .getElementById("transmission")
       .value =
         "MT";
+
   }
 
 
@@ -828,6 +907,7 @@ function parseTelegram() {
       .trim();
 
   if (brand) {
+
     cleanTitle =
       cleanTitle
         .replace(
@@ -838,6 +918,7 @@ function parseTelegram() {
           ""
         )
         .trim();
+
   }
 
   const words =
@@ -846,19 +927,23 @@ function parseTelegram() {
       .filter(Boolean);
 
   if (words.length) {
+
     document
       .getElementById("model")
       .value =
         words[0];
+
   }
 
   if (words.length > 1) {
+
     document
       .getElementById("variant")
       .value =
         words
           .slice(1)
           .join(" ");
+
   }
 
 
@@ -870,17 +955,21 @@ function parseTelegram() {
     );
 
   if (!km) {
+
     km =
       text.match(
         /low km\s*(\d+)\s*rb/i
       );
+
   }
 
   if (km) {
+
     document
       .getElementById("odometer")
       .value =
         Number(km[1]) * 1000;
+
   }
 
 
@@ -892,12 +981,14 @@ function parseTelegram() {
     );
 
   if (cash) {
+
     document
       .getElementById("cash_price")
       .value =
         jtToNumber(
           cash[1]
         );
+
   }
 
 
@@ -909,12 +1000,14 @@ function parseTelegram() {
     );
 
   if (otr) {
+
     document
       .getElementById("credit_price")
       .value =
         jtToNumber(
           otr[1]
         );
+
   }
 
 
@@ -927,25 +1020,29 @@ function parseTelegram() {
       )
     ];
 
-  let dpValues = [];
+  const dpValues = [];
 
   dpMatches.forEach(
     item => {
+
       dpValues.push(
         jtToNumber(
           item[1]
         )
       );
+
     }
   );
 
   if (dpValues.length) {
+
     document
       .getElementById("dp")
       .value =
         Math.min(
           ...dpValues
         );
+
   }
 
 
@@ -960,10 +1057,13 @@ function parseTelegram() {
 
 
   alert(
+
     branchResult.branch
       ? `Data berhasil dikonversi\nCabang: ${branchResult.branch}`
       : "Data berhasil dikonversi\nCabang belum dikenali, pilih manual."
+
   );
+
 }
 
 </script>

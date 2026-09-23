@@ -421,7 +421,6 @@ text-blue-700
 
 <div class="grid gap-5 md:grid-cols-2">
 
-
 <div>
 
 <label
@@ -620,6 +619,13 @@ value="AHA Gajah Mada Cipete"
 selected={car.branch === "AHA Gajah Mada Cipete"}
 >
 AHA Gajah Mada Cipete
+</option>
+
+<option
+value="AHA Royal"
+selected={car.branch === "AHA Royal"}
+>
+AHA Royal
 </option>
 
 <option
@@ -1247,82 +1253,47 @@ Simpan Perubahan
      CLEAN TELEGRAM DESCRIPTION
      ===================================================== */
 
- function cleanTelegramDescription(
-  text
-) {
+  function cleanTelegramDescription(
+    text
+  ) {
 
-  return String(
-    text || ""
-  )
-
-    /*
-     * Hapus cabang + Group,
-     * TAPI jangan hapus newline setelahnya.
-     *
-     * Contoh:
-     * Abu (Garage88 Ciater) Group C
-     * - Engine...
-     *
-     * menjadi:
-     * Abu
-     * - Engine...
-     */
-
-    .replace(
-      /[ \t]*\([^)\n]*(?:garage\s*88|garage88|aha)[^)\n]*\)[ \t]*(?:group|grup|grub)[ \t]*[a-z0-9]+[ \t]*/gi,
-      ""
+    return String(
+      text || ""
     )
 
-    /*
-     * Cabang dalam kurung tanpa Group.
-     */
+      .replace(
+        /[ \t]*\([^)\n]*(?:garage\s*88|garage88|aha)[^)\n]*\)[ \t]*(?:group|grup|grub)[ \t]*[a-z0-9]+[ \t]*/gi,
+        ""
+      )
 
-    .replace(
-      /[ \t]*\([^)\n]*(?:garage\s*88|garage88|aha)[^)\n]*\)[ \t]*/gi,
-      ""
-    )
+      .replace(
+        /[ \t]*\([^)\n]*(?:garage\s*88|garage88|aha)[^)\n]*\)[ \t]*/gi,
+        ""
+      )
 
-    /*
-     * Group/Grup/Grub tersisa.
-     * Tidak memakan newline.
-     */
+      .replace(
+        /[ \t]*\b(?:group|grup|grub)[ \t]+[a-z0-9]+\b[ \t]*/gi,
+        ""
+      )
 
-    .replace(
-      /[ \t]*\b(?:group|grup|grub)[ \t]+[a-z0-9]+\b[ \t]*/gi,
-      ""
-    )
+      .replace(
+        /[ \t]+\n/g,
+        "\n"
+      )
 
-    /*
-     * Rapikan spasi sebelum newline.
-     */
+      .replace(
+        /[ \t]{2,}/g,
+        " "
+      )
 
-    .replace(
-      /[ \t]+\n/g,
-      "\n"
-    )
+      .replace(
+        /\n{3,}/g,
+        "\n\n"
+      )
 
-    /*
-     * Rapikan spasi ganda,
-     * tapi HANYA dalam satu baris.
-     */
+      .trim();
 
-    .replace(
-      /[ \t]{2,}/g,
-      " "
-    )
-
-    /*
-     * Maksimal 2 newline kosong.
-     */
-
-    .replace(
-      /\n{3,}/g,
-      "\n\n"
-    )
-
-    .trim();
-
-}
+  }
 
 
   /* =====================================================
@@ -1368,11 +1339,6 @@ Simpan Perubahan
       let normalized =
         text;
 
-
-      /*
-       * 35,5 → 35.5
-       * 35.5 → 35.5
-       */
 
       if (
         normalized.includes(
@@ -1453,11 +1419,6 @@ Simpan Perubahan
       return null;
     }
 
-
-    /*
-     * OTR 215
-     * dianggap 215JT
-     */
 
     if (
       number > 0 &&
