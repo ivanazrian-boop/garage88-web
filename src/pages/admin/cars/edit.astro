@@ -4,7 +4,6 @@ import { supabase } from "../../../lib/supabase";
 
 const key = Astro.url.searchParams.get("key");
 const id = Astro.url.searchParams.get("id");
-
 const ADMIN_KEY = "garage88";
 
 if (key !== ADMIN_KEY || !id) {
@@ -24,27 +23,46 @@ if (error) {
 }
 
 if (!car) {
-  return Astro.redirect(
-    `/admin/cars?key=${ADMIN_KEY}`
-  );
+  return Astro.redirect(`/admin/cars?key=${ADMIN_KEY}`);
 }
 
 if (Astro.request.method === "POST") {
-  const formData =
-    await Astro.request.formData();
+  const formData = await Astro.request.formData();
+
+  const brand =
+    formData.get("brand")?.toString().trim() || "";
+
+  const model =
+    formData.get("model")?.toString().trim() || "";
+
+  const variant =
+    formData.get("variant")?.toString().trim() || null;
+
+  const year =
+    Number(formData.get("year")) || null;
+
+  const plateNumber =
+    formData.get("plate_number")?.toString().trim() || "";
+
+  const slugSource =
+    `${brand}-${model}-${variant || ""}-${year}` +
+    `${plateNumber ? `-${plateNumber}` : ""}`;
+
+  const slug = slugSource
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 
   const updateData = {
-    brand:
-      formData.get("brand")?.toString() || "",
+    slug,
 
-    model:
-      formData.get("model")?.toString() || "",
+    brand,
 
-    variant:
-      formData.get("variant")?.toString() || null,
+    model,
 
-    year:
-      Number(formData.get("year")) || null,
+    variant,
+
+    year,
 
     branch:
       formData.get("branch")?.toString() || null,
@@ -74,7 +92,7 @@ if (Astro.request.method === "POST") {
       formData.get("cash_only") === "on",
 
     plate_number:
-      formData.get("plate_number")?.toString() || null,
+      plateNumber || null,
 
     tax_valid_until:
       formData.get("tax_valid_until")?.toString() || null,
@@ -117,1362 +135,1037 @@ if (Astro.request.method === "POST") {
 
 <MainLayout title="Edit Mobil | Garage88 Admin">
 
-<section class="min-h-screen bg-slate-100 py-12">
-
-<div class="mx-auto max-w-5xl px-6">
-
-<!-- HEADER -->
-
-<div class="flex items-center justify-between gap-5">
-
-<div>
-
-<h1 class="text-3xl font-bold">
-Edit Mobil
-</h1>
-
-<p class="mt-2 text-slate-500">
-{car.brand} {car.model}
-</p>
-
-</div>
-
-<a
-href={`/admin/cars?key=${ADMIN_KEY}`}
-class="
-shrink-0
-rounded-xl
-border
-border-slate-300
-bg-white
-px-5
-py-3
-font-semibold
-text-slate-700
-hover:bg-slate-50
-"
->
-← Kembali ke Stock
-</a>
-
-</div>
-
-{
-message && (
-
-<div class="mt-5 rounded-xl bg-green-100 p-4 text-green-700">
-{message}
-</div>
-
-)
-}
-
-<form
-method="POST"
-class="
-mt-8
-grid
-gap-6
-rounded-2xl
-bg-white
-p-8
-shadow
-"
->
-
-<!-- ================================================= -->
-<!-- TELEGRAM QUICK UPDATE -->
-<!-- ================================================= -->
-
-<div
-class="
-rounded-2xl
-border-2
-border-blue-200
-bg-blue-50
-p-5
-"
->
-
-<div
-class="
-flex
-flex-col
-gap-2
-md:flex-row
-md:items-center
-md:justify-between
-"
->
-
-<div>
-
-<h2
-class="
-text-lg
-font-extrabold
-text-slate-900
-"
->
-Update dari Telegram
-</h2>
-
-<p
-class="
-mt-1
-text-sm
-text-slate-600
-"
->
-Paste listing terbaru. Hanya Harga Kredit, Harga Cash, DP terkecil dan Deskripsi yang akan diisi.
-</p>
-
-</div>
-
-<span
-class="
-w-fit
-rounded-full
-bg-blue-100
-px-3
-py-1.5
-text-xs
-font-bold
-text-blue-700
-"
->
-QUICK UPDATE
-</span>
-
-</div>
-
-<textarea
-id="telegram-paste"
-rows="10"
-placeholder="Paste deskripsi Telegram di sini..."
-class="
-mt-5
-w-full
-rounded-xl
-border
-border-blue-200
-bg-white
-p-4
-text-sm
-leading-relaxed
-text-slate-900
-outline-none
-focus:border-blue-500
-focus:ring-2
-focus:ring-blue-100
-"
-></textarea>
-
-<div
-class="
-mt-4
-flex
-flex-col
-gap-3
-md:flex-row
-md:items-center
-"
->
-
-<button
-type="button"
-id="parse-telegram"
-class="
-rounded-xl
-bg-blue-600
-px-6
-py-3
-font-bold
-text-white
-transition
-hover:bg-blue-700
-"
->
-Ambil Harga & Deskripsi
-</button>
-
-<button
-type="button"
-id="clear-telegram"
-class="
-rounded-xl
-border
-border-slate-300
-bg-white
-px-5
-py-3
-font-semibold
-text-slate-600
-transition
-hover:bg-slate-50
-"
->
-Clear
-</button>
-
-</div>
-
-<div
-id="telegram-result"
-class="
-mt-4
-hidden
-rounded-xl
-border
-border-blue-200
-bg-white
-p-4
-"
->
-
-<p
-class="
-text-xs
-font-bold
-uppercase
-tracking-wide
-text-slate-400
-"
->
-Hasil yang ditemukan
-</p>
-
-<div
-class="
-mt-3
-grid
-gap-2
-text-sm
-md:grid-cols-3
-"
->
-
-<div class="rounded-lg bg-slate-50 p-3">
-
-<div class="text-xs text-slate-400">
-Harga Kredit / OTR
-</div>
-
-<div
-id="result-credit"
-class="mt-1 font-bold text-slate-900"
->
--
-</div>
-
-</div>
-
-<div class="rounded-lg bg-slate-50 p-3">
-
-<div class="text-xs text-slate-400">
-Harga Cash
-</div>
-
-<div
-id="result-cash"
-class="mt-1 font-bold text-slate-900"
->
--
-</div>
-
-</div>
-
-<div class="rounded-lg bg-slate-50 p-3">
-
-<div class="text-xs text-slate-400">
-DP Terkecil
-</div>
-
-<div
-id="result-dp"
-class="mt-1 font-bold text-red-600"
->
--
-</div>
-
-</div>
-
-</div>
-
-<p
-id="telegram-result-message"
-class="
-mt-3
-text-xs
-font-semibold
-text-blue-700
-"
->
-</p>
-
-</div>
-
-</div>
-
-
-<!-- ================================================= -->
-<!-- DATA MOBIL -->
-<!-- ================================================= -->
-
-<div class="grid gap-5 md:grid-cols-2">
-
-<div>
-
-<label
-class="
-mb-2
-block
-text-sm
-font-semibold
-text-slate-600
-"
->
-Merek
-</label>
-
-<input
-name="brand"
-value={car.brand}
-class="
-w-full
-rounded-xl
-border
-p-4
-"
-/>
-
-</div>
-
-
-<div>
-
-<label
-class="
-mb-2
-block
-text-sm
-font-semibold
-text-slate-600
-"
->
-Model
-</label>
-
-<input
-name="model"
-value={car.model}
-class="
-w-full
-rounded-xl
-border
-p-4
-"
-/>
-
-</div>
-
-
-<div>
-
-<label
-class="
-mb-2
-block
-text-sm
-font-semibold
-text-slate-600
-"
->
-Variant / Tipe
-</label>
-
-<input
-name="variant"
-value={car.variant ?? ""}
-class="
-w-full
-rounded-xl
-border
-p-4
-"
-/>
-
-</div>
-
-
-<div>
-
-<label
-class="
-mb-2
-block
-text-sm
-font-semibold
-text-slate-600
-"
->
-Tahun
-</label>
-
-<input
-name="year"
-type="number"
-value={car.year}
-class="
-w-full
-rounded-xl
-border
-p-4
-"
-/>
-
-</div>
-
-
-<div>
-
-<label
-class="
-mb-2
-block
-text-sm
-font-semibold
-text-slate-600
-"
->
-Warna
-</label>
-
-<input
-name="color"
-value={car.color ?? ""}
-class="
-w-full
-rounded-xl
-border
-p-4
-"
-/>
-
-</div>
-
-
-<div>
-
-<label
-class="
-mb-2
-block
-text-sm
-font-semibold
-text-slate-600
-"
->
-Cabang
-</label>
-
-<select
-name="branch"
-class="
-w-full
-rounded-xl
-border
-p-4
-"
->
-
-<option
-value=""
-selected={!car.branch}
->
-Pilih Cabang
-</option>
-
-<option
-value="AHA Gallery"
-selected={car.branch === "AHA Gallery"}
->
-AHA Gallery
-</option>
-
-<option
-value="AHA Nusantara"
-selected={car.branch === "AHA Nusantara"}
->
-AHA Nusantara
-</option>
-
-<option
-value="AHA Gajah Mada Cipondoh"
-selected={car.branch === "AHA Gajah Mada Cipondoh"}
->
-AHA Gajah Mada Cipondoh
-</option>
-
-<option
-value="AHA Gajah Mada Cipete"
-selected={car.branch === "AHA Gajah Mada Cipete"}
->
-AHA Gajah Mada Cipete
-</option>
-
-<option
-value="AHA Royal"
-selected={car.branch === "AHA Royal"}
->
-AHA Royal
-</option>
-
-<option
-value="Garage88 Kebayoran"
-selected={car.branch === "Garage88 Kebayoran"}
->
-Garage88 Kebayoran
-</option>
-
-<option
-value="Garage88 Basura"
-selected={car.branch === "Garage88 Basura"}
->
-Garage88 Basura
-</option>
-
-<option
-value="Garage88 Joglo"
-selected={car.branch === "Garage88 Joglo"}
->
-Garage88 Joglo
-</option>
-
-<option
-value="Garage88 Ciater"
-selected={car.branch === "Garage88 Ciater"}
->
-Garage88 Ciater
-</option>
-
-<option
-value="AHA ADEX"
-selected={car.branch === "AHA ADEX"}
->
-AHA ADEX
-</option>
-
-</select>
-
-</div>
-
-
-<div>
-
-<label
-class="
-mb-2
-block
-text-sm
-font-semibold
-text-slate-600
-"
->
-BBM
-</label>
-
-<select
-name="fuel"
-class="
-w-full
-rounded-xl
-border
-p-4
-"
->
-
-<option
-value="Bensin"
-selected={car.fuel === "Bensin"}
->
-Bensin
-</option>
-
-<option
-value="Diesel"
-selected={car.fuel === "Diesel"}
->
-Diesel
-</option>
-
-<option
-value="Hybrid"
-selected={car.fuel === "Hybrid"}
->
-Hybrid
-</option>
-
-<option
-value="Electric Vehicle"
-selected={car.fuel === "Electric Vehicle"}
->
-Electric Vehicle
-</option>
-
-</select>
-
-</div>
-
-
-<div>
-
-<label
-class="
-mb-2
-block
-text-sm
-font-semibold
-text-slate-600
-"
->
-Transmisi
-</label>
-
-<select
-name="transmission"
-class="
-w-full
-rounded-xl
-border
-p-4
-"
->
-
-<option
-value="AT"
-selected={car.transmission === "AT"}
->
-AT
-</option>
-
-<option
-value="MT"
-selected={car.transmission === "MT"}
->
-MT
-</option>
-
-</select>
-
-</div>
-
-
-<!-- KM -->
-
-<div>
-
-<label
-class="
-mb-2
-block
-text-sm
-font-semibold
-text-slate-600
-"
->
-KM
-</label>
-
-<input
-name="odometer"
-type="number"
-value={car.odometer ?? ""}
-placeholder="Contoh: 80000"
-class="
-w-full
-rounded-xl
-border
-p-4
-"
-/>
-
-</div>
-
-
-<!-- HARGA KREDIT -->
-
-<div>
-
-<label
-class="
-mb-2
-block
-text-sm
-font-semibold
-text-slate-600
-"
->
-Harga Kredit / OTR
-</label>
-
-<input
-id="credit-price"
-name="credit_price"
-type="number"
-value={car.credit_price ?? ""}
-placeholder="Contoh: 213000000"
-class="
-w-full
-rounded-xl
-border
-p-4
-"
-/>
-
-</div>
-
-
-<!-- HARGA CASH -->
-
-<div>
-
-<label
-class="
-mb-2
-block
-text-sm
-font-semibold
-text-slate-600
-"
->
-Harga Cash
-</label>
-
-<input
-id="cash-price"
-name="cash_price"
-type="number"
-value={car.cash_price ?? ""}
-placeholder="Contoh: 228000000"
-class="
-w-full
-rounded-xl
-border
-p-4
-"
-/>
-
-</div>
-
-
-<!-- DP -->
-
-<div>
-
-<label
-class="
-mb-2
-block
-text-sm
-font-semibold
-text-slate-600
-"
->
-DP Mulai
-</label>
-
-<input
-id="dp-price"
-name="dp"
-type="number"
-value={car.dp ?? ""}
-placeholder="Contoh: 18000000"
-class="
-w-full
-rounded-xl
-border
-p-4
-"
-/>
-
-</div>
-
-
-<!-- PLAT -->
-
-<div>
-
-<label
-class="
-mb-2
-block
-text-sm
-font-semibold
-text-slate-600
-"
->
-Plat
-</label>
-
-<input
-name="plate_number"
-value={car.plate_number ?? ""}
-placeholder="Contoh: B 1234 ABC"
-class="
-w-full
-rounded-xl
-border
-p-4
-"
-/>
-
-</div>
-
-
-<!-- PAJAK -->
-
-<div>
-
-<label
-class="
-mb-2
-block
-text-sm
-font-semibold
-text-slate-600
-"
->
-Pajak
-</label>
-
-<input
-name="tax_valid_until"
-value={car.tax_valid_until ?? ""}
-placeholder="Contoh: 01/2027"
-class="
-w-full
-rounded-xl
-border
-p-4
-"
-/>
-
-</div>
-
-</div>
-
-
-<!-- ================================================= -->
-<!-- CASH ONLY -->
-<!-- ================================================= -->
-
-<div
-class="
-rounded-xl
-border
-border-amber-200
-bg-amber-50
-p-4
-"
->
-
-<label class="flex cursor-pointer items-center gap-3">
-
-<input
-type="checkbox"
-name="cash_only"
-checked={car.cash_only === true}
-class="
-h-5
-w-5
-rounded
-border-slate-300
-"
-/>
-
-<div>
-
-<p class="font-bold text-slate-900">
-Cash Only
-</p>
-
-<p class="text-sm text-slate-500">
-Centang jika unit hanya dijual cash
-</p>
-
-</div>
-
-</label>
-
-</div>
-
-
-<!-- ================================================= -->
-<!-- DESCRIPTION -->
-<!-- ================================================= -->
-
-<div>
-
-<label
-class="
-mb-2
-block
-font-semibold
-text-slate-700
-"
->
-Deskripsi
-</label>
-
-<textarea
-id="car-description"
-name="description"
-rows="12"
-class="
-w-full
-rounded-xl
-border
-p-4
-leading-relaxed
-"
->{car.description ?? ""}</textarea>
-
-</div>
-
-
-<!-- ================================================= -->
-<!-- STATUS -->
-<!-- ================================================= -->
-
-<div>
-
-<label
-class="
-mb-2
-block
-font-semibold
-text-slate-700
-"
->
-Status
-</label>
-
-<select
-name="status"
-class="
-w-full
-rounded-xl
-border
-p-4
-"
->
-
-<option
-value="READY"
-selected={car.status === "READY"}
->
-READY
-</option>
-
-<option
-value="BOOKED"
-selected={car.status === "BOOKED"}
->
-BOOKED
-</option>
-
-<option
-value="SOLD"
-selected={car.status === "SOLD"}
->
-SOLD
-</option>
-
-</select>
-
-</div>
-
-
-<!-- ================================================= -->
-<!-- FEATURED -->
-<!-- ================================================= -->
-
-<div
-class="
-rounded-xl
-border
-border-slate-200
-bg-slate-50
-p-4
-"
->
-
-<label class="flex cursor-pointer items-center gap-3">
-
-<input
-type="checkbox"
-name="featured"
-checked={car.featured}
-class="
-h-5
-w-5
-"
-/>
-
-<div>
-
-<p class="font-bold text-slate-900">
-Featured
-</p>
-
-<p class="text-sm text-slate-500">
-Tampilkan sebagai unit prioritas
-</p>
-
-</div>
-
-</label>
-
-</div>
-
-
-<!-- ================================================= -->
-<!-- SAVE -->
-<!-- ================================================= -->
-
-<button
-class="
-rounded-xl
-bg-red-600
-px-8
-py-4
-font-semibold
-text-white
-transition
-hover:bg-red-700
-"
->
-Simpan Perubahan
-</button>
-
-</form>
-
-</div>
-
-</section>
-
-
-<script is:inline>
-
-  // @ts-nocheck
-
-  const telegramInput =
-    document.getElementById(
-      "telegram-paste"
-    );
-
-  const parseButton =
-    document.getElementById(
-      "parse-telegram"
-    );
-
-  const clearButton =
-    document.getElementById(
-      "clear-telegram"
-    );
-
-  const creditInput =
-    document.getElementById(
-      "credit-price"
-    );
-
-  const cashInput =
-    document.getElementById(
-      "cash-price"
-    );
-
-  const dpInput =
-    document.getElementById(
-      "dp-price"
-    );
-
-  const descriptionInput =
-    document.getElementById(
-      "car-description"
-    );
-
-  const resultBox =
-    document.getElementById(
-      "telegram-result"
-    );
-
-  const resultCredit =
-    document.getElementById(
-      "result-credit"
-    );
-
-  const resultCash =
-    document.getElementById(
-      "result-cash"
-    );
-
-  const resultDp =
-    document.getElementById(
-      "result-dp"
-    );
-
-  const resultMessage =
-    document.getElementById(
-      "telegram-result-message"
-    );
-
-
-  /* =====================================================
-     NORMALIZE
-     ===================================================== */
-
-  function normalizeText(value) {
-
-    return String(
-      value || ""
-    )
-      .replace(
-        /\u00a0/g,
-        " "
-      )
-      .replace(
-        /\r\n/g,
-        "\n"
+  <section class="min-h-screen bg-slate-100 py-12">
+
+    <div class="mx-auto max-w-5xl px-6">
+
+      <div class="flex items-center justify-between gap-5">
+
+        <div>
+
+          <h1 class="text-3xl font-bold">
+            Edit Mobil
+          </h1>
+
+          <p class="mt-2 text-slate-500">
+            {car.brand} {car.model}
+          </p>
+
+        </div>
+
+        <a
+          href={`/admin/cars?key=${ADMIN_KEY}`}
+          class="shrink-0 rounded-xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-700 hover:bg-slate-50"
+        >
+          ← Kembali ke Stock
+        </a>
+
+      </div>
+
+      {
+        message && (
+          <div class="mt-5 rounded-xl bg-green-100 p-4 text-green-700">
+            {message}
+          </div>
+        )
+      }
+
+      <form
+        method="POST"
+        class="mt-8 grid gap-6 rounded-2xl bg-white p-8 shadow"
+      >
+
+        <!-- TELEGRAM QUICK UPDATE -->
+
+        <div class="rounded-2xl border-2 border-blue-200 bg-blue-50 p-5">
+
+          <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+
+            <div>
+
+              <h2 class="text-lg font-extrabold text-slate-900">
+                Update dari Telegram
+              </h2>
+
+              <p class="mt-1 text-sm text-slate-600">
+                Paste listing terbaru. Hanya Harga Kredit, Harga Cash, DP terkecil dan Deskripsi yang akan diisi.
+              </p>
+
+            </div>
+
+            <span class="w-fit rounded-full bg-blue-100 px-3 py-1.5 text-xs font-bold text-blue-700">
+              QUICK UPDATE
+            </span>
+
+          </div>
+
+          <textarea
+            id="telegram-paste"
+            rows="10"
+            placeholder="Paste deskripsi Telegram di sini..."
+            class="mt-5 w-full rounded-xl border border-blue-200 bg-white p-4 text-sm leading-relaxed text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+          ></textarea>
+
+          <div class="mt-4 flex flex-col gap-3 md:flex-row md:items-center">
+
+            <button
+              type="button"
+              id="parse-telegram"
+              class="rounded-xl bg-blue-600 px-6 py-3 font-bold text-white transition hover:bg-blue-700"
+            >
+              Ambil Harga & Deskripsi
+            </button>
+
+            <button
+              type="button"
+              id="clear-telegram"
+              class="rounded-xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-600 transition hover:bg-slate-50"
+            >
+              Clear
+            </button>
+
+          </div>
+
+          <div
+            id="telegram-result"
+            class="mt-4 hidden rounded-xl border border-blue-200 bg-white p-4"
+          >
+
+            <p class="text-xs font-bold uppercase tracking-wide text-slate-400">
+              Hasil yang ditemukan
+            </p>
+
+            <div class="mt-3 grid gap-2 text-sm md:grid-cols-3">
+
+              <div class="rounded-lg bg-slate-50 p-3">
+
+                <div class="text-xs text-slate-400">
+                  Harga Kredit / OTR
+                </div>
+
+                <div
+                  id="result-credit"
+                  class="mt-1 font-bold text-slate-900"
+                >
+                  -
+                </div>
+
+              </div>
+
+              <div class="rounded-lg bg-slate-50 p-3">
+
+                <div class="text-xs text-slate-400">
+                  Harga Cash
+                </div>
+
+                <div
+                  id="result-cash"
+                  class="mt-1 font-bold text-slate-900"
+                >
+                  -
+                </div>
+
+              </div>
+
+              <div class="rounded-lg bg-slate-50 p-3">
+
+                <div class="text-xs text-slate-400">
+                  DP Terkecil
+                </div>
+
+                <div
+                  id="result-dp"
+                  class="mt-1 font-bold text-red-600"
+                >
+                  -
+                </div>
+
+              </div>
+
+            </div>
+
+            <p
+              id="telegram-result-message"
+              class="mt-3 text-xs font-semibold text-blue-700"
+            ></p>
+
+          </div>
+
+        </div>
+
+
+        <!-- DATA MOBIL -->
+
+        <div class="grid gap-5 md:grid-cols-2">
+
+          <div>
+
+            <label class="mb-2 block text-sm font-semibold text-slate-600">
+              Merek
+            </label>
+
+            <input
+              name="brand"
+              value={car.brand}
+              class="w-full rounded-xl border p-4"
+            />
+
+          </div>
+
+
+          <div>
+
+            <label class="mb-2 block text-sm font-semibold text-slate-600">
+              Model
+            </label>
+
+            <input
+              name="model"
+              value={car.model}
+              class="w-full rounded-xl border p-4"
+            />
+
+          </div>
+
+
+          <div>
+
+            <label class="mb-2 block text-sm font-semibold text-slate-600">
+              Variant / Tipe
+            </label>
+
+            <input
+              name="variant"
+              value={car.variant ?? ""}
+              class="w-full rounded-xl border p-4"
+            />
+
+          </div>
+
+
+          <div>
+
+            <label class="mb-2 block text-sm font-semibold text-slate-600">
+              Tahun
+            </label>
+
+            <input
+              name="year"
+              type="number"
+              value={car.year}
+              class="w-full rounded-xl border p-4"
+            />
+
+          </div>
+
+
+          <div>
+
+            <label class="mb-2 block text-sm font-semibold text-slate-600">
+              Warna
+            </label>
+
+            <input
+              name="color"
+              value={car.color ?? ""}
+              class="w-full rounded-xl border p-4"
+            />
+
+          </div>
+
+
+          <div>
+
+            <label class="mb-2 block text-sm font-semibold text-slate-600">
+              Cabang
+            </label>
+
+            <select
+              name="branch"
+              class="w-full rounded-xl border p-4"
+            >
+
+              <option
+                value=""
+                selected={!car.branch}
+              >
+                Pilih Cabang
+              </option>
+
+              <option
+                value="AHA Gallery"
+                selected={car.branch === "AHA Gallery"}
+              >
+                AHA Gallery
+              </option>
+
+              <option
+                value="AHA Nusantara"
+                selected={car.branch === "AHA Nusantara"}
+              >
+                AHA Nusantara
+              </option>
+
+              <option
+                value="AHA Gajah Mada Cipondoh"
+                selected={car.branch === "AHA Gajah Mada Cipondoh"}
+              >
+                AHA Gajah Mada Cipondoh
+              </option>
+
+              <option
+                value="AHA Gajah Mada Cipete"
+                selected={car.branch === "AHA Gajah Mada Cipete"}
+              >
+                AHA Gajah Mada Cipete
+              </option>
+
+              <option
+                value="AHA Royal"
+                selected={car.branch === "AHA Royal"}
+              >
+                AHA Royal
+              </option>
+
+              <option
+                value="Garage88 Kebayoran"
+                selected={car.branch === "Garage88 Kebayoran"}
+              >
+                Garage88 Kebayoran
+              </option>
+
+              <option
+                value="Garage88 Basura"
+                selected={car.branch === "Garage88 Basura"}
+              >
+                Garage88 Basura
+              </option>
+
+              <option
+                value="Garage88 Joglo"
+                selected={car.branch === "Garage88 Joglo"}
+              >
+                Garage88 Joglo
+              </option>
+
+              <option
+                value="Garage88 Ciater"
+                selected={car.branch === "Garage88 Ciater"}
+              >
+                Garage88 Ciater
+              </option>
+
+              <option
+                value="AHA ADEX"
+                selected={car.branch === "AHA ADEX"}
+              >
+                AHA ADEX
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <div>
+
+            <label class="mb-2 block text-sm font-semibold text-slate-600">
+              BBM
+            </label>
+
+            <select
+              name="fuel"
+              class="w-full rounded-xl border p-4"
+            >
+
+              <option
+                value="Bensin"
+                selected={car.fuel === "Bensin"}
+              >
+                Bensin
+              </option>
+
+              <option
+                value="Diesel"
+                selected={car.fuel === "Diesel"}
+              >
+                Diesel
+              </option>
+
+              <option
+                value="Hybrid"
+                selected={car.fuel === "Hybrid"}
+              >
+                Hybrid
+              </option>
+
+              <option
+                value="Electric Vehicle"
+                selected={car.fuel === "Electric Vehicle"}
+              >
+                Electric Vehicle
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <div>
+
+            <label class="mb-2 block text-sm font-semibold text-slate-600">
+              Transmisi
+            </label>
+
+            <select
+              name="transmission"
+              class="w-full rounded-xl border p-4"
+            >
+
+              <option
+                value="AT"
+                selected={car.transmission === "AT"}
+              >
+                AT
+              </option>
+
+              <option
+                value="MT"
+                selected={car.transmission === "MT"}
+              >
+                MT
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <!-- KM -->
+
+          <div>
+
+            <label class="mb-2 block text-sm font-semibold text-slate-600">
+              KM
+            </label>
+
+            <input
+              name="odometer"
+              type="number"
+              value={car.odometer ?? ""}
+              placeholder="Contoh: 80000"
+              class="w-full rounded-xl border p-4"
+            />
+
+          </div>
+
+
+          <!-- HARGA KREDIT -->
+
+          <div>
+
+            <label class="mb-2 block text-sm font-semibold text-slate-600">
+              Harga Kredit / OTR
+            </label>
+
+            <input
+              id="credit-price"
+              name="credit_price"
+              type="number"
+              value={car.credit_price ?? ""}
+              placeholder="Contoh: 213000000"
+              class="w-full rounded-xl border p-4"
+            />
+
+          </div>
+
+
+          <!-- HARGA CASH -->
+
+          <div>
+
+            <label class="mb-2 block text-sm font-semibold text-slate-600">
+              Harga Cash
+            </label>
+
+            <input
+              id="cash-price"
+              name="cash_price"
+              type="number"
+              value={car.cash_price ?? ""}
+              placeholder="Contoh: 228000000"
+              class="w-full rounded-xl border p-4"
+            />
+
+          </div>
+
+
+          <!-- DP -->
+
+          <div>
+
+            <label class="mb-2 block text-sm font-semibold text-slate-600">
+              DP Mulai
+            </label>
+
+            <input
+              id="dp-price"
+              name="dp"
+              type="number"
+              value={car.dp ?? ""}
+              placeholder="Contoh: 18000000"
+              class="w-full rounded-xl border p-4"
+            />
+
+          </div>
+
+
+          <!-- PLAT -->
+
+          <div>
+
+            <label class="mb-2 block text-sm font-semibold text-slate-600">
+              Plat
+            </label>
+
+            <input
+              name="plate_number"
+              value={car.plate_number ?? ""}
+              placeholder="Contoh: B 1234 ABC"
+              class="w-full rounded-xl border p-4"
+            />
+
+          </div>
+
+
+          <!-- PAJAK -->
+
+          <div>
+
+            <label class="mb-2 block text-sm font-semibold text-slate-600">
+              Pajak
+            </label>
+
+            <input
+              name="tax_valid_until"
+              value={car.tax_valid_until ?? ""}
+              placeholder="Contoh: 01/2027"
+              class="w-full rounded-xl border p-4"
+            />
+
+          </div>
+
+        </div>
+
+
+        <!-- CASH ONLY -->
+
+        <div class="rounded-xl border border-amber-200 bg-amber-50 p-4">
+
+          <label class="flex cursor-pointer items-center gap-3">
+
+            <input
+              type="checkbox"
+              name="cash_only"
+              checked={car.cash_only === true}
+              class="h-5 w-5 rounded border-slate-300"
+            />
+
+            <div>
+
+              <p class="font-bold text-slate-900">
+                Cash Only
+              </p>
+
+              <p class="text-sm text-slate-500">
+                Centang jika unit hanya dijual cash
+              </p>
+
+            </div>
+
+          </label>
+
+        </div>
+
+
+        <!-- DESCRIPTION -->
+
+        <div>
+
+          <label class="mb-2 block font-semibold text-slate-700">
+            Deskripsi
+          </label>
+
+          <textarea
+            id="car-description"
+            name="description"
+            rows="12"
+            class="w-full rounded-xl border p-4 leading-relaxed"
+          >{car.description ?? ""}</textarea>
+
+        </div>
+
+
+        <!-- STATUS -->
+
+        <div>
+
+          <label class="mb-2 block font-semibold text-slate-700">
+            Status
+          </label>
+
+          <select
+            name="status"
+            class="w-full rounded-xl border p-4"
+          >
+
+            <option
+              value="READY"
+              selected={car.status === "READY"}
+            >
+              READY
+            </option>
+
+            <option
+              value="BOOKED"
+              selected={car.status === "BOOKED"}
+            >
+              BOOKED
+            </option>
+
+            <option
+              value="SOLD"
+              selected={car.status === "SOLD"}
+            >
+              SOLD
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <!-- FEATURED -->
+
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+
+          <label class="flex cursor-pointer items-center gap-3">
+
+            <input
+              type="checkbox"
+              name="featured"
+              checked={car.featured}
+              class="h-5 w-5"
+            />
+
+            <div>
+
+              <p class="font-bold text-slate-900">
+                Featured
+              </p>
+
+              <p class="text-sm text-slate-500">
+                Tampilkan sebagai unit prioritas
+              </p>
+
+            </div>
+
+          </label>
+
+        </div>
+
+
+        <!-- SAVE -->
+
+        <button
+          class="rounded-xl bg-red-600 px-8 py-4 font-semibold text-white transition hover:bg-red-700"
+        >
+          Simpan Perubahan
+        </button>
+
+      </form>
+
+    </div>
+
+  </section>
+
+
+  <script is:inline>
+
+    // @ts-nocheck
+
+    const telegramInput =
+      document.getElementById(
+        "telegram-paste"
       );
 
-  }
+    const parseButton =
+      document.getElementById(
+        "parse-telegram"
+      );
+
+    const clearButton =
+      document.getElementById(
+        "clear-telegram"
+      );
+
+    const creditInput =
+      document.getElementById(
+        "credit-price"
+      );
+
+    const cashInput =
+      document.getElementById(
+        "cash-price"
+      );
+
+    const dpInput =
+      document.getElementById(
+        "dp-price"
+      );
+
+    const descriptionInput =
+      document.getElementById(
+        "car-description"
+      );
+
+    const resultBox =
+      document.getElementById(
+        "telegram-result"
+      );
+
+    const resultCredit =
+      document.getElementById(
+        "result-credit"
+      );
+
+    const resultCash =
+      document.getElementById(
+        "result-cash"
+      );
+
+    const resultDp =
+      document.getElementById(
+        "result-dp"
+      );
+
+    const resultMessage =
+      document.getElementById(
+        "telegram-result-message"
+      );
 
 
-  /* =====================================================
-     CLEAN TELEGRAM DESCRIPTION
-     ===================================================== */
+    /* =====================================================
+       NORMALIZE
+       ===================================================== */
 
-  function cleanTelegramDescription(
-    text
-  ) {
+    function normalizeText(value) {
 
-    return String(
-      text || ""
-    )
-
-      .replace(
-        /[ \t]*\([^)\n]*(?:garage\s*88|garage88|aha)[^)\n]*\)[ \t]*(?:group|grup|grub)[ \t]*[a-z0-9]+[ \t]*/gi,
-        ""
+      return String(
+        value || ""
       )
+        .replace(
+          /\u00a0/g,
+          " "
+        )
+        .replace(
+          /\r\n/g,
+          "\n"
+        );
 
-      .replace(
-        /[ \t]*\([^)\n]*(?:garage\s*88|garage88|aha)[^)\n]*\)[ \t]*/gi,
-        ""
-      )
-
-      .replace(
-        /[ \t]*\b(?:group|grup|grub)[ \t]+[a-z0-9]+\b[ \t]*/gi,
-        ""
-      )
-
-      .replace(
-        /[ \t]+\n/g,
-        "\n"
-      )
-
-      .replace(
-        /[ \t]{2,}/g,
-        " "
-      )
-
-      .replace(
-        /\n{3,}/g,
-        "\n\n"
-      )
-
-      .trim();
-
-  }
-
-
-  /* =====================================================
-     PARSE MONEY
-     ===================================================== */
-
-  function parseMoney(
-    raw,
-    unit = ""
-  ) {
-
-    if (!raw) {
-      return null;
     }
 
-    const text =
-      String(raw)
-        .trim()
-        .toLowerCase();
 
-    const suffix =
-      String(unit || "")
-        .trim()
-        .toLowerCase();
+    /* =====================================================
+       CLEAN TELEGRAM DESCRIPTION
+       ===================================================== */
 
-
-    const hasMillion =
-      /^(jt|juta)$/.test(
-        suffix
-      );
-
-    const hasBillion =
-      /^(m|miliar|milyar)$/.test(
-        suffix
-      );
-
-
-    if (
-      hasMillion ||
-      hasBillion
+    function cleanTelegramDescription(
+      text
     ) {
 
-      let normalized =
-        text;
+      return String(
+        text || ""
+      )
+        .replace(
+          /[ \t]*\([^)\n]*(?:garage\s*88|garage88|aha)[^)\n]*\)[ \t]*(?:group|grup|grub)[ \t]*[a-z0-9]+[ \t]*/gi,
+          ""
+        )
+        .replace(
+          /[ \t]*\([^)\n]*(?:garage\s*88|garage88|aha)[^)\n]*\)[ \t]*/gi,
+          ""
+        )
+        .replace(
+          /[ \t]*\b(?:group|grup|grub)[ \t]+[a-z0-9]+\b[ \t]*/gi,
+          ""
+        )
+        .replace(
+          /[ \t]+\n/g,
+          "\n"
+        )
+        .replace(
+          /[ \t]{2,}/g,
+          " "
+        )
+        .replace(
+          /\n{3,}/g,
+          "\n\n"
+        )
+        .trim();
 
+    }
+
+
+    /* =====================================================
+       PARSE MONEY
+       ===================================================== */
+
+    function parseMoney(
+      raw,
+      unit = ""
+    ) {
+
+      if (!raw) {
+        return null;
+      }
+
+      const text =
+        String(raw)
+          .trim()
+          .toLowerCase();
+
+      const suffix =
+        String(unit || "")
+          .trim()
+          .toLowerCase();
+
+      const hasMillion =
+        /^(jt|juta)$/.test(
+          suffix
+        );
+
+      const hasBillion =
+        /^(m|miliar|milyar)$/.test(
+          suffix
+        );
 
       if (
-        normalized.includes(
-          ","
-        )
+        hasMillion ||
+        hasBillion
       ) {
 
-        normalized =
-          normalized
-            .replace(
-              /\./g,
-              ""
-            )
-            .replace(
-              ",",
-              "."
-            );
+        let normalized =
+          text;
+
+        if (
+          normalized.includes(
+            ","
+          )
+        ) {
+
+          normalized =
+            normalized
+              .replace(
+                /\./g,
+                ""
+              )
+              .replace(
+                ",",
+                "."
+              );
+
+        }
+
+        const decimal =
+          Number(
+            normalized
+          );
+
+        if (
+          !Number.isFinite(
+            decimal
+          )
+        ) {
+          return null;
+        }
+
+        if (hasBillion) {
+
+          return Math.round(
+            decimal *
+            1_000_000_000
+          );
+
+        }
+
+        return Math.round(
+          decimal *
+          1_000_000
+        );
 
       }
 
-
-      const decimal =
-        Number(
-          normalized
+      const digits =
+        text.replace(
+          /[^0-9]/g,
+          ""
         );
 
+      if (!digits) {
+        return null;
+      }
+
+      const number =
+        Number(
+          digits
+        );
 
       if (
         !Number.isFinite(
-          decimal
+          number
         )
       ) {
         return null;
       }
 
+      if (
+        number > 0 &&
+        number < 10000
+      ) {
 
-      if (hasBillion) {
-
-        return Math.round(
-          decimal *
-          1_000_000_000
+        return (
+          number *
+          1_000_000
         );
 
       }
 
-
-      return Math.round(
-        decimal *
-        1_000_000
-      );
+      return number;
 
     }
 
 
-    const digits =
-      text.replace(
-        /[^0-9]/g,
-        ""
-      );
+    /* =====================================================
+       MONEY PATTERN
+       ===================================================== */
+
+    const MONEY =
+      "([0-9]+(?:[.,][0-9]+)?)\\s*(JT|JUTA|M|MILIAR|MILYAR)?";
 
 
-    if (!digits) {
+    /* =====================================================
+       FIND MONEY
+       ===================================================== */
+
+    function findMoney(
+      text,
+      labels
+    ) {
+
+      for (
+        const label of labels
+      ) {
+
+        const regex =
+          new RegExp(
+            `${label}\\s*(?:[:=\\-]|RP\\.?\\s*)?\\s*${MONEY}`,
+            "i"
+          );
+
+        const match =
+          text.match(
+            regex
+          );
+
+        if (match) {
+
+          const value =
+            parseMoney(
+              match[1],
+              match[2]
+            );
+
+          if (value) {
+            return value;
+          }
+
+        }
+
+      }
+
       return null;
+
     }
 
 
-    const number =
-      Number(
-        digits
-      );
+    /* =====================================================
+       CREDIT / OTR
+       ===================================================== */
 
-
-    if (
-      !Number.isFinite(
-        number
-      )
-    ) {
-      return null;
-    }
-
-
-    if (
-      number > 0 &&
-      number < 10000
+    function findCreditPrice(
+      text
     ) {
 
-      return (
-        number *
-        1_000_000
+      return findMoney(
+        text,
+        [
+          "HARGA\\s+CREDIT\\s*\\(\\s*OTR\\s*\\)",
+          "HARGA\\s+KREDIT\\s*\\(\\s*OTR\\s*\\)",
+          "HARGA\\s+CREDIT",
+          "HARGA\\s+KREDIT",
+          "OTR\\s*\\/\\s*KREDIT",
+          "OTR\\s*\\/\\s*CREDIT",
+          "OTR"
+        ]
       );
 
     }
 
 
-    return number;
+    /* =====================================================
+       CASH
+       ===================================================== */
 
-  }
-
-
-  /* =====================================================
-     MONEY PATTERN
-     ===================================================== */
-
-  const MONEY =
-    "([0-9]+(?:[.,][0-9]+)?)\\s*(JT|JUTA|M|MILIAR|MILYAR)?";
-
-
-  /* =====================================================
-     FIND MONEY
-     ===================================================== */
-
-  function findMoney(
-    text,
-    labels
-  ) {
-
-    for (
-      const label of labels
+    function findCashPrice(
+      text
     ) {
+
+      return findMoney(
+        text,
+        [
+          "HARGA\\s+CASH",
+          "CASH\\s+PRICE",
+          "CASH"
+        ]
+      );
+
+    }
+
+
+    /* =====================================================
+       ALL DP / TDP
+       ===================================================== */
+
+    function findAllDp(
+      text
+    ) {
+
+      const results =
+        [];
 
       const regex =
-        new RegExp(
-          `${label}\\s*(?:[:=\\-]|RP\\.?\\s*)*\\s*${MONEY}`,
-          "i"
-        );
+        /\b(?:TDP|DP)(?:\s+MULAI(?:\s+DARI)?)?\s*(?:[:=\-]|RP\.?\s*)?\s*([0-9]+(?:[.,][0-9]+)?)\s*(JT|JUTA|M|MILIAR|MILYAR)?/gi;
 
+      let match;
 
-      const match =
-        text.match(
-          regex
-        );
-
-
-      if (match) {
+      while (
+        (
+          match =
+            regex.exec(
+              text
+            )
+        ) !== null
+      ) {
 
         const value =
           parseMoney(
@@ -1480,353 +1173,236 @@ Simpan Perubahan
             match[2]
           );
 
+        if (
+          value &&
+          value > 0
+        ) {
 
-        if (value) {
-          return value;
+          results.push(
+            value
+          );
+
         }
 
       }
 
+      return results;
+
     }
 
 
-    return null;
+    /* =====================================================
+       FORMAT RUPIAH
+       ===================================================== */
 
-  }
-
-
-  /* =====================================================
-     CREDIT / OTR
-     ===================================================== */
-
-  function findCreditPrice(
-    text
-  ) {
-
-    return findMoney(
-      text,
-      [
-        "HARGA\\s+CREDIT\\s*\\(\\s*OTR\\s*\\)",
-        "HARGA\\s+KREDIT\\s*\\(\\s*OTR\\s*\\)",
-        "HARGA\\s+CREDIT",
-        "HARGA\\s+KREDIT",
-        "OTR\\s*\\/\\s*KREDIT",
-        "OTR\\s*\\/\\s*CREDIT",
-        "OTR"
-      ]
-    );
-
-  }
-
-
-  /* =====================================================
-     CASH
-     ===================================================== */
-
-  function findCashPrice(
-    text
-  ) {
-
-    return findMoney(
-      text,
-      [
-        "HARGA\\s+CASH",
-        "CASH\\s+PRICE",
-        "CASH"
-      ]
-    );
-
-  }
-
-
-  /* =====================================================
-     ALL DP / TDP
-     ===================================================== */
-
-  function findAllDp(
-    text
-  ) {
-
-    const results =
-      [];
-
-
-    const regex =
-      /\b(?:TDP|DP)(?:\s+MULAI(?:\s+DARI)?)?\s*(?:[:=\-]|RP\.?\s*)*\s*([0-9]+(?:[.,][0-9]+)?)\s*(JT|JUTA|M|MILIAR|MILYAR)?/gi;
-
-
-    let match;
-
-
-    while (
-      (
-        match =
-          regex.exec(
-            text
-          )
-      ) !== null
+    function formatRupiah(
+      value
     ) {
 
-      const value =
-        parseMoney(
-          match[1],
-          match[2]
+      if (!value) {
+        return "-";
+      }
+
+      return new Intl.NumberFormat(
+        "id-ID",
+        {
+          style:
+            "currency",
+
+          currency:
+            "IDR",
+
+          maximumFractionDigits:
+            0,
+        }
+      ).format(
+        value
+      );
+
+    }
+
+
+    /* =====================================================
+       PARSE TELEGRAM
+       ===================================================== */
+
+    function parseTelegram() {
+
+      const raw =
+        normalizeText(
+          telegramInput?.value
+        ).trim();
+
+      if (!raw) {
+
+        alert(
+          "Paste deskripsi Telegram dulu."
         );
 
+        return;
+
+      }
+
+      const credit =
+        findCreditPrice(
+          raw
+        );
+
+      const cash =
+        findCashPrice(
+          raw
+        );
+
+      const allDp =
+        findAllDp(
+          raw
+        );
+
+      const lowestDp =
+        allDp.length
+          ? Math.min(
+              ...allDp
+            )
+          : null;
+
+      const cleanedDescription =
+        cleanTelegramDescription(
+          raw
+        );
+
+
+      /* =================================================
+         UPDATE HANYA FIELD YANG DIIZINKAN
+         ================================================= */
 
       if (
-        value &&
-        value > 0
+        credit !== null
       ) {
 
-        results.push(
-          value
-        );
-
-      }
-
-    }
-
-
-    return results;
-
-  }
-
-
-  /* =====================================================
-     FORMAT RUPIAH
-     ===================================================== */
-
-  function formatRupiah(
-    value
-  ) {
-
-    if (!value) {
-      return "-";
-    }
-
-
-    return new Intl.NumberFormat(
-      "id-ID",
-      {
-        style:
-          "currency",
-
-        currency:
-          "IDR",
-
-        maximumFractionDigits:
-          0,
-      }
-    ).format(
-      value
-    );
-
-  }
-
-
-  /* =====================================================
-     PARSE TELEGRAM
-     ===================================================== */
-
-  function parseTelegram() {
-
-    const raw =
-      normalizeText(
-        telegramInput?.value
-      ).trim();
-
-
-    if (!raw) {
-
-      alert(
-        "Paste deskripsi Telegram dulu."
-      );
-
-      return;
-
-    }
-
-
-    const credit =
-      findCreditPrice(
-        raw
-      );
-
-
-    const cash =
-      findCashPrice(
-        raw
-      );
-
-
-    const allDp =
-      findAllDp(
-        raw
-      );
-
-
-    const lowestDp =
-      allDp.length
-        ? Math.min(
-            ...allDp
-          )
-        : null;
-
-
-    const cleanedDescription =
-      cleanTelegramDescription(
-        raw
-      );
-
-
-    /* =================================================
-       UPDATE HANYA FIELD YANG DIIZINKAN
-       ================================================= */
-
-
-    if (
-      credit !== null
-    ) {
-
-      creditInput.value =
-        String(
-          credit
-        );
-
-    }
-
-
-    if (
-      cash !== null
-    ) {
-
-      cashInput.value =
-        String(
-          cash
-        );
-
-    }
-
-
-    if (
-      lowestDp !== null
-    ) {
-
-      dpInput.value =
-        String(
-          lowestDp
-        );
-
-    }
-
-
-    descriptionInput.value =
-      cleanedDescription;
-
-
-    /* =================================================
-       RESULT
-       ================================================= */
-
-
-    resultCredit.textContent =
-      credit
-        ? formatRupiah(
+        creditInput.value =
+          String(
             credit
-          )
-        : "Tidak ditemukan";
+          );
 
+      }
 
-    resultCash.textContent =
-      cash
-        ? formatRupiah(
+      if (
+        cash !== null
+      ) {
+
+        cashInput.value =
+          String(
             cash
-          )
-        : "Tidak ditemukan";
+          );
 
+      }
 
-    resultDp.textContent =
-      lowestDp
-        ? formatRupiah(
+      if (
+        lowestDp !== null
+      ) {
+
+        dpInput.value =
+          String(
             lowestDp
-          )
-        : "Tidak ditemukan";
+          );
+
+      }
+
+      descriptionInput.value =
+        cleanedDescription;
 
 
-    resultBox.classList.remove(
-      "hidden"
-    );
+      /* =================================================
+         RESULT
+         ================================================= */
 
+      resultCredit.textContent =
+        credit
+          ? formatRupiah(
+              credit
+            )
+          : "Tidak ditemukan";
 
-    const changed =
-      [];
+      resultCash.textContent =
+        cash
+          ? formatRupiah(
+              cash
+            )
+          : "Tidak ditemukan";
 
+      resultDp.textContent =
+        lowestDp
+          ? formatRupiah(
+              lowestDp
+            )
+          : "Tidak ditemukan";
 
-    if (credit) {
-
-      changed.push(
-        "OTR"
-      );
-
-    }
-
-
-    if (cash) {
-
-      changed.push(
-        "Cash"
-      );
-
-    }
-
-
-    if (lowestDp) {
-
-      changed.push(
-        `DP terkecil dari ${allDp.length} data DP/TDP`
-      );
-
-    }
-
-
-    changed.push(
-      "Deskripsi"
-    );
-
-
-    resultMessage.textContent =
-      `Terisi: ${changed.join(
-        " • "
-      )}. Cek dulu lalu klik Simpan Perubahan.`;
-
-  }
-
-
-  /* =====================================================
-     EVENT
-     ===================================================== */
-
-  parseButton?.addEventListener(
-    "click",
-    parseTelegram
-  );
-
-
-  clearButton?.addEventListener(
-    "click",
-    () => {
-
-      telegramInput.value =
-        "";
-
-      resultBox.classList.add(
+      resultBox.classList.remove(
         "hidden"
       );
 
-    }
-  );
+      const changed =
+        [];
 
-</script>
+      if (credit) {
+
+        changed.push(
+          "OTR"
+        );
+
+      }
+
+      if (cash) {
+
+        changed.push(
+          "Cash"
+        );
+
+      }
+
+      if (lowestDp) {
+
+        changed.push(
+          `DP terkecil dari ${allDp.length} data DP/TDP`
+        );
+
+      }
+
+      changed.push(
+        "Deskripsi"
+      );
+
+      resultMessage.textContent =
+        `Terisi: ${changed.join(
+          " • "
+        )}. Cek dulu lalu klik Simpan Perubahan.`;
+
+    }
+
+
+    /* =====================================================
+       EVENT
+       ===================================================== */
+
+    parseButton?.addEventListener(
+      "click",
+      parseTelegram
+    );
+
+    clearButton?.addEventListener(
+      "click",
+      () => {
+
+        telegramInput.value =
+          "";
+
+        resultBox.classList.add(
+          "hidden"
+        );
+
+      }
+    );
+
+  </script>
 
 </MainLayout>

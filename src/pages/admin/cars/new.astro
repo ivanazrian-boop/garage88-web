@@ -26,11 +26,33 @@ if (Astro.request.method === "POST") {
   const year =
     Number(formData.get("year")) || null;
 
-  const slug =
-    `${brand}-${model}-${variant || ""}-${year}`
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
+  // =========================================================
+  // PLAT NOMOR
+  // =========================================================
+
+  const plateNumber =
+    formData.get("plate_number")?.toString().trim() || "";
+
+  // =========================================================
+  // SLUG
+  //
+  // Jika ada plat:
+  // toyota-alphard-g-2022-b-1234-abc
+  //
+  // Jika tidak ada plat:
+  // toyota-alphard-g-2022
+  //
+  // TIDAK ADA AUTO -2 / -3
+  // =========================================================
+
+  const slugSource =
+    `${brand}-${model}-${variant || ""}-${year}` +
+    `${plateNumber ? `-${plateNumber}` : ""}`;
+
+  const slug = slugSource
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 
   const car = {
     slug,
@@ -71,7 +93,7 @@ if (Astro.request.method === "POST") {
       formData.get("cash_only") === "on",
 
     plate_number:
-      formData.get("plate_number")?.toString() || null,
+      plateNumber || null,
 
     tax_valid_until:
       null,
@@ -107,965 +129,955 @@ if (Astro.request.method === "POST") {
 
 <MainLayout title="Tambah Mobil | Garage88 Admin">
 
-<section class="min-h-screen bg-slate-100 py-12">
-
-<div class="mx-auto max-w-5xl px-6">
-
-<h1 class="text-3xl font-bold">
-Tambah Mobil
-</h1>
-
-{
-  message && (
-
-    <div class="mt-5 rounded-xl bg-red-100 p-4 text-red-700">
-      {message}
-    </div>
-
-  )
-}
-
-<div class="mt-8 rounded-2xl bg-white p-6 shadow">
-
-<h2 class="text-xl font-bold">
-📋 Paste Deskripsi Telegram
-</h2>
-
-<textarea
-  id="telegramInput"
-  rows="10"
-  placeholder="Paste deskripsi mobil dari Telegram..."
-  class="mt-4 w-full rounded-xl border p-4"
-></textarea>
-
-<button
-  type="button"
-  onclick="parseTelegram()"
-  class="mt-4 rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white"
->
-🚀 Convert Data
-</button>
-
-</div>
-
-<form
-  method="POST"
-  class="mt-8 grid gap-6 rounded-2xl bg-white p-8 shadow"
->
-
-<div class="grid gap-5 md:grid-cols-2">
-
-<input
-  id="brand"
-  name="brand"
-  placeholder="Brand"
-  required
-  class="rounded-xl border p-4"
-/>
-
-<input
-  id="model"
-  name="model"
-  placeholder="Model"
-  required
-  class="rounded-xl border p-4"
-/>
-
-<input
-  id="variant"
-  name="variant"
-  placeholder="Variant"
-  class="rounded-xl border p-4"
-/>
-
-<input
-  id="year"
-  name="year"
-  type="number"
-  placeholder="Tahun"
-  class="rounded-xl border p-4"
-/>
-
-<input
-  id="color"
-  name="color"
-  placeholder="Warna"
-  class="rounded-xl border p-4"
-/>
-
-<select
-  id="branch"
-  name="branch"
-  class="rounded-xl border p-4"
->
-
-  <option value="">
-    Cabang
-  </option>
-
-  <option value="AHA Gallery">
-    AHA Gallery
-  </option>
-
-  <option value="AHA Nusantara">
-    AHA Nusantara
-  </option>
-
-  <option value="AHA Gajah Mada Cipondoh">
-    AHA Gajah Mada Cipondoh
-  </option>
-
-  <option value="AHA Gajah Mada Cipete">
-    AHA Gajah Mada Cipete
-  </option>
-
-  <option value="AHA Royal">
-    AHA Royal
-  </option>
-
-  <option value="Garage88 Kebayoran">
-    Garage88 Kebayoran
-  </option>
-
-  <option value="Garage88 Basura">
-    Garage88 Basura
-  </option>
-
-  <option value="Garage88 Joglo">
-    Garage88 Joglo
-  </option>
-
-  <option value="Garage88 Ciater">
-    Garage88 Ciater
-  </option>
-
-  <option value="AHA ADEX">
-    AHA ADEX
-  </option>
-
-</select>
-
-<select
-  id="fuel"
-  name="fuel"
-  class="rounded-xl border p-4"
->
-
-  <option value="">
-    Fuel
-  </option>
-
-  <option value="Bensin">
-    Bensin
-  </option>
-
-  <option value="Diesel">
-    Diesel
-  </option>
-
-  <option value="Hybrid">
-    Hybrid
-  </option>
-
-  <option value="Electric Vehicle">
-    Electric Vehicle
-  </option>
-
-</select>
-
-<select
-  id="transmission"
-  name="transmission"
-  class="rounded-xl border p-4"
->
-
-  <option value="">
-    Transmisi
-  </option>
-
-  <option value="AT">
-    AT
-  </option>
-
-  <option value="MT">
-    MT
-  </option>
-
-</select>
-
-<input
-  id="odometer"
-  name="odometer"
-  type="number"
-  placeholder="KM"
-  class="rounded-xl border p-4"
-/>
-
-<input
-  id="credit_price"
-  name="credit_price"
-  type="number"
-  placeholder="Harga Kredit"
-  class="rounded-xl border p-4"
-/>
-
-<input
-  id="cash_price"
-  name="cash_price"
-  type="number"
-  placeholder="Harga Cash"
-  class="rounded-xl border p-4"
-/>
-
-<input
-  id="dp"
-  name="dp"
-  type="number"
-  placeholder="DP"
-  class="rounded-xl border p-4"
-/>
-
-<input
-  name="plate_number"
-  placeholder="Plat Nomor"
-  class="rounded-xl border p-4"
-/>
-
-</div>
-
-
-<!-- CASH ONLY -->
-
-<div
-  class="
-    rounded-xl
-    border
-    border-amber-200
-    bg-amber-50
-    p-4
-  "
->
-
-  <label class="flex cursor-pointer items-center gap-3">
-
-    <input
-      type="checkbox"
-      name="cash_only"
-      class="
-        h-5
-        w-5
-        rounded
-        border-slate-300
-      "
-    />
-
-    <div>
-
-      <p class="font-bold text-slate-900">
-        Cash Only
-      </p>
-
-      <p class="text-sm text-slate-500">
-        Centang jika unit hanya dijual cash
-      </p>
-
-    </div>
-
-  </label>
-
-</div>
-
-
-<textarea
-  id="description"
-  name="description"
-  placeholder="Deskripsi mobil"
-  rows="10"
-  class="rounded-xl border p-4"
-></textarea>
-
-<label class="flex items-center gap-3">
-
-<input
-  type="checkbox"
-  name="featured"
-/>
-
-<span>
-Featured
-</span>
-
-</label>
-
-<button
-  class="rounded-xl bg-red-600 px-8 py-4 font-semibold text-white hover:bg-red-700"
->
-Simpan Mobil
-</button>
-
-</form>
-
-</div>
-
-</section>
-
-
-
-<script is:inline>
-
-function jtToNumber(value) {
-  return Number(value) * 1000000;
-}
-
-
-/* =========================================================
-   CABANG
-   ========================================================= */
-
-const BRANCH_ALIASES = [
-
-  {
-    name: "AHA Gajah Mada Cipondoh",
-
-    aliases: [
-      "aha gajah mada cipondoh",
-      "gajah mada cipondoh",
-      "aha gm cipondoh",
-      "gm cipondoh"
-    ]
-  },
-
-  {
-    name: "AHA Gajah Mada Cipete",
-
-    aliases: [
-      "aha gajah mada cipete",
-      "gajah mada cipete",
-      "aha gm cipete",
-      "gm cipete"
-    ]
-  },
-
-  {
-    name: "AHA Royal",
-
-    aliases: [
-      "aha royal",
-      "royal"
-    ]
-  },
-
-  {
-    name: "Garage88 Kebayoran",
-
-    aliases: [
-      "garage88 kebayoran",
-      "garage 88 kebayoran",
-      "g88 kebayoran",
-      "kebayoran"
-    ]
-  },
-
-  {
-    name: "Garage88 Basura",
-
-    aliases: [
-      "garage88 basura",
-      "garage 88 basura",
-      "g88 basura",
-      "basura"
-    ]
-  },
-
-  {
-    name: "Garage88 Joglo",
-
-    aliases: [
-      "garage88 joglo",
-      "garage 88 joglo",
-      "g88 joglo",
-      "joglo"
-    ]
-  },
-
-  {
-    name: "Garage88 Ciater",
-
-    aliases: [
-      "garage88 ciater",
-      "garage 88 ciater",
-      "g88 ciater",
-      "ciater"
-    ]
-  },
-
-  {
-    name: "AHA Nusantara",
-
-    aliases: [
-      "aha nusantara",
-      "nusantara"
-    ]
-  },
-
-  {
-    name: "AHA Gallery",
-
-    aliases: [
-      "aha gallery",
-      "gallery"
-    ]
-  },
-
-  {
-    name: "AHA ADEX",
-
-    aliases: [
-      "aha adex",
-      "adex"
-    ]
-  }
-
-];
-
-
-function normalizeBranchText(value) {
-
-  return String(value || "")
-    .toLowerCase()
-    .replace(/[._\-–—]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-}
-
-
-function findCanonicalBranch(value) {
-
-  const normalized =
-    normalizeBranchText(value);
-
-  if (!normalized) {
-    return "";
-  }
-
-  for (const branch of BRANCH_ALIASES) {
-
-    for (const alias of branch.aliases) {
-
-      const normalizedAlias =
-        normalizeBranchText(alias);
-
-      if (
-        normalized === normalizedAlias ||
-        normalized.includes(normalizedAlias)
-      ) {
-        return branch.name;
+  <section class="min-h-screen bg-slate-100 py-12">
+
+    <div class="mx-auto max-w-5xl px-6">
+
+      <h1 class="text-3xl font-bold">
+        Tambah Mobil
+      </h1>
+
+      {
+        message && (
+          <div class="mt-5 rounded-xl bg-red-100 p-4 text-red-700">
+            {message}
+          </div>
+        )
       }
+
+      <div class="mt-8 rounded-2xl bg-white p-6 shadow">
+
+        <h2 class="text-xl font-bold">
+          📋 Paste Deskripsi Telegram
+        </h2>
+
+        <textarea
+          id="telegramInput"
+          rows="10"
+          placeholder="Paste deskripsi mobil dari Telegram..."
+          class="mt-4 w-full rounded-xl border p-4"
+        ></textarea>
+
+        <button
+          type="button"
+          onclick="parseTelegram()"
+          class="mt-4 rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white"
+        >
+          🚀 Convert Data
+        </button>
+
+      </div>
+
+      <form
+        method="POST"
+        class="mt-8 grid gap-6 rounded-2xl bg-white p-8 shadow"
+      >
+
+        <div class="grid gap-5 md:grid-cols-2">
+
+          <input
+            id="brand"
+            name="brand"
+            placeholder="Brand"
+            required
+            class="rounded-xl border p-4"
+          />
+
+          <input
+            id="model"
+            name="model"
+            placeholder="Model"
+            required
+            class="rounded-xl border p-4"
+          />
+
+          <input
+            id="variant"
+            name="variant"
+            placeholder="Variant"
+            class="rounded-xl border p-4"
+          />
+
+          <input
+            id="year"
+            name="year"
+            type="number"
+            placeholder="Tahun"
+            class="rounded-xl border p-4"
+          />
+
+          <input
+            id="color"
+            name="color"
+            placeholder="Warna"
+            class="rounded-xl border p-4"
+          />
+
+          <select
+            id="branch"
+            name="branch"
+            class="rounded-xl border p-4"
+          >
+            <option value="">
+              Cabang
+            </option>
+
+            <option value="AHA Gallery">
+              AHA Gallery
+            </option>
+
+            <option value="AHA Nusantara">
+              AHA Nusantara
+            </option>
+
+            <option value="AHA Gajah Mada Cipondoh">
+              AHA Gajah Mada Cipondoh
+            </option>
+
+            <option value="AHA Gajah Mada Cipete">
+              AHA Gajah Mada Cipete
+            </option>
+
+            <option value="AHA Royal">
+              AHA Royal
+            </option>
+
+            <option value="Garage88 Kebayoran">
+              Garage88 Kebayoran
+            </option>
+
+            <option value="Garage88 Basura">
+              Garage88 Basura
+            </option>
+
+            <option value="Garage88 Joglo">
+              Garage88 Joglo
+            </option>
+
+            <option value="Garage88 Ciater">
+              Garage88 Ciater
+            </option>
+
+            <option value="AHA ADEX">
+              AHA ADEX
+            </option>
+          </select>
+
+          <select
+            id="fuel"
+            name="fuel"
+            class="rounded-xl border p-4"
+          >
+            <option value="">
+              Fuel
+            </option>
+
+            <option value="Bensin">
+              Bensin
+            </option>
+
+            <option value="Diesel">
+              Diesel
+            </option>
+
+            <option value="Hybrid">
+              Hybrid
+            </option>
+
+            <option value="Electric Vehicle">
+              Electric Vehicle
+            </option>
+          </select>
+
+          <select
+            id="transmission"
+            name="transmission"
+            class="rounded-xl border p-4"
+          >
+            <option value="">
+              Transmisi
+            </option>
+
+            <option value="AT">
+              AT
+            </option>
+
+            <option value="MT">
+              MT
+            </option>
+          </select>
+
+          <input
+            id="odometer"
+            name="odometer"
+            type="number"
+            placeholder="KM"
+            class="rounded-xl border p-4"
+          />
+
+          <input
+            id="credit_price"
+            name="credit_price"
+            type="number"
+            placeholder="Harga Kredit"
+            class="rounded-xl border p-4"
+          />
+
+          <input
+            id="cash_price"
+            name="cash_price"
+            type="number"
+            placeholder="Harga Cash"
+            class="rounded-xl border p-4"
+          />
+
+          <input
+            id="dp"
+            name="dp"
+            type="number"
+            placeholder="DP"
+            class="rounded-xl border p-4"
+          />
+
+          <input
+            id="plate_number"
+            name="plate_number"
+            placeholder="Plat Nomor"
+            class="rounded-xl border p-4"
+          />
+
+        </div>
+
+        <!-- CASH ONLY -->
+
+        <div
+          class="
+            rounded-xl
+            border
+            border-amber-200
+            bg-amber-50
+            p-4
+          "
+        >
+
+          <label class="flex cursor-pointer items-center gap-3">
+
+            <input
+              type="checkbox"
+              name="cash_only"
+              class="
+                h-5
+                w-5
+                rounded
+                border-slate-300
+              "
+            />
+
+            <div>
+
+              <p class="font-bold text-slate-900">
+                Cash Only
+              </p>
+
+              <p class="text-sm text-slate-500">
+                Centang jika unit hanya dijual cash
+              </p>
+
+            </div>
+
+          </label>
+
+        </div>
+
+        <textarea
+          id="description"
+          name="description"
+          placeholder="Deskripsi mobil"
+          rows="10"
+          class="rounded-xl border p-4"
+        ></textarea>
+
+        <label class="flex items-center gap-3">
+
+          <input
+            type="checkbox"
+            name="featured"
+          />
+
+          <span>
+            Featured
+          </span>
+
+        </label>
+
+        <button
+          class="rounded-xl bg-red-600 px-8 py-4 font-semibold text-white hover:bg-red-700"
+        >
+          Simpan Mobil
+        </button>
+
+      </form>
+
+    </div>
+
+  </section>
+
+  <script is:inline>
+
+    function jtToNumber(value) {
+      return Number(value) * 1000000;
+    }
+
+
+    /* =========================================================
+       CABANG
+       ========================================================= */
+
+    const BRANCH_ALIASES = [
+
+      {
+        name: "AHA Gajah Mada Cipondoh",
+
+        aliases: [
+          "aha gajah mada cipondoh",
+          "gajah mada cipondoh",
+          "aha gm cipondoh",
+          "gm cipondoh"
+        ]
+      },
+
+      {
+        name: "AHA Gajah Mada Cipete",
+
+        aliases: [
+          "aha gajah mada cipete",
+          "gajah mada cipete",
+          "aha gm cipete",
+          "gm cipete"
+        ]
+      },
+
+      {
+        name: "AHA Royal",
+
+        aliases: [
+          "aha royal",
+          "royal"
+        ]
+      },
+
+      {
+        name: "Garage88 Kebayoran",
+
+        aliases: [
+          "garage88 kebayoran",
+          "garage 88 kebayoran",
+          "g88 kebayoran",
+          "kebayoran"
+        ]
+      },
+
+      {
+        name: "Garage88 Basura",
+
+        aliases: [
+          "garage88 basura",
+          "garage 88 basura",
+          "g88 basura",
+          "basura"
+        ]
+      },
+
+      {
+        name: "Garage88 Joglo",
+
+        aliases: [
+          "garage88 joglo",
+          "garage 88 joglo",
+          "g88 joglo",
+          "joglo"
+        ]
+      },
+
+      {
+        name: "Garage88 Ciater",
+
+        aliases: [
+          "garage88 ciater",
+          "garage 88 ciater",
+          "g88 ciater",
+          "ciater"
+        ]
+      },
+
+      {
+        name: "AHA Nusantara",
+
+        aliases: [
+          "aha nusantara",
+          "nusantara"
+        ]
+      },
+
+      {
+        name: "AHA Gallery",
+
+        aliases: [
+          "aha gallery",
+          "gallery"
+        ]
+      },
+
+      {
+        name: "AHA ADEX",
+
+        aliases: [
+          "aha adex",
+          "adex"
+        ]
+      }
+
+    ];
+
+
+    function normalizeBranchText(value) {
+
+      return String(value || "")
+        .toLowerCase()
+        .replace(/[._\-–—]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
 
     }
 
-  }
 
-  return "";
+    function findCanonicalBranch(value) {
 
-}
+      const normalized =
+        normalizeBranchText(value);
+
+      if (!normalized) {
+        return "";
+      }
+
+      for (const branch of BRANCH_ALIASES) {
+
+        for (const alias of branch.aliases) {
+
+          const normalizedAlias =
+            normalizeBranchText(alias);
+
+          if (
+            normalized === normalizedAlias ||
+            normalized.includes(normalizedAlias)
+          ) {
+            return branch.name;
+          }
+
+        }
+
+      }
+
+      return "";
+
+    }
 
 
-function extractBranchFromTitle(title) {
+    function extractBranchFromTitle(title) {
 
-  const matches =
-    [
-      ...title.matchAll(
-        /\(\s*([^)]+?)\s*\)/g
-      )
-    ];
+      const matches = [
+        ...title.matchAll(
+          /\(([^)]+?)\)/g
+        )
+      ];
 
-  for (const match of matches) {
+      for (const match of matches) {
 
-    const branch =
-      findCanonicalBranch(
-        match[1]
-      );
+        const branch =
+          findCanonicalBranch(
+            match[1]
+          );
 
-    if (branch) {
+        if (branch) {
+
+          return {
+            branch,
+            matchedText: match[0]
+          };
+
+        }
+
+      }
 
       return {
-        branch,
-        matchedText: match[0]
+        branch: "",
+        matchedText: ""
       };
 
     }
 
-  }
 
-  return {
-    branch: "",
-    matchedText: ""
-  };
+    function removeGroupInfo(value) {
 
-}
+      return String(value || "")
+        .replace(
+          /\s*[-–—]?\s*(?:group|grup|grub)\s+[a-z0-9]+\b/gi,
+          ""
+        );
 
-
-function removeGroupInfo(value) {
-
-  return String(value || "")
-    .replace(
-      /\s*[-–—]?\s*(?:group|grup|grub)\s+[a-z0-9]+\b/gi,
-      ""
-    );
-
-}
+    }
 
 
-function removeBranchParentheses(value) {
+    function removeBranchParentheses(value) {
 
-  return String(value || "")
-    .replace(
-      /\(\s*([^)]+?)\s*\)/g,
-      function(fullMatch, inside) {
+      return String(value || "")
+        .replace(
+          /\(([^)]+?)\)/g,
+          function(fullMatch, inside) {
 
-        const branch =
-          findCanonicalBranch(
-            inside
-          );
+            const branch =
+              findCanonicalBranch(
+                inside
+              );
 
-        if (branch) {
-          return "";
-        }
+            if (branch) {
+              return "";
+            }
 
-        return fullMatch;
+            return fullMatch;
+
+          }
+        );
+
+    }
+
+
+    function cleanDescription(value) {
+
+      let result =
+        removeBranchParentheses(value);
+
+      result =
+        removeGroupInfo(result);
+
+      result =
+        result
+          .split("\n")
+          .map(function(line) {
+
+            return line
+              .replace(/\s+$/g, "")
+              .trimEnd();
+
+          })
+          .join("\n")
+          .replace(/[ \t]+\n/g, "\n")
+          .replace(/\n{3,}/g, "\n\n")
+          .trim();
+
+      return result;
+
+    }
+
+
+    /* =========================================================
+       TELEGRAM PARSER
+       ========================================================= */
+
+    function parseTelegram() {
+
+      const text =
+        document
+          .getElementById("telegramInput")
+          .value
+          .trim();
+
+      if (!text) {
+
+        alert("Paste Telegram dulu");
+
+        return;
 
       }
-    );
 
-}
-
-
-function cleanDescription(value) {
-
-  let result =
-    removeBranchParentheses(value);
-
-  result =
-    removeGroupInfo(result);
-
-  result =
-    result
-      .split("\n")
-      .map(function(line) {
-
-        return line
-          .replace(/\s+$/g, "")
-          .trimEnd();
-
-      })
-      .join("\n")
-      .replace(/[ \t]+\n/g, "\n")
-      .replace(/\n{3,}/g, "\n\n")
-      .trim();
-
-  return result;
-
-}
+      const firstLine =
+        text
+          .split("\n")[0]
+          .trim();
 
 
-/* =========================================================
-   TELEGRAM PARSER
-   ========================================================= */
+      // CABANG
 
-function parseTelegram() {
-
-  const text =
-    document
-      .getElementById("telegramInput")
-      .value
-      .trim();
-
-  if (!text) {
-
-    alert("Paste Telegram dulu");
-
-    return;
-
-  }
-
-  const firstLine =
-    text
-      .split("\n")[0]
-      .trim();
-
-
-  // CABANG
-
-  const branchResult =
-    extractBranchFromTitle(
-      firstLine
-    );
-
-  document
-    .getElementById("branch")
-    .value =
-      branchResult.branch || "";
-
-
-  // CLEAN FIRST LINE
-
-  let cleanFirstLine =
-    firstLine;
-
-  if (branchResult.matchedText) {
-
-    cleanFirstLine =
-      cleanFirstLine.replace(
-        branchResult.matchedText,
-        ""
-      );
-
-  }
-
-  cleanFirstLine =
-    removeGroupInfo(
-      cleanFirstLine
-    )
-      .replace(/\s+/g, " ")
-      .trim();
-
-
-  // YEAR
-
-  const year =
-    cleanFirstLine.match(
-      /\b20\d{2}\b/
-    );
-
-  if (year) {
-
-    document
-      .getElementById("year")
-      .value =
-        year[0];
-
-  }
-
-
-  // BRAND
-
-  const brands = [
-    "Toyota",
-    "Honda",
-    "Hyundai",
-    "Mazda",
-    "BMW",
-    "Mercedes",
-    "Audi",
-    "Wuling",
-    "Mitsubishi",
-    "Nissan",
-    "BYD"
-  ];
-
-  let brand = "";
-
-  for (const b of brands) {
-
-    if (
-      cleanFirstLine
-        .toLowerCase()
-        .includes(
-          b.toLowerCase()
-        )
-    ) {
-
-      brand = b;
-
-      break;
-
-    }
-
-  }
-
-  document
-    .getElementById("brand")
-    .value =
-      brand;
-
-
-  // COLOR
-
-  const colors = [
-    "Putih",
-    "Hitam",
-    "Silver",
-    "Grey",
-    "Abu",
-    "Merah",
-    "Biru",
-    "Hijau",
-    "Coklat",
-    "Metallic"
-  ];
-
-  for (const c of colors) {
-
-    if (
-      cleanFirstLine
-        .toLowerCase()
-        .includes(
-          c.toLowerCase()
-        )
-    ) {
+      const branchResult =
+        extractBranchFromTitle(
+          firstLine
+        );
 
       document
-        .getElementById("color")
+        .getElementById("branch")
         .value =
-          c;
-
-      break;
-
-    }
-
-  }
+          branchResult.branch || "";
 
 
-  // FUEL
+      // CLEAN FIRST LINE
 
-  if (
-    text
-      .toLowerCase()
-      .includes("hybrid")
-  ) {
+      let cleanFirstLine =
+        firstLine;
 
-    document
-      .getElementById("fuel")
-      .value =
-        "Hybrid";
+      if (branchResult.matchedText) {
 
-  }
-  else if (
-    text
-      .toLowerCase()
-      .includes("diesel")
-  ) {
+        cleanFirstLine =
+          cleanFirstLine.replace(
+            branchResult.matchedText,
+            ""
+          );
 
-    document
-      .getElementById("fuel")
-      .value =
-        "Diesel";
+      }
 
-  }
-  else {
-
-    document
-      .getElementById("fuel")
-      .value =
-        "Bensin";
-
-  }
-
-
-  // TRANSMISSION
-
-  if (
-    cleanFirstLine.match(
-      /\bAT\b/i
-    )
-  ) {
-
-    document
-      .getElementById("transmission")
-      .value =
-        "AT";
-
-  }
-  else if (
-    cleanFirstLine.match(
-      /\bMT\b/i
-    )
-  ) {
-
-    document
-      .getElementById("transmission")
-      .value =
-        "MT";
-
-  }
-
-
-  // MODEL + VARIANT
-
-  let cleanTitle =
-    cleanFirstLine
-      .replace(
-        /\(.*?\)/g,
-        ""
-      )
-      .replace(
-        year?.[0] || "",
-        ""
-      )
-      .trim();
-
-  if (brand) {
-
-    cleanTitle =
-      cleanTitle
-        .replace(
-          new RegExp(
-            brand,
-            "i"
-          ),
-          ""
+      cleanFirstLine =
+        removeGroupInfo(
+          cleanFirstLine
         )
-        .trim();
-
-  }
-
-  const words =
-    cleanTitle
-      .split(/\s+/)
-      .filter(Boolean);
-
-  if (words.length) {
-
-    document
-      .getElementById("model")
-      .value =
-        words[0];
-
-  }
-
-  if (words.length > 1) {
-
-    document
-      .getElementById("variant")
-      .value =
-        words
-          .slice(1)
-          .join(" ");
-
-  }
+          .replace(/\s+/g, " ")
+          .trim();
 
 
-  // KM
+      // YEAR
 
-  let km =
-    text.match(
-      /(?:odometer|km)\s*[:\-]?\s*(\d+)\s*rb/i
-    );
-
-  if (!km) {
-
-    km =
-      text.match(
-        /low km\s*(\d+)\s*rb/i
-      );
-
-  }
-
-  if (km) {
-
-    document
-      .getElementById("odometer")
-      .value =
-        Number(km[1]) * 1000;
-
-  }
-
-
-  // CASH
-
-  const cash =
-    text.match(
-      /cash\s+(\d+)\s*(jt|juta)/i
-    );
-
-  if (cash) {
-
-    document
-      .getElementById("cash_price")
-      .value =
-        jtToNumber(
-          cash[1]
+      const year =
+        cleanFirstLine.match(
+          /\b20\d{2}\b/
         );
 
-  }
+      if (year) {
+
+        document
+          .getElementById("year")
+          .value =
+            year[0];
+
+      }
 
 
-  // OTR CREDIT
+      // BRAND
 
-  const otr =
-    text.match(
-      /(?:otr|harga kredit)\s+(\d+)\s*(jt|juta)/i
-    );
+      const brands = [
+        "Toyota",
+        "Honda",
+        "Hyundai",
+        "Mazda",
+        "BMW",
+        "Mercedes",
+        "Audi",
+        "Wuling",
+        "Mitsubishi",
+        "Nissan",
+        "BYD"
+      ];
 
-  if (otr) {
+      let brand = "";
 
-    document
-      .getElementById("credit_price")
-      .value =
-        jtToNumber(
-          otr[1]
-        );
+      for (const b of brands) {
 
-  }
+        if (
+          cleanFirstLine
+            .toLowerCase()
+            .includes(
+              b.toLowerCase()
+            )
+        ) {
 
+          brand = b;
 
-  // DP TERKECIL
+          break;
 
-  const dpMatches =
-    [
-      ...text.matchAll(
-        /(?:tdp|dp)\s*(\d+)\s*(jt|juta)/gi
-      )
-    ];
+        }
 
-  const dpValues = [];
+      }
 
-  dpMatches.forEach(
-    item => {
-
-      dpValues.push(
-        jtToNumber(
-          item[1]
-        )
-      );
-
-    }
-  );
-
-  if (dpValues.length) {
-
-    document
-      .getElementById("dp")
-      .value =
-        Math.min(
-          ...dpValues
-        );
-
-  }
+      document
+        .getElementById("brand")
+        .value =
+          brand;
 
 
-  // DESCRIPTION
+      // COLOR
 
-  document
-    .getElementById("description")
-    .value =
-      cleanDescription(
+      const colors = [
+        "Putih",
+        "Hitam",
+        "Silver",
+        "Grey",
+        "Abu",
+        "Merah",
+        "Biru",
+        "Hijau",
+        "Coklat",
+        "Metallic"
+      ];
+
+      for (const c of colors) {
+
+        if (
+          cleanFirstLine
+            .toLowerCase()
+            .includes(
+              c.toLowerCase()
+            )
+        ) {
+
+          document
+            .getElementById("color")
+            .value =
+              c;
+
+          break;
+
+        }
+
+      }
+
+
+      // FUEL
+
+      if (
         text
+          .toLowerCase()
+          .includes("hybrid")
+      ) {
+
+        document
+          .getElementById("fuel")
+          .value =
+            "Hybrid";
+
+      }
+
+      else if (
+        text
+          .toLowerCase()
+          .includes("diesel")
+      ) {
+
+        document
+          .getElementById("fuel")
+          .value =
+            "Diesel";
+
+      }
+
+      else {
+
+        document
+          .getElementById("fuel")
+          .value =
+            "Bensin";
+
+      }
+
+
+      // TRANSMISSION
+
+      if (
+        cleanFirstLine.match(
+          /\bAT\b/i
+        )
+      ) {
+
+        document
+          .getElementById("transmission")
+          .value =
+            "AT";
+
+      }
+
+      else if (
+        cleanFirstLine.match(
+          /\bMT\b/i
+        )
+      ) {
+
+        document
+          .getElementById("transmission")
+          .value =
+            "MT";
+
+      }
+
+
+      // MODEL + VARIANT
+
+      let cleanTitle =
+        cleanFirstLine
+          .replace(
+            /\([^)]*?\)/g,
+            ""
+          )
+          .replace(
+            year?.[0] || "",
+            ""
+          )
+          .trim();
+
+      if (brand) {
+
+        cleanTitle =
+          cleanTitle
+            .replace(
+              new RegExp(
+                brand,
+                "i"
+              ),
+              ""
+            )
+            .trim();
+
+      }
+
+      const words =
+        cleanTitle
+          .split(/\s+/)
+          .filter(Boolean);
+
+      if (words.length) {
+
+        document
+          .getElementById("model")
+          .value =
+            words[0];
+
+      }
+
+      if (words.length > 1) {
+
+        document
+          .getElementById("variant")
+          .value =
+            words
+              .slice(1)
+              .join(" ");
+
+      }
+
+
+      // KM
+
+      let km =
+        text.match(
+          /(?:odometer|km)\s*[:\-]?\s*(\d+)\s*rb/i
+        );
+
+      if (!km) {
+
+        km =
+          text.match(
+            /low km\s*(\d+)\s*rb/i
+          );
+
+      }
+
+      if (km) {
+
+        document
+          .getElementById("odometer")
+          .value =
+            Number(km[1]) * 1000;
+
+      }
+
+
+      // CASH
+
+      const cash =
+        text.match(
+          /cash\s+(\d+)\s*(jt|juta)/i
+        );
+
+      if (cash) {
+
+        document
+          .getElementById("cash_price")
+          .value =
+            jtToNumber(
+              cash[1]
+            );
+
+      }
+
+
+      // OTR CREDIT
+
+      const otr =
+        text.match(
+          /(?:otr|harga kredit)\s+(\d+)\s*(jt|juta)/i
+        );
+
+      if (otr) {
+
+        document
+          .getElementById("credit_price")
+          .value =
+            jtToNumber(
+              otr[1]
+            );
+
+      }
+
+
+      // DP TERKECIL
+
+      const dpMatches = [
+        ...text.matchAll(
+          /(?:tdp|dp)\s*(\d+)\s*(jt|juta)/gi
+        )
+      ];
+
+      const dpValues = [];
+
+      dpMatches.forEach(
+        item => {
+
+          dpValues.push(
+            jtToNumber(
+              item[1]
+            )
+          );
+
+        }
       );
 
+      if (dpValues.length) {
 
-  alert(
+        document
+          .getElementById("dp")
+          .value =
+            Math.min(
+              ...dpValues
+            );
 
-    branchResult.branch
-      ? `Data berhasil dikonversi\nCabang: ${branchResult.branch}`
-      : "Data berhasil dikonversi\nCabang belum dikenali, pilih manual."
+      }
 
-  );
 
-}
+      // DESCRIPTION
 
-</script>
+      document
+        .getElementById("description")
+        .value =
+          cleanDescription(
+            text
+          );
+
+
+      alert(
+
+        branchResult.branch
+          ? `Data berhasil dikonversi\nCabang: ${branchResult.branch}`
+          : "Data berhasil dikonversi\nCabang belum dikenali, pilih manual."
+
+      );
+
+    }
+
+  </script>
 
 </MainLayout>
