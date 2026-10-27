@@ -50,18 +50,56 @@ let notice = "";
 let noticeType: "success" | "error" = "success";
 
 function getR2Key(imageUrl: string): string | null {
-  if (!publicBase || !imageUrl.startsWith(`${publicBase}/`)) {
+  if (!publicBase || !imageUrl) {
     return null;
   }
 
-  const path = imageUrl.slice(publicBase.length + 1);
+  let url: URL;
 
-  // Hanya izinkan file di folder mobil yang sedang dibuka.
-  if (!path.startsWith(`${carId}/`) || path.includes("..")) {
+  try {
+    url = new URL(imageUrl);
+  } catch {
     return null;
   }
 
-  // Jangan pernah menyentuh folder cover.
+  let base: URL;
+
+  try {
+    base = new URL(publicBase);
+  } catch {
+    return null;
+  }
+
+  // Domain foto harus sama dengan domain R2 yang dikonfigurasi.
+  if (
+    url.origin !== base.origin ||
+    !url.pathname.startsWith(`${base.pathname.replace(/\/+$/, "")}/`)
+  ) {
+    return null;
+  }
+
+  const basePath = base.pathname.replace(/\/+$/, "");
+  let path: string;
+
+  try {
+    path = decodeURIComponent(
+      url.pathname.slice(basePath.length + 1)
+    );
+  } catch {
+    return null;
+  }
+
+  // Wajib berada di folder mobil yang sedang dibuka.
+  if (
+    !path.startsWith(`cars/${carId}/`) ||
+    path.includes("..") ||
+    path.startsWith("/") ||
+    path.includes("\\")
+  ) {
+    return null;
+  }
+
+  // Jangan hapus cover yang dikelola melalui fitur lain.
   if (
     path.includes("/generated/") ||
     path.includes("/cover-source/")
