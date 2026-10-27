@@ -1,6 +1,7 @@
 ---
 import MainLayout from "../../../layouts/MainLayout.astro";
-import { supabase } from "../../../lib/supabase";
+import { createClient } from "@supabase/supabase-js";
+import { env } from "cloudflare:workers";
 
 const key = Astro.url.searchParams.get("key");
 const carId = Astro.url.searchParams.get("id");
@@ -11,289 +12,248 @@ if (key !== ADMIN_KEY || !carId) {
   return Astro.redirect("/");
 }
 
-
 let message = "";
 let success = false;
 
-
 if (Astro.request.method === "POST") {
-
   const formData = await Astro.request.formData();
+  const files = (formData.getAll("images") as File[]).reverse();
 
-const files =
-  (formData.getAll("images") as File[]).reverse();
-
-
-  console.log(
-    "TOTAL FILE:",
-    files.length
-  );
-
+  console.log("TOTAL FILE:", files.length);
 
   if (files.length === 0) {
-
-    message =
-      "Tidak ada file yang dipilih";
-
+    message = "Tidak ada file yang dipilih";
   } else {
+    const bindings = env as Record<string, unknown>;
 
-
-    let sortOrder = 1;
-
-    let uploaded = 0;
-
-
-
-    for (const file of files) {
-
-
-      if (!file.size) {
-        continue;
-      }
-
-
-      console.log(
-        "UPLOAD:",
-        file.name
-      );
-
-
-
-      const extension =
-        file.name.split(".").pop();
-
-
-
-      const fileName =
-        `${crypto.randomUUID()}.${extension}`;
-
-
-
-      const filePath =
-        `${carId}/${fileName}`;
-
-
-
-      /*
-       * Upload Storage
-       */
-
-      const {
-        error: uploadError
-      } =
-        await supabase.storage
-          .from("cars")
-          .upload(
-            filePath,
-            file,
-            {
-              contentType:file.type
+    const bucket = bindings.R2_BUCKET as
+      | {
+          put: (
+            key: string,
+            value: Uint8Array,
+            options?: {
+              httpMetadata?: {
+                contentType?: string;
+                cacheControl?: string;
+              };
             }
-          );
+          ) => Promise<unknown>;
+        }
+      | undefined;
 
+    const publicBaseValue = bindings.R2_PUBLIC_URL;
+    const publicBase =
+      typeof publicBaseValue === "string"
+        ? publicBaseValue.replace(/\/+$/, "")
+        : "";
 
+    const supabaseUrl =
+      bindings.SUPABASE_URL ?? bindings.PUBLIC_SUPABASE_URL;
 
-      if (uploadError) {
+    const serviceKey = bindings.SUPABASE_SERVICE_KEY;
 
-        console.error(
-          "STORAGE ERROR:",
-          uploadError
-        );
-
-        message =
-          uploadError.message;
-
-        break;
-
-      }
-
-
-
-      /*
-       * Public URL
-       */
-
-      const {
-        data:urlData
-      } =
-      supabase.storage
-        .from("cars")
-        .getPublicUrl(filePath);
-
-
-
-      console.log(
-        "URL:",
-        urlData.publicUrl
-      );
-
-
-
-      /*
-       * Insert car_images
-       */
-
-      const {
-        error:imageError
-      } =
-      await supabase
-        .from("car_images")
-        .insert({
-
-          car_id: carId,
-
-          image_url:
-            urlData.publicUrl,
-
-          sort_order:
-            sortOrder
-
-        });
-
-
-
-      if (imageError) {
-
-        console.error(
-          "CAR IMAGE ERROR:",
-          imageError
-        );
-
-
-        message =
-          imageError.message;
-
-        break;
-
-      }
-
-
-
-      uploaded++;
-
-      sortOrder++;
-
-    }
-
-
-
-    if (uploaded > 0) {
-
-      success = true;
+    if (!bucket || !publicBase) {
+      console.error("R2 CONFIG ERROR:", {
+        hasBucket: Boolean(bucket),
+        hasPublicUrl: Boolean(publicBase),
+      });
 
       message =
-        `${uploaded} foto berhasil diupload`;
+        "R2 belum tersedia. Periksa binding R2_BUCKET dan R2_PUBLIC_URL.";
+    } else if (
+      typeof supabaseUrl !== "string" ||
+      typeof serviceKey !== "string" ||
+      !supabaseUrl ||
+      !serviceKey
+    ) {
+      console.error("SUPABASE SERVER CONFIG ERROR:", {
+        hasUrl: Boolean(supabaseUrl),
+        hasServiceKey: Boolean(serviceKey),
+      });
 
+      message =
+        "Konfigurasi Supabase server belum tersedia. Periksa SUPABASE_URL dan SUPABASE_SERVICE_KEY pada Cloudflare.";
+    } else {
+      const supabaseAdmin = createClient(
+        supabaseUrl,
+        serviceKey,
+        {
+          auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+          },
+        }
+      );
+
+      let sortOrder = 1;
+      let uploaded = 0;
+      let failed = false;
+
+      for (const file of files) {
+        if (!file.size) continue;
+
+        console.log("UPLOAD:", file.name);
+
+        let filePath = "";
+
+        try {
+          const originalExtension =
+            file.name.split(".").pop()?.toLowerCase() || "";
+
+          const allowedExtensions = [
+            "jpg",
+            "jpeg",
+            "png",
+            "webp",
+            "avif",
+            "gif",
+          ];
+
+          const extensionByMime: Record<string, string> = {
+            "image/jpeg": "jpg",
+            "image/png": "png",
+            "image/webp": "webp",
+            "image/avif": "avif",
+            "image/gif": "gif",
+          };
+
+          const extension = allowedExtensions.includes(originalExtension)
+            ? originalExtension
+            : extensionByMime[file.type] || "jpg";
+
+          const fileName = `${crypto.randomUUID()}.${extension}`;
+          filePath = `${carId}/${fileName}`;
+
+          const contentType = file.type || "image/jpeg";
+          const bytes = new Uint8Array(await file.arrayBuffer());
+
+          // Upload file ke Cloudflare R2.
+          await bucket.put(filePath, bytes, {
+            httpMetadata: {
+              contentType,
+              cacheControl: "public, max-age=31536000",
+            },
+          });
+
+          const imageUrl = `${publicBase}/${filePath}`;
+
+          console.log("R2 URL:", imageUrl);
+
+          // Simpan metadata foto di Supabase.
+          const { error: imageError } = await supabaseAdmin
+            .from("car_images")
+            .insert({
+              car_id: carId,
+              image_url: imageUrl,
+              sort_order: sortOrder,
+            });
+
+          if (imageError) {
+            console.error("CAR IMAGE ERROR:", imageError);
+
+            message =
+              `Foto sudah diupload ke R2, tetapi gagal disimpan ke database: ${imageError.message}`;
+
+            failed = true;
+            break;
+          }
+
+          uploaded++;
+          sortOrder++;
+        } catch (error) {
+          console.error("R2 UPLOAD ERROR:", error);
+
+          message =
+            error instanceof Error
+              ? error.message
+              : "Upload foto gagal";
+
+          failed = true;
+          break;
+        }
+      }
+
+      if (uploaded > 0) {
+        success = true;
+
+        message = failed
+          ? `${uploaded} foto berhasil diupload. Sebagian proses gagal: ${message}`
+          : `${uploaded} foto berhasil diupload`;
+      } else if (!failed && !message) {
+        message = "Tidak ada file valid untuk diupload";
+      }
     }
-
   }
-
 }
-
 ---
 
 <MainLayout title="Upload Foto | Garage88 Admin">
+  <section class="min-h-screen bg-slate-100 py-12">
+    <div class="mx-auto max-w-4xl px-6">
+      <h1 class="text-3xl font-bold">
+        Upload Foto Mobil
+      </h1>
 
+      <p class="mt-2 text-slate-500">
+        ID Mobil: {carId}
+      </p>
 
-<section class="min-h-screen bg-slate-100 py-12">
+      {
+        message && (
+          <div
+            class:list={[
+              "mt-5 rounded-xl p-4",
+              success
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700",
+            ]}
+          >
+            {message}
+          </div>
+        )
+      }
 
+      <form
+        method="POST"
+        enctype="multipart/form-data"
+        class="mt-8 rounded-2xl bg-white p-8 shadow"
+      >
+        <label class="mb-3 block text-sm font-semibold">
+          Pilih Foto
+        </label>
 
-<div class="mx-auto max-w-4xl px-6">
+        <input
+          type="file"
+          name="images"
+          multiple
+          accept="image/*"
+          required
+          class="w-full rounded-xl border p-4"
+        />
 
+        <button
+          type="submit"
+          class="mt-6 rounded-xl bg-red-600 px-8 py-4 font-semibold text-white hover:bg-red-700"
+        >
+          Upload Foto
+        </button>
+      </form>
 
-<h1 class="text-3xl font-bold">
-Upload Foto Mobil
-</h1>
+      <div class="mt-8 flex gap-5">
+        <a
+          href={`/detail/${carId}`}
+          class="text-red-600"
+        >
+          Lihat Detail
+        </a>
 
-
-<p class="mt-2 text-slate-500">
-ID Mobil:
-{carId}
-</p>
-
-
-
-{
-message && (
-
-<div
-class:list={[
-"mt-5 rounded-xl p-4",
-success
-? "bg-green-100 text-green-700"
-: "bg-red-100 text-red-700"
-]}
->
-{message}
-</div>
-
-)
-
-}
-
-
-
-<form
-method="POST"
-enctype="multipart/form-data"
-class="mt-8 rounded-2xl bg-white p-8 shadow"
->
-
-
-<label class="block text-sm font-semibold mb-3">
-Pilih Foto
-</label>
-
-
-<input
-type="file"
-name="images"
-multiple
-accept="image/*"
-required
-class="w-full rounded-xl border p-4"
-/>
-
-
-
-<button
-type="submit"
-class="mt-6 rounded-xl bg-red-600 px-8 py-4 font-semibold text-white hover:bg-red-700"
->
-Upload Foto
-</button>
-
-
-</form>
-
-
-
-<div class="mt-8 flex gap-5">
-
-
-<a
-href={`/detail/${carId}`}
-class="text-red-600"
->
-Lihat Detail
-</a>
-
-
-<a
-href={`/admin?key=${ADMIN_KEY}`}
-class="text-slate-600"
->
-Kembali Admin
-</a>
-
-
-</div>
-
-
-</div>
-
-
-</section>
-
-
+        <a
+          href={`/admin?key=${ADMIN_KEY}`}
+          class="text-slate-600"
+        >
+          Kembali Admin
+        </a>
+      </div>
+    </div>
+  </section>
 </MainLayout>

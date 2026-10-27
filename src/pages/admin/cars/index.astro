@@ -1,5 +1,6 @@
 ---
 import MainLayout from "../../../layouts/MainLayout.astro";
+import PremiumCoverGenerator from "../../../components/admin/PremiumCoverGenerator.astro";
 
 import {
   getCars,
@@ -930,6 +931,8 @@ const cacheVersion =
 
                     </div>
 
+
+                    <PremiumCoverGenerator car={car} adminKey={key ?? ""} />
 
                     <!-- ==================================== -->
                     <!-- CAR INFO -->

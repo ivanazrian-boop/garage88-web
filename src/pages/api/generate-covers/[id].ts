@@ -493,110 +493,54 @@ export const POST:
 
 
     /* =================================
-       STORAGE
+       CLOUDFLARE R2 STORAGE
        ================================= */
 
-    const igPath =
-      `${id}/generated/ig-cover.jpg`;
+    const bindings = env as Record<string, unknown>;
 
+    const bucket = bindings.R2_BUCKET as {
+      put: (
+        key: string,
+        value: Uint8Array,
+        options?: {
+          httpMetadata?: {
+            contentType?: string;
+            cacheControl?: string;
+          };
+        }
+      ) => Promise<unknown>;
+    } | undefined;
 
-    const metaPath =
-      `${id}/generated/meta-cover.jpg`;
-
-
-    const [
-      igUpload,
-      metaUpload,
-    ] =
-      await Promise.all([
-
-        supabase
-          .storage
-          .from("cars")
-          .upload(
-            igPath,
-            igJpeg,
-            {
-              contentType:
-                "image/jpeg",
-
-              cacheControl:
-                "0",
-
-              upsert:
-                true,
-            }
-          ),
-
-
-        supabase
-          .storage
-          .from("cars")
-          .upload(
-            metaPath,
-            metaJpeg,
-            {
-              contentType:
-                "image/jpeg",
-
-              cacheControl:
-                "0",
-
-              upsert:
-                true,
-            }
-          ),
-
-      ]);
-
-
-    if (
-      igUpload.error
-    ) {
-
-      throw new Error(
-        `IG upload: ${igUpload.error.message}`
-      );
-
+    if (!bucket) {
+      throw new Error("R2_BUCKET binding tidak tersedia");
     }
 
+    const publicBase = getRequiredEnv("R2_PUBLIC_URL").replace(/\/+$/, "");
 
-    if (
-      metaUpload.error
-    ) {
+    const igPath = `${id}/generated/ig-cover.jpg`;
+    const metaPath = `${id}/generated/meta-cover.jpg`;
 
-      throw new Error(
-        `Meta upload: ${metaUpload.error.message}`
-      );
-
+    if (igJpeg.length === 0 || metaJpeg.length === 0) {
+      throw new Error("Hasil render IG atau Meta kosong");
     }
 
+    await Promise.all([
+      bucket.put(igPath, igJpeg, {
+        httpMetadata: {
+          contentType: "image/jpeg",
+          cacheControl: "public, max-age=3600",
+        },
+      }),
+      bucket.put(metaPath, metaJpeg, {
+        httpMetadata: {
+          contentType: "image/jpeg",
+          cacheControl: "public, max-age=3600",
+        },
+      }),
+    ]);
 
-    /* =================================
-       URL
-       ================================= */
-
-    const igUrl =
-      supabase
-        .storage
-        .from("cars")
-        .getPublicUrl(
-          igPath
-        )
-        .data
-        .publicUrl;
-
-
-    const metaUrl =
-      supabase
-        .storage
-        .from("cars")
-        .getPublicUrl(
-          metaPath
-        )
-        .data
-        .publicUrl;
-
+    const igUrl = `${publicBase}/${igPath}`;
+    const metaUrl = `${publicBase}/${metaPath}`;
 
     /* =================================
        SAVE EVERYTHING

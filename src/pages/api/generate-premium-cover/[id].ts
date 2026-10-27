@@ -1,3 +1,4 @@
+
 import type { APIRoute } from "astro";
 import { env } from "cloudflare:workers";
 import { createClient } from "@supabase/supabase-js";
@@ -6,6 +7,10 @@ import {
   buildPremiumCoverHtml,
   getPremiumTopPhotoUrls,
 } from "../../../lib/premiumCoverTemplate";
+
+import {
+  buildGarage88MetaSquareHtml,
+} from "../../../lib/metaSquareTemplate";
 
 export const prerender = false;
 
@@ -23,6 +28,7 @@ type R2BucketBinding = {
     options?: {
       httpMetadata?: {
         contentType?: string;
+        cacheControl?: string;
       };
     }
   ) => Promise<unknown>;
@@ -42,9 +48,12 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function renderPremiumJpeg(
+async function renderJpeg(
   browser: BrowserBinding,
-  html: string
+  html: string,
+  width: number,
+  height: number,
+  label: string
 ): Promise<Uint8Array> {
   const maxAttempts = 3;
 
@@ -52,8 +61,8 @@ async function renderPremiumJpeg(
     const response = await browser.quickAction("screenshot", {
       html,
       viewport: {
-        width: 1080,
-        height: 1350,
+        width,
+        height,
         deviceScaleFactor: 1,
       },
       screenshotOptions: {
@@ -71,7 +80,7 @@ async function renderPremiumJpeg(
       const jpeg = new Uint8Array(await response.arrayBuffer());
 
       if (jpeg.length === 0) {
-        throw new Error("Browser menghasilkan file JPEG kosong");
+        throw new Error(`${label}: hasil JPEG kosong`);
       }
 
       return jpeg;
@@ -79,7 +88,7 @@ async function renderPremiumJpeg(
 
     if (response.status === 429 && attempt < maxAttempts) {
       console.warn(
-        `Browser rate limit. Retry ${attempt}/${maxAttempts}`
+        `${label}: browser rate limit, retry ${attempt}/${maxAttempts}`
       );
 
       await sleep(11000);
@@ -87,11 +96,11 @@ async function renderPremiumJpeg(
     }
 
     throw new Error(
-      `Premium screenshot gagal (${response.status}): ${await response.text()}`
+      `${label} gagal (${response.status}): ${await response.text()}`
     );
   }
 
-  throw new Error("Premium screenshot gagal setelah retry");
+  throw new Error(`${label} gagal setelah retry`);
 }
 
 export const POST: APIRoute = async ({ params, request }) => {
@@ -99,10 +108,12 @@ export const POST: APIRoute = async ({ params, request }) => {
     const id = params.id;
 
     if (!id) {
-      return new Response("Missing car id", { status: 400 });
+      return Response.json(
+        { ok: false, error: "Missing car id" },
+        { status: 400 }
+      );
     }
 
-    // Baca judul hero dari admin bila dikirim.
     let heroFromAdmin: string | null = null;
 
     const contentType = request.headers.get("content-type") ?? "";
@@ -112,10 +123,7 @@ export const POST: APIRoute = async ({ params, request }) => {
         | { hero_title?: unknown }
         | null;
 
-      if (
-        body &&
-        Object.prototype.hasOwnProperty.call(body, "hero_title")
-      ) {
+      if (body && Object.prototype.hasOwnProperty.call(body, "hero_title")) {
         heroFromAdmin =
           typeof body.hero_title === "string"
             ? body.hero_title.trim()
@@ -135,28 +143,19 @@ export const POST: APIRoute = async ({ params, request }) => {
 
     const bindings = env as Record<string, unknown>;
 
-    const browser = bindings.BROWSER as
-      | BrowserBinding
-      | undefined;
-
-    const bucket = bindings.R2_BUCKET as
-      | R2BucketBinding
-      | undefined;
+    const browser = bindings.BROWSER as BrowserBinding | undefined;
+    const bucket = bindings.R2_BUCKET as R2BucketBinding | undefined;
 
     if (!browser) {
       throw new Error("Missing Cloudflare BROWSER binding");
     }
 
     if (!bucket) {
-      throw new Error(
-        "R2_BUCKET binding tidak tersedia. Periksa wrangler.jsonc."
-      );
+      throw new Error("R2_BUCKET binding tidak tersedia");
     }
 
-    const publicBase = getRequiredEnv("R2_PUBLIC_URL")
-      .replace(/\/+$/, "");
+    const publicBase = getRequiredEnv("R2_PUBLIC_URL").replace(/\/+$/, "");
 
-    // Ambil data mobil.
     const { data: car, error: carError } = await supabase
       .from("cars")
       .select("*")
@@ -167,19 +166,20 @@ export const POST: APIRoute = async ({ params, request }) => {
       throw new Error(carError?.message || "Car not found");
     }
 
-    // Foto utama dari hasil PhotoRoom.
     const sourceImageUrl = String(
       car.cover_source_image_url ?? ""
     ).trim();
 
     if (!sourceImageUrl) {
-      return new Response(
-        "Upload PHOTOROOM POLOS terlebih dahulu",
+      return Response.json(
+        {
+          ok: false,
+          error: "Upload PHOTOROOM POLOS terlebih dahulu",
+        },
         { status: 400 }
       );
     }
 
-    // Ambil foto tambahan berdasarkan urutan database.
     const { data: images, error: imagesError } = await supabase
       .from("car_images")
       .select("image_url, sort_order")
@@ -192,7 +192,6 @@ export const POST: APIRoute = async ({ params, request }) => {
       );
     }
 
-    // Tentukan judul hero.
     const existingHero = String(
       car.cover_hero_title ?? ""
     ).trim();
@@ -212,33 +211,68 @@ export const POST: APIRoute = async ({ params, request }) => {
 
     const topPhotoUrls = getPremiumTopPhotoUrls(images ?? []);
 
-    // Bangun HTML dengan desain Premium asli.
-    const html = buildPremiumCoverHtml(
+    // IG menggunakan template Premium yang sudah ada.
+    const premiumHtml = buildPremiumCoverHtml(
       carForCover,
       sourceImageUrl,
       topPhotoUrls
     );
 
-    console.log("Render Premium Cover:", id);
-    console.log("Hero:", resolvedHero);
-    console.log("Foto tambahan:", topPhotoUrls.length);
+    // Meta menggunakan template Meta yang sudah ada.
+    const metaHtml = buildGarage88MetaSquareHtml(
+      carForCover,
+      sourceImageUrl
+    );
 
-    const jpeg = await renderPremiumJpeg(browser, html);
+    console.log("Render Premium IG Cover:", id);
 
-    // Premium menimpa IG Cover utama.
-    // Meta Cover tidak disentuh.
+    const premiumJpeg = await renderJpeg(
+      browser,
+      premiumHtml,
+      1080,
+      1350,
+      "Premium IG Cover"
+    );
+
+    // Jeda untuk mengurangi risiko browser rate limit.
+    await sleep(11000);
+
+    console.log("Render Meta Cover:", id);
+
+    const metaJpeg = await renderJpeg(
+      browser,
+      metaHtml,
+      1080,
+      1080,
+      "Meta Cover"
+    );
+
     const igPath = `${id}/generated/ig-cover.jpg`;
+    const metaPath = `${id}/generated/meta-cover.jpg`;
+
     const igUrl = `${publicBase}/${igPath}`;
+    const metaUrl = `${publicBase}/${metaPath}`;
 
-    await bucket.put(igPath, jpeg, {
-      httpMetadata: {
-        contentType: "image/jpeg",
-      },
-    });
+    // Simpan kedua hasil ke R2.
+    await Promise.all([
+      bucket.put(igPath, premiumJpeg, {
+        httpMetadata: {
+          contentType: "image/jpeg",
+          cacheControl: "public, max-age=3600",
+        },
+      }),
+      bucket.put(metaPath, metaJpeg, {
+        httpMetadata: {
+          contentType: "image/jpeg",
+          cacheControl: "public, max-age=3600",
+        },
+      }),
+    ]);
 
-    // Perbarui URL IG dan judul hero saja.
+    // Update database setelah kedua hasil berhasil di-render dan disimpan.
     const updateData: Record<string, unknown> = {
       ig_image_url: igUrl,
+      meta_image_url: metaUrl,
       cover_needs_regenerate: false,
     };
 
@@ -255,14 +289,15 @@ export const POST: APIRoute = async ({ params, request }) => {
       throw new Error(`DB update gagal: ${updateError.message}`);
     }
 
-    console.log("Premium Cover tersimpan:", igUrl);
+    console.log("Premium IG Cover tersimpan:", igUrl);
+    console.log("Meta Cover tersimpan:", metaUrl);
 
     return Response.json({
       ok: true,
       car_id: id,
       cover_hero_title: resolvedHero,
       ig_image_url: igUrl,
-      meta_unchanged: true,
+      meta_image_url: metaUrl,
     });
   } catch (error) {
     console.error("generate-premium-cover:", error);

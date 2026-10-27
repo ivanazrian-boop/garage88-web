@@ -1,14 +1,31 @@
 import type { APIRoute } from "astro";
+import { env } from "cloudflare:workers";
 import { createClient } from "@supabase/supabase-js";
 
 
 export const prerender = false;
 
 
-const supabase = createClient(
-  import.meta.env.SUPABASE_URL,
-  import.meta.env.SUPABASE_SERVICE_KEY
-);
+function getRequiredEnv(name: string): string {
+  const value = (env as Record<string, unknown>)[name];
+  if (typeof value !== "string" || !value.trim()) {
+    throw new Error(`Missing Cloudflare env: ${name}`);
+  }
+  return value;
+}
+
+type R2BucketBinding = {
+  put: (
+    key: string,
+    value: Uint8Array,
+    options?: {
+      httpMetadata?: {
+        contentType?: string;
+        cacheControl?: string;
+      };
+    }
+  ) => Promise<unknown>;
+};
 
 
 
@@ -56,72 +73,26 @@ export const POST: APIRoute = async ({ params, request }) => {
 
 
 
-    const buffer =
-      await file.arrayBuffer();
+    const buffer = new Uint8Array(await file.arrayBuffer());
 
+    const bindings = env as Record<string, unknown>;
+    const bucket = bindings.R2_BUCKET as R2BucketBinding | undefined;
 
-
-    const fileName =
-      `${id}.jpg`;
-
-
-
-    const upload =
-      await supabase.storage
-      .from("ig_covers")
-      .upload(
-
-        fileName,
-
-        buffer,
-
-        {
-          contentType:file.type || "image/jpeg",
-          upsert:true
-        }
-
-      );
-
-
-
-    if(upload.error){
-
-
-      console.error(
-        upload.error
-      );
-
-
-      return new Response(
-
-        JSON.stringify({
-          error:upload.error.message
-        }),
-
-        {
-          status:500
-        }
-
-      );
-
+    if (!bucket) {
+      throw new Error("R2_BUCKET binding tidak tersedia");
     }
 
+    const publicBase = getRequiredEnv("R2_PUBLIC_URL").replace(/\/+$/, "");
+    const fileName = `${id}/generated/ig-cover.jpg`;
 
+    await bucket.put(fileName, buffer, {
+      httpMetadata: {
+        contentType: file.type || "image/jpeg",
+        cacheControl: "public, max-age=3600",
+      },
+    });
 
-
-
-    const {
-      data:url
-    } =
-    supabase.storage
-    .from("ig_covers")
-    .getPublicUrl(
-      fileName
-    );
-
-
-
-
+    const imageUrl = `${publicBase}/${fileName}`;
 
     const update =
       await supabase
@@ -129,7 +100,7 @@ export const POST: APIRoute = async ({ params, request }) => {
       .update({
 
         ig_image_url:
-        url.publicUrl
+        imageUrl
 
       })
       .eq(
@@ -168,7 +139,7 @@ export const POST: APIRoute = async ({ params, request }) => {
 
         success:true,
 
-        url:url.publicUrl
+        url:imageUrl
 
       }),
 

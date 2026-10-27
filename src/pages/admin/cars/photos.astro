@@ -1,432 +1,371 @@
 ---
 import MainLayout from "../../../layouts/MainLayout.astro";
-import { supabase } from "../../../lib/supabase";
+import { createClient } from "@supabase/supabase-js";
+import { env } from "cloudflare:workers";
 
 const key = Astro.url.searchParams.get("key");
 const carId = Astro.url.searchParams.get("id");
-
 const ADMIN_KEY = "garage88";
-
 
 if (key !== ADMIN_KEY || !carId) {
   return Astro.redirect("/");
 }
 
+const bindings = env as Record<string, unknown>;
+const supabaseUrl =
+  bindings.SUPABASE_URL ?? bindings.PUBLIC_SUPABASE_URL;
+const serviceKey = bindings.SUPABASE_SERVICE_KEY;
 
-
-// ========================
-// DELETE FOTO
-// ========================
-
-const deleteId =
-  Astro.url.searchParams.get("delete");
-
-
-if(deleteId){
-
-
-  const {
-    data:image
-  } =
-  await supabase
-    .from("car_images")
-    .select("*")
-    .eq(
-      "id",
-      deleteId
-    )
-    .single();
-
-
-
-  if(image){
-
-
-    const path =
-      image.image_url
-      .split("/public/cars/")
-      .pop();
-
-
-
-    if(path){
-
-      await supabase.storage
-        .from("cars")
-        .remove([
-          path
-        ]);
-
-    }
-
-
-
-    await supabase
-      .from("car_images")
-      .delete()
-      .eq(
-        "id",
-        deleteId
-      );
-
-
-  }
-
-
-
-  return Astro.redirect(
-    `/admin/cars/photos?id=${carId}&key=${ADMIN_KEY}&refresh=${Date.now()}`
+if (
+  typeof supabaseUrl !== "string" ||
+  typeof serviceKey !== "string" ||
+  !supabaseUrl ||
+  !serviceKey
+) {
+  throw new Error(
+    "Konfigurasi Supabase server belum tersedia. Periksa SUPABASE_URL dan SUPABASE_SERVICE_KEY."
   );
-
-
 }
 
+const supabaseAdmin = createClient(supabaseUrl, serviceKey, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+  },
+});
 
+const bucket = bindings.R2_BUCKET as
+  | {
+      delete: (keys: string[]) => Promise<unknown>;
+    }
+  | undefined;
 
+const publicBaseValue = bindings.R2_PUBLIC_URL;
+const publicBase =
+  typeof publicBaseValue === "string"
+    ? publicBaseValue.replace(/\/+$/, "")
+    : "";
 
+let notice = "";
+let noticeType: "success" | "error" = "success";
 
+function getR2Key(imageUrl: string): string | null {
+  if (!publicBase || !imageUrl.startsWith(`${publicBase}/`)) {
+    return null;
+  }
+
+  const path = imageUrl.slice(publicBase.length + 1);
+
+  // Hanya izinkan file di folder mobil yang sedang dibuka.
+  if (!path.startsWith(`${carId}/`) || path.includes("..")) {
+    return null;
+  }
+
+  // Jangan pernah menyentuh folder cover.
+  if (
+    path.includes("/generated/") ||
+    path.includes("/cover-source/")
+  ) {
+    return null;
+  }
+
+  return path;
+}
+
+async function deleteGalleryImages(
+  imageRows: Array<{ id: string; image_url: string }>
+) {
+  if (!bucket) {
+    throw new Error("Binding R2_BUCKET tidak tersedia.");
+  }
+
+  const keys: string[] = [];
+  const ids: string[] = [];
+
+  for (const image of imageRows) {
+    const path = getR2Key(image.image_url);
+
+    if (path) {
+      keys.push(path);
+      ids.push(image.id);
+    }
+  }
+
+  // Jika URL bukan R2, jangan hapus record yang file-nya belum
+  // berhasil diidentifikasi. Ini mencegah kehilangan referensi foto.
+  if (ids.length !== imageRows.length) {
+    throw new Error(
+      "Sebagian URL foto bukan URL R2 yang dikenali. Tidak ada record yang dihapus."
+    );
+  }
+
+  if (keys.length > 0) {
+    await bucket.delete(keys);
+  }
+
+  const { error } = await supabaseAdmin
+    .from("car_images")
+    .delete()
+    .in("id", ids)
+    .eq("car_id", carId);
+
+  if (error) {
+    throw new Error(
+      `File galeri sudah dihapus dari R2, tetapi penghapusan record database gagal: ${error.message}`
+    );
+  }
+
+  return ids.length;
+}
+
+// ========================
+// DELETE SATU FOTO
+// ========================
+
+const deleteId = Astro.url.searchParams.get("delete");
+
+if (deleteId) {
+  try {
+    const { data: image, error } = await supabaseAdmin
+      .from("car_images")
+      .select("id, car_id, image_url")
+      .eq("id", deleteId)
+      .eq("car_id", carId)
+      .single();
+
+    if (error || !image) {
+      throw new Error("Foto tidak ditemukan untuk mobil ini.");
+    }
+
+    await deleteGalleryImages([image]);
+
+    return Astro.redirect(
+      `/admin/cars/photos?id=${encodeURIComponent(carId)}&key=${ADMIN_KEY}&notice=deleted&refresh=${Date.now()}`
+    );
+  } catch (error) {
+    console.error("DELETE PHOTO ERROR:", error);
+    notice = error instanceof Error
+      ? error.message
+      : "Gagal menghapus foto.";
+    noticeType = "error";
+  }
+}
+
+// ========================
+// DELETE SEMUA FOTO GALERI
+// ========================
+
+if (Astro.url.searchParams.get("deleteAll") === "1") {
+  try {
+    const { data: gallery, error } = await supabaseAdmin
+      .from("car_images")
+      .select("id, car_id, image_url")
+      .eq("car_id", carId);
+
+    if (error) {
+      throw new Error(`Gagal mengambil daftar foto: ${error.message}`);
+    }
+
+    if (!gallery || gallery.length === 0) {
+      notice = "Tidak ada foto galeri untuk dihapus.";
+    } else {
+      const count = await deleteGalleryImages(gallery);
+      notice = `${count} foto galeri berhasil dihapus. Cover mobil tidak diubah.`;
+    }
+  } catch (error) {
+    console.error("DELETE ALL GALLERY ERROR:", error);
+    notice = error instanceof Error
+      ? error.message
+      : "Gagal menghapus semua foto galeri.";
+    noticeType = "error";
+  }
+}
+
+if (Astro.url.searchParams.get("notice") === "deleted" && !notice) {
+  notice = "Foto berhasil dihapus.";
+}
 
 // ========================
 // DATA MOBIL
 // ========================
 
-
-const { data:car } =
-await supabase
-.from("cars")
-.select("*")
-.eq(
-  "id",
-  carId
-)
-.single();
-
-
-
-
-
+const { data: car } = await supabaseAdmin
+  .from("cars")
+  .select("*")
+  .eq("id", carId)
+  .single();
 
 // ========================
-// DATA FOTO
+// DATA FOTO GALERI
 // ========================
 
+const { data: images, error: imagesError } = await supabaseAdmin
+  .from("car_images")
+  .select("*")
+  .eq("car_id", carId)
+  .order("sort_order", { ascending: true });
 
-const { data:images } =
-await supabase
-.from("car_images")
-.select("*")
-.eq(
-  "car_id",
-  carId
-)
-.order(
-  "sort_order",
-  {
-    ascending:true
-  }
-);
-
+if (imagesError) {
+  console.error("LOAD GALLERY ERROR:", imagesError);
+  notice = `Gagal mengambil data foto: ${imagesError.message}`;
+  noticeType = "error";
+}
 ---
 
 <MainLayout title="Kelola Foto | Garage88">
-
-
-
-<section class="min-h-screen bg-slate-100 py-12">
-
-
-<div class="mx-auto max-w-6xl px-6">
-
-
-
-<div class="flex items-center justify-between">
-
-
-<div>
-
-<h1 class="text-3xl font-bold">
-Kelola Foto
-</h1>
-
-
-<p class="mt-2 text-slate-500">
-{car?.brand} {car?.model}
-</p>
-
-
-</div>
-
-
-
-
-<a
-href={`/admin/cars/edit?id=${carId}&key=${ADMIN_KEY}`}
-class="
-rounded-xl
-border
-border-slate-300
-bg-white
-px-5
-py-3
-font-semibold
-text-slate-700
-hover:bg-slate-50
-"
->
-← Kembali ke Edit Mobil
-</a>
-
-
-</div>
-
-
-
-
-
-<div class="mt-8">
-
-
-<a
-href={`/admin/cars/upload?id=${carId}&key=${ADMIN_KEY}`}
-class="
-rounded-xl
-bg-red-600
-px-6
-py-3
-font-semibold
-text-white
-"
->
-+ Tambah Foto
-</a>
-
-
-</div>
-
-
-
-
-
-<p class="mt-8 text-sm text-slate-500">
-Geser foto untuk menentukan foto utama.
-Foto paling atas adalah cover.
-</p>
-
-
-
-
-
-
-
-<div
-id="photo-grid"
-class="
-mt-8
-grid
-gap-6
-md:grid-cols-3
-"
->
-
-
-
-{
-images?.map((image)=>(
-
-
-<div
-data-id={image.id}
-class="
-cursor-move
-overflow-hidden
-rounded-2xl
-bg-white
-shadow
-"
->
-
-
-
-<img
-src={image.image_url}
-class="
-aspect-video
-w-full
-object-cover
-"
-/>
-
-
-
-
-
-<div class="p-4">
-
-
-{
-image.sort_order === 1 && (
-
-<span
-class="
-rounded-full
-bg-green-100
-px-3
-py-1
-text-xs
-font-semibold
-text-green-700
-"
->
-Foto Utama
-</span>
-
-)
-
-}
-
-
-
-
-<p class="mt-3 text-xs text-slate-400">
-Urutan {image.sort_order}
-</p>
-
-
-
-
-
-
-<a
-href={`/admin/cars/photos?id=${carId}&key=${ADMIN_KEY}&delete=${image.id}`}
-onclick="return confirm('Hapus foto ini?')"
-class="
-mt-4
-block
-rounded-xl
-bg-red-600
-py-2
-text-center
-text-sm
-font-semibold
-text-white
-"
->
-Hapus Foto
-</a>
-
-
-
-</div>
-
-
-</div>
-
-
-))
-
-}
-
-
-</div>
-
-
-
-</div>
-
-
-</section>
-
-
-
-
-
-
-
-<script is:inline src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
-
-
-
-<script is:inline>
-
-
-const grid =
-document.getElementById(
-"photo-grid"
-);
-
-
-
-if(grid){
-
-
-new Sortable(
-grid,
-{
-
-
-animation:150,
-
-
-
-onEnd: async function(){
-
-
-
-const items =
-Array
-.from(grid.children)
-.map(
-(item,index)=>({
-
-id:
-item.dataset.id,
-
-sort_order:
-index + 1
-
-})
-);
-
-
-
-await fetch(
-"/api/admin/reorder-images",
-{
-
-method:"POST",
-
-headers:{
-"Content-Type":
-"application/json"
-},
-
-
-body:
-JSON.stringify({
-images:items
-})
-
-}
-
-);
-
-
-
-}
-
-
-}
-
-);
-
-
-}
-
-
-
-</script>
-
-
-
-
+  <section class="min-h-screen bg-slate-100 py-12">
+    <div class="mx-auto max-w-6xl px-6">
+      <div class="flex items-center justify-between gap-4">
+        <div>
+          <h1 class="text-3xl font-bold">Kelola Foto</h1>
+          <p class="mt-2 text-slate-500">
+            {car?.brand} {car?.model}
+          </p>
+        </div>
+
+        <a
+          href={`/admin/cars/edit?id=${carId}&key=${ADMIN_KEY}`}
+          class="rounded-xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-700 hover:bg-slate-50"
+        >
+          ← Kembali ke Edit Mobil
+        </a>
+      </div>
+
+      {notice && (
+        <div
+          class:list={[
+            "mt-5 rounded-xl p-4",
+            noticeType === "success"
+              ? "bg-green-100 text-green-700"
+              : "bg-red-100 text-red-700",
+          ]}
+        >
+          {notice}
+        </div>
+      )}
+
+      <div class="mt-8 flex flex-wrap items-center gap-3">
+        <a
+          href={`/admin/cars/upload?id=${carId}&key=${ADMIN_KEY}`}
+          class="rounded-xl bg-red-600 px-6 py-3 font-semibold text-white hover:bg-red-700"
+        >
+          + Tambah Foto
+        </a>
+
+        {images && images.length > 0 && (
+          <button
+            id="delete-all-gallery"
+            type="button"
+            class="rounded-xl border border-red-600 bg-white px-6 py-3 font-semibold text-red-600 hover:bg-red-50"
+          >
+            Hapus Semua Foto
+          </button>
+        )}
+      </div>
+
+      <p class="mt-8 text-sm text-slate-500">
+        Geser foto untuk menentukan foto utama. Foto paling atas adalah cover.
+      </p>
+
+      <p class="mt-2 text-sm text-slate-500">
+        Foto galeri: {images?.length ?? 0}. Tombol hapus semua tidak mengubah cover IG, Meta, atau premium.
+      </p>
+
+      <div
+        id="photo-grid"
+        class="mt-8 grid gap-6 md:grid-cols-3"
+      >
+        {images?.map((image) => (
+          <div
+            data-id={image.id}
+            class="cursor-move overflow-hidden rounded-2xl bg-white shadow"
+          >
+            <img
+              src={image.image_url}
+              alt={`${car?.brand ?? ""} ${car?.model ?? ""} foto ${image.sort_order}`}
+              class="aspect-video w-full object-cover"
+              loading="lazy"
+            />
+
+            <div class="p-4">
+              {image.sort_order === 1 && (
+                <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+                  Foto Utama
+                </span>
+              )}
+
+              <p class="mt-3 text-xs text-slate-400">
+                Urutan {image.sort_order}
+              </p>
+
+              <a
+                href={`/admin/cars/photos?id=${carId}&key=${ADMIN_KEY}&delete=${image.id}`}
+                onclick="return confirm('Hapus foto ini? File foto galeri akan dihapus dari R2.')"
+                class="mt-4 block rounded-xl bg-red-600 py-2 text-center text-sm font-semibold text-white hover:bg-red-700"
+              >
+                Hapus Foto
+              </a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <script is:inline src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+
+  <script is:inline>
+    const grid = document.getElementById("photo-grid");
+
+    if (grid && window.Sortable) {
+      new Sortable(grid, {
+        animation: 150,
+
+        onEnd: async function () {
+          const items = Array.from(grid.children).map((item, index) => ({
+            id: item.dataset.id,
+            sort_order: index + 1,
+          }));
+
+          const response = await fetch("/api/admin/reorder-images", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              images: items,
+            }),
+          });
+
+          if (!response.ok) {
+            alert("Gagal menyimpan urutan foto. Silakan refresh halaman.");
+          }
+        },
+      });
+    }
+
+    const deleteAllButton = document.getElementById("delete-all-gallery");
+
+    if (deleteAllButton) {
+      deleteAllButton.addEventListener("click", function () {
+        const confirmed = confirm(
+          "PERINGATAN: Semua foto galeri mobil ini akan dihapus dari R2 dan database. Cover IG, Meta, dan premium tidak akan dihapus. Lanjutkan?"
+        );
+
+        if (!confirmed) return;
+
+        const secondConfirmation = confirm(
+          "Konfirmasi sekali lagi: hapus SEMUA foto galeri untuk mobil ini?"
+        );
+
+        if (!secondConfirmation) return;
+
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set("deleteAll", "1");
+        currentUrl.searchParams.set("refresh", String(Date.now()));
+
+        window.location.href = currentUrl.toString();
+      });
+    }
+  </script>
 </MainLayout>

@@ -26,3 +26,16 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# Local environment backups
+.env.*
+!.env.example
+
+# Local backups and runtime artifacts
+backup/
+*.backup-*
+.wrangler/
+storage-scan.txt
+storage-assets-inventory.json
+r2-migration-failures.json
+.DS_Store

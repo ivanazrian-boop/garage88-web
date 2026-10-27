@@ -62,24 +62,35 @@ export const POST: APIRoute = async ({ params, request }) => {
     const bytes =
       new Uint8Array(await file.arrayBuffer());
 
-    const { error: uploadError } =
-      await supabase.storage
-        .from("cars")
-        .upload(path, bytes, {
-          contentType: file.type,
-          cacheControl: "0",
-          upsert: true,
-        });
+    const bindings = env as Record<string, unknown>;
 
-    if (uploadError) {
-      throw new Error(uploadError.message);
+    const bucket = bindings.R2_BUCKET as {
+      put: (
+        key: string,
+        value: Uint8Array,
+        options?: {
+          httpMetadata?: {
+            contentType?: string;
+            cacheControl?: string;
+          };
+        }
+      ) => Promise<unknown>;
+    } | undefined;
+
+    if (!bucket) {
+      throw new Error("R2_BUCKET binding tidak tersedia");
     }
 
-    const publicUrl =
-      supabase.storage
-        .from("cars")
-        .getPublicUrl(path)
-        .data.publicUrl;
+    const publicBase = getRequiredEnv("R2_PUBLIC_URL").replace(/\/+$/, "");
+
+    await bucket.put(path, bytes, {
+      httpMetadata: {
+        contentType: file.type,
+        cacheControl: "public, max-age=3600",
+      },
+    });
+
+    const publicUrl = `${publicBase}/${path}`;
 
     const { error: updateError } =
       await supabase
