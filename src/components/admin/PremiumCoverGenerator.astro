@@ -1,8 +1,11 @@
+
 ---
 interface Props {
   car: {
     id: string;
+    ig_image_url?: string | null;
     cover_source_image_url?: string | null;
+    cover_hero_title?: string | null;
   };
   adminKey: string;
 }
@@ -11,18 +14,24 @@ const { car, adminKey } = Astro.props;
 const hasSourceImage = Boolean(car.cover_source_image_url?.trim());
 ---
 
-<div class="mt-3" data-premium-cover-generator data-car-id={car.id} data-admin-key={adminKey}>
+<div
+  class="mt-3"
+  data-premium-cover-generator
+  data-car-id={car.id}
+  data-admin-key={adminKey}
+>
   <button
     type="button"
     data-premium-generate-button
     disabled={!hasSourceImage}
-    class="w-full rounded-xl bg-orange-500 px-4 py-3 text-sm font-bold text-white hover:bg-orange-600 disabled:opacity-50"
+    class="w-full rounded-xl bg-orange-500 px-4 py-3 text-sm font-bold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
   >
     Generate Premium Cover (IG)
   </button>
 
   <p class="mt-1 text-[11px] text-slate-500">
-    Mengganti IG Cover. Meta Cover tidak berubah.
+    Mengganti IG Cover menggunakan judul Hero Cover yang diedit.
+    Meta Cover tidak berubah.
   </p>
 
   {!hasSourceImage && (
@@ -31,66 +40,132 @@ const hasSourceImage = Boolean(car.cover_source_image_url?.trim());
     </p>
   )}
 
-  <p data-premium-status class="mt-2 hidden text-sm" aria-live="polite"></p>
+  <p
+    data-premium-status
+    class="mt-2 hidden text-sm"
+    aria-live="polite"
+  ></p>
 </div>
 
 <script>
-  document.querySelectorAll<HTMLElement>("[data-premium-cover-generator]").forEach((container) => {
-    if (container.dataset.bound === "true") return;
-    container.dataset.bound = "true";
+  document
+    .querySelectorAll<HTMLElement>("[data-premium-cover-generator]")
+    .forEach((container) => {
+      if (container.dataset.bound === "true") return;
+      container.dataset.bound = "true";
 
-    const button = container.querySelector<HTMLButtonElement>("[data-premium-generate-button]");
-    const status = container.querySelector<HTMLParagraphElement>("[data-premium-status]");
-    const carId = container.dataset.carId;
-    const adminKey = container.dataset.adminKey || "";
-
-    button?.addEventListener("click", async () => {
-      if (!carId || !button || button.disabled) return;
-
-      button.disabled = true;
-      button.textContent = "Generating Premium...";
-
-      if (status) {
-        status.className = "mt-2 text-sm text-slate-600";
-        status.textContent = "Sedang membuat cover...";
-      }
-
-      try {
-        const response = await fetch(
-          `/api/generate-premium-cover/${encodeURIComponent(carId)}?key=${encodeURIComponent(adminKey)}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({}),
-          },
+      const button =
+        container.querySelector<HTMLButtonElement>(
+          "[data-premium-generate-button]"
         );
 
-        const result = await response.json() as {
-          ok?: boolean;
-          ig_image_url?: string;
-          error?: string;
-        };
+      const status =
+        container.querySelector<HTMLParagraphElement>(
+          "[data-premium-status]"
+        );
 
-        if (!response.ok || !result.ok || !result.ig_image_url) {
-          throw new Error(result.error || `Gagal generate (HTTP ${response.status})`);
-        }
+      const carId = container.dataset.carId;
+      const adminKey = container.dataset.adminKey || "";
+
+      button?.addEventListener("click", async () => {
+        if (!carId || !button || button.disabled) return;
+
+        const originalText =
+          button.textContent?.trim() || "Generate Premium Cover (IG)";
+
+        const heroInput =
+          document.querySelector<HTMLInputElement>(
+            `[data-hero-title="${carId}"]`
+          );
+
+        // Ambil judul terbaru yang sedang tampil di input Hero Cover.
+        const submittedHeroTitle = heroInput?.value.trim() ?? "";
+
+        button.disabled = true;
+        button.textContent = "Generating Premium...";
 
         if (status) {
-          status.className = "mt-2 text-sm text-emerald-700";
-          status.textContent = "Berhasil! IG Cover diperbarui.";
+          status.classList.remove(
+            "hidden",
+            "text-red-600",
+            "text-emerald-700"
+          );
+          status.classList.add("text-slate-600");
+          status.textContent =
+            "Membuat Premium Cover menggunakan judul Hero Cover terbaru...";
         }
 
-        button.textContent = "IG Cover Diperbarui";
-        window.setTimeout(() => window.location.reload(), 700);
-      } catch (error) {
-        button.disabled = false;
-        button.textContent = "Generate Premium Cover (IG)";
+        try {
+          const response = await fetch(
+            `/api/generate-premium-cover/${encodeURIComponent(carId)}?key=${encodeURIComponent(adminKey)}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                hero_title: submittedHeroTitle,
+              }),
+            }
+          );
 
-        if (status) {
-          status.className = "mt-2 text-sm text-red-600";
-          status.textContent = error instanceof Error ? error.message : String(error);
+          const result = (await response.json()) as {
+            ok?: boolean;
+            ig_image_url?: string;
+            cover_hero_title?: string;
+            error?: string;
+          };
+
+          if (
+            !response.ok ||
+            !result.ok ||
+            !result.ig_image_url
+          ) {
+            throw new Error(
+              result.error ||
+                `Gagal generate Premium Cover (HTTP ${response.status})`
+            );
+          }
+
+          const savedHeroTitle =
+            result.cover_hero_title ?? submittedHeroTitle;
+
+          // Sinkronkan input dengan judul yang dikembalikan API.
+          if (heroInput) {
+            heroInput.value = savedHeroTitle;
+          }
+
+          if (status) {
+            status.classList.remove(
+              "text-slate-600",
+              "text-red-600"
+            );
+            status.classList.add("text-emerald-700");
+            status.textContent =
+              `Berhasil. Hero Cover tersimpan: ${savedHeroTitle}. Memuat ulang halaman...`;
+          }
+
+          button.textContent = "Premium Cover Berhasil";
+
+          window.setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        } catch (error) {
+          button.disabled = false;
+          button.textContent = originalText;
+
+          if (status) {
+            status.classList.remove(
+              "text-slate-600",
+              "text-emerald-700"
+            );
+            status.classList.add("text-red-600");
+            status.textContent =
+              error instanceof Error
+                ? error.message
+                : String(error);
+          }
         }
-      }
+      });
     });
-  });
 </script>
