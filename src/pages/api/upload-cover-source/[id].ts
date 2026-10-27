@@ -57,7 +57,7 @@ export const POST: APIRoute = async ({ params, request }) => {
         : "jpg";
 
     const path =
-      `${id}/cover-source/photoroom.${ext}`;
+      `cars/${id}/cover-source/photoroom.${ext}`;
 
     const bytes =
       new Uint8Array(await file.arrayBuffer());

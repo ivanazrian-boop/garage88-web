@@ -517,8 +517,8 @@ export const POST:
 
     const publicBase = getRequiredEnv("R2_PUBLIC_URL").replace(/\/+$/, "");
 
-    const igPath = `${id}/generated/ig-cover.jpg`;
-    const metaPath = `${id}/generated/meta-cover.jpg`;
+    const igPath = `cars/${id}/generated/ig-cover.jpg`;
+    const metaPath = `cars/${id}/generated/meta-cover.jpg`;
 
     if (igJpeg.length === 0 || metaJpeg.length === 0) {
       throw new Error("Hasil render IG atau Meta kosong");

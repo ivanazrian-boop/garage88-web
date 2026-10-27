@@ -83,7 +83,7 @@ export const POST: APIRoute = async ({ params, request }) => {
     }
 
     const publicBase = getRequiredEnv("R2_PUBLIC_URL").replace(/\/+$/, "");
-    const fileName = `${id}/generated/ig-cover.jpg`;
+    const fileName = `cars/${id}/generated/ig-cover.jpg`;
 
     await bucket.put(fileName, buffer, {
       httpMetadata: {

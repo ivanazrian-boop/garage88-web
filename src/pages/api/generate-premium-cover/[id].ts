@@ -247,8 +247,8 @@ export const POST: APIRoute = async ({ params, request }) => {
       "Meta Cover"
     );
 
-    const igPath = `${id}/generated/ig-cover.jpg`;
-    const metaPath = `${id}/generated/meta-cover.jpg`;
+    const igPath = `cars/${id}/generated/ig-cover.jpg`;
+    const metaPath = `cars/${id}/generated/meta-cover.jpg`;
 
     const igUrl = `${publicBase}/${igPath}`;
     const metaUrl = `${publicBase}/${metaPath}`;

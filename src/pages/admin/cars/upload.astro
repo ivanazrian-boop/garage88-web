@@ -122,7 +122,7 @@ if (Astro.request.method === "POST") {
             : extensionByMime[file.type] || "jpg";
 
           const fileName = `${crypto.randomUUID()}.${extension}`;
-          filePath = `${carId}/${fileName}`;
+          filePath = `cars/${carId}/${fileName}`;
 
           const contentType = file.type || "image/jpeg";
           const bytes = new Uint8Array(await file.arrayBuffer());
