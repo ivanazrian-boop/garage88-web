@@ -1124,7 +1124,7 @@ const cacheVersion =
                       class="
                         mt-6
                         grid
-                        grid-cols-4
+                        grid-cols-5
                         gap-3
                       "
                     >
@@ -1199,6 +1199,27 @@ const cacheVersion =
 
                       </button>
 
+
+                      <button
+                        type="button"
+                        data-premium-generate-id={car.id}
+                        class="
+                          cursor-pointer
+                          rounded-xl
+                          bg-violet-700
+                          py-3
+                          text-center
+                          text-sm
+                          font-semibold
+                          text-white
+                          transition
+                          hover:bg-violet-800
+                          disabled:cursor-not-allowed
+                          disabled:opacity-60
+                        "
+                      >
+                        Premium IG
+                      </button>
 
                       <a
                         href={`/admin/cars/delete?id=${car.id}&key=${ADMIN_KEY}`}
@@ -1712,6 +1733,76 @@ const cacheVersion =
           }
         );
 
+      });
+
+
+    /* =====================================================
+       GENERATE PREMIUM IG COVER ONLY
+       Meta Cover tidak disentuh oleh endpoint ini.
+       ===================================================== */
+
+    document
+      .querySelectorAll<HTMLButtonElement>("[data-premium-generate-id]")
+      .forEach((button) => {
+        button.addEventListener("click", async () => {
+          const id = button.dataset.premiumGenerateId;
+
+          if (!id) return;
+
+          const heroInput =
+            document.querySelector<HTMLInputElement>(
+              `[data-hero-title="${id}"]`
+            );
+
+          const heroTitle = heroInput?.value ?? "";
+          const originalLabel = button.innerText;
+
+          if (!confirm("Generate Premium IG Cover? Cover IG lama akan ditimpa, Meta Cover tetap aman.")) {
+            return;
+          }
+
+          button.disabled = true;
+          button.innerText = "Generating Premium...";
+
+          try {
+            const response = await fetch(`/api/generate-premium-cover/${id}`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                hero_title: heroTitle,
+              }),
+            });
+
+            const responseText = await response.text();
+
+            let result: { ok?: boolean; error?: string; message?: string } = {};
+            try {
+              result = JSON.parse(responseText);
+            } catch {
+              // API may return plain text on error.
+            }
+
+            if (!response.ok) {
+              throw new Error(
+                result.error || result.message || responseText || "Generate Premium gagal"
+              );
+            }
+
+            alert("Premium IG Cover berhasil dibuat. Meta Cover tidak diubah.");
+            location.reload();
+          } catch (error) {
+            console.error("GENERATE PREMIUM IG COVER:", error);
+            alert(
+              error instanceof Error
+                ? error.message
+                : "Gagal generate Premium IG Cover"
+            );
+            button.disabled = false;
+            button.innerText = originalLabel;
+          }
+        });
       });
 
   </script>
