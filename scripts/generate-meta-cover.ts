@@ -1,16 +1,14 @@
 import sharp from "sharp";
 
 
-async function generate(){
+async function generate() {
+  const imageUrl =
+    "https://vstrzskobsskcmxmngye.supabase.co/storage/v1/object/public/cars/01c91e24-95dd-4f5a-a1a6-f930ce0de883/602e8e0b-e209-48c5-854b-7c6131600da4.jpg";
 
+  const price = "230 JT";
 
-const imageUrl =
-"https://otlydqitiwgtnrqvpjyf.supabase.co/storage/v1/object/public/cars/01c91e24-95dd-4f5a-a1a6-f930ce0de883/602e8e0b-e209-48c5-854b-7c6131600da4.jpg";
-
-
-const price =
-"230 JT";
-
+  // Lanjutkan kode generate yang sudah ada di bawah ini.
+}
 
 
 const imageBuffer =
