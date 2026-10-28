@@ -1,6 +1,7 @@
 ---
 import MainLayout from "../../../layouts/MainLayout.astro";
-import { supabase } from "../../../lib/supabase";
+import { env } from "cloudflare:workers";
+import { createClient } from "@supabase/supabase-js";
 
 const key = Astro.url.searchParams.get("key");
 const ADMIN_KEY = "garage88";
@@ -108,12 +109,40 @@ if (Astro.request.method === "POST") {
       formData.get("featured") === "on",
   };
 
-  const { data, error } =
-    await supabase
+  const runtimeEnv = env as unknown as Record<string, unknown>;
+  const supabaseUrl = runtimeEnv.SUPABASE_URL;
+  const serviceKey = runtimeEnv.SUPABASE_SERVICE_KEY;
+
+  if (
+    typeof supabaseUrl !== "string" ||
+    !supabaseUrl.trim() ||
+    typeof serviceKey !== "string" ||
+    !serviceKey.trim()
+  ) {
+    message = "Konfigurasi Supabase server belum lengkap.";
+  } else {
+    const adminSupabase = createClient(supabaseUrl, serviceKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    });
+
+    const { data, error } = await adminSupabase
       .from("cars")
       .insert(car)
       .select()
       .single();
+
+    if (error) {
+      console.error("Tambah mobil gagal:", error.code, error.message);
+      message = error.message;
+    } else {
+      return Astro.redirect(
+        `/admin/cars/upload?id=${data.id}&key=${ADMIN_KEY}`
+      );
+    }
+  }
 
   if (error) {
     console.error(error);
