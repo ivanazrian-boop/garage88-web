@@ -1,6 +1,30 @@
 ---
 import MainLayout from "../../../layouts/MainLayout.astro";
-import { supabase } from "../../../lib/supabase";
+import { createClient } from "@supabase/supabase-js";
+import { env } from "cloudflare:workers";
+
+const bindings = env as unknown as Record<string, unknown>;
+
+function getRequiredEnv(name: string): string {
+  const value = bindings[name];
+
+  if (typeof value !== "string" || !value) {
+    throw new Error(`Missing Cloudflare env: ${name}`);
+  }
+
+  return value;
+}
+
+const supabaseAdmin = createClient(
+  getRequiredEnv("SUPABASE_URL"),
+  getRequiredEnv("SUPABASE_SERVICE_KEY"),
+  {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  }
+);
 
 const key = Astro.url.searchParams.get("key");
 const id = Astro.url.searchParams.get("id");
@@ -12,7 +36,7 @@ if (key !== ADMIN_KEY || !id) {
 
 let message = "";
 
-const { data: car, error } = await supabase
+const { data: car, error } = await supabaseAdmin
   .from("cars")
   .select("*")
   .eq("id", id)
@@ -111,7 +135,7 @@ if (Astro.request.method === "POST") {
   };
 
   const { error: updateError } =
-    await supabase
+    await supabaseAdmin
       .from("cars")
       .update(updateData)
       .eq("id", id);
