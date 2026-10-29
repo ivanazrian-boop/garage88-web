@@ -39,3 +39,5 @@ storage-scan.txt
 storage-assets-inventory.json
 r2-migration-failures.json
 .DS_Store
+
+.dev.vars

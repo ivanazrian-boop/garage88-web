@@ -35,13 +35,29 @@ type R2BucketBinding = {
 };
 
 function getRequiredEnv(name: string): string {
-  const value = (env as Record<string, unknown>)[name];
+  // Cloudflare Worker environment (production).
+  const cloudflareValue =
+    (env as Record<string, unknown>)[name];
 
-  if (typeof value !== "string" || !value.trim()) {
-    throw new Error(`Missing Cloudflare env: ${name}`);
+  if (
+    typeof cloudflareValue === "string" &&
+    cloudflareValue.trim()
+  ) {
+    return cloudflareValue.trim();
   }
 
-  return value;
+  // Local Astro environment fallback.
+  const localValue =
+    (import.meta.env as Record<string, unknown>)[name];
+
+  if (
+    typeof localValue === "string" &&
+    localValue.trim()
+  ) {
+    return localValue.trim();
+  }
+
+  throw new Error(`Missing Cloudflare env: ${name}`);
 }
 
 function sleep(ms: number): Promise<void> {

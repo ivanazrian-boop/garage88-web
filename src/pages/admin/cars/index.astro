@@ -703,6 +703,14 @@ const cacheVersion =
                           )
                         }
 
+                        <button
+                          type="button"
+                          data-generate-adigsi-ai={car.id}
+                          class="mt-2 block w-full rounded-md bg-slate-900 px-2 py-2 text-[10px] font-bold text-white hover:bg-slate-700 disabled:cursor-wait disabled:opacity-50"
+                        >
+                          GENERATE ADIGSI-AI
+                        </button>
+
                       </div>
 
 
@@ -1376,6 +1384,66 @@ const cacheVersion =
           }
         );
 
+      });
+
+
+    /* =====================================================
+       GENERATE ADIGSI-AI
+       ===================================================== */
+
+    document
+      .querySelectorAll<HTMLButtonElement>(
+        "[data-generate-adigsi-ai]"
+      )
+      .forEach((button) => {
+        button.addEventListener("click", async () => {
+          const id = button.dataset.generateAdigsiAi;
+
+          if (!id) return;
+
+          const confirmed = confirm(
+            "Generate ADIGSI-AI sekarang?\\n\\n" +
+            "Hasil baru akan menjadi PhotoRoom Polos yang aktif. " +
+            "Foto asli, IG Cover, dan Meta Cover tidak diubah."
+          );
+
+          if (!confirmed) return;
+
+          const originalText = button.textContent;
+
+          button.disabled = true;
+          button.textContent = "GENERATING...";
+
+          try {
+            const response = await fetch(
+              `/api/generate-adigsi-ai/${id}`,
+              { method: "POST" }
+            );
+
+            const result = await response.json().catch(() => null);
+
+            if (!response.ok || !result?.ok) {
+              throw new Error(
+                result?.error || `Request gagal (${response.status})`
+              );
+            }
+
+            alert("ADIGSI-AI berhasil dibuat.");
+            location.reload();
+          } catch (error) {
+            console.error("GENERATE ADIGSI-AI:", error);
+
+            alert(
+              error instanceof Error
+                ? error.message
+                : "Gagal generate ADIGSI-AI."
+            );
+
+            button.disabled = false;
+            button.textContent =
+              originalText || "GENERATE ADIGSI-AI";
+          }
+        });
       });
 
 

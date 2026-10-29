@@ -1,7 +1,7 @@
 ---
 import MainLayout from "../../../layouts/MainLayout.astro";
-import { createClient } from "@supabase/supabase-js";
 import { env } from "cloudflare:workers";
+import { createSupabaseServerClient } from "../../../lib/supabaseServer";
 
 const key = Astro.url.searchParams.get("key");
 const carId = Astro.url.searchParams.get("id");
@@ -12,27 +12,7 @@ if (key !== ADMIN_KEY || !carId) {
 }
 
 const bindings = env as Record<string, unknown>;
-const supabaseUrl =
-  bindings.SUPABASE_URL ?? bindings.PUBLIC_SUPABASE_URL;
-const serviceKey = bindings.SUPABASE_SERVICE_KEY;
-
-if (
-  typeof supabaseUrl !== "string" ||
-  typeof serviceKey !== "string" ||
-  !supabaseUrl ||
-  !serviceKey
-) {
-  throw new Error(
-    "Konfigurasi Supabase server belum tersedia. Periksa SUPABASE_URL dan SUPABASE_SERVICE_KEY."
-  );
-}
-
-const supabaseAdmin = createClient(supabaseUrl, serviceKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-  },
-});
+const supabaseAdmin = createSupabaseServerClient();
 
 const bucket = bindings.R2_BUCKET as
   | {
