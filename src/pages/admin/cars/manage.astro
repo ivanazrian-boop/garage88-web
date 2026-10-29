@@ -1,6 +1,10 @@
 ---
 import MainLayout from "../../../layouts/MainLayout.astro";
-import { supabase } from "../../../lib/supabase";
+import {
+  createSupabaseServerClient,
+} from "../../../lib/supabaseServer";
+
+const supabase = createSupabaseServerClient();
 
 const key = Astro.url.searchParams.get("key");
 const ADMIN_KEY = "garage88";
