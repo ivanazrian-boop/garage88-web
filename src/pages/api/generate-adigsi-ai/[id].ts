@@ -3,9 +3,7 @@ import type { APIRoute } from "astro";
 import { env } from "cloudflare:workers";
 import { createClient } from "@supabase/supabase-js";
 
-
 function getRequiredEnv(name: string): string {
-  // Cloudflare Worker runtime, terutama production.
   const cloudflareValue =
     (env as Record<string, unknown>)[name];
 
@@ -16,7 +14,6 @@ function getRequiredEnv(name: string): string {
     return cloudflareValue.trim();
   }
 
-  // Fallback untuk environment lokal Astro yang membaca .env.
   const localValue =
     (import.meta.env as Record<string, unknown>)[name];
 
@@ -79,7 +76,176 @@ export const POST: APIRoute = async ({ params }) => {
       );
     }
 
-    // Generate gambar dengan komposisi dari pengujian Bria.
+    // MASTER STUDIO STYLE:
+    // Semua kendaraan harus memiliki environment studio yang sama.
+    // Warna mobil tidak boleh memengaruhi warna background,
+    // lighting, floor, reflection, maupun shadow.
+
+    const sceneDescription = `
+PREMIUM AUTOMOTIVE PHOTOGRAPHY.
+STRICT AND CONSISTENT WHITE STUDIO ENVIRONMENT.
+
+MASTER VISUAL REFERENCE:
+A premium luxury automotive dealership product photograph
+inside a bright, clean, seamless white photography studio.
+
+1. BACKGROUND - ABSOLUTELY CONSISTENT
+
+Pure clean white background (#FFFFFF).
+Seamless white infinity cyclorama studio.
+Bright, evenly illuminated white environment.
+No visible horizon line, wall edges, corners or seams.
+
+The background MUST ALWAYS remain neutral white,
+regardless of the vehicle's original paint color.
+
+Do not sample, derive, or adapt background colors
+from the vehicle paint, body panels, windows or reflections.
+
+2. LIGHTING - NEUTRAL WHITE
+
+Professional softbox-style diffused studio lighting.
+Neutral white light, approximately 5500K.
+Soft, balanced illumination from multiple directions.
+Even exposure across the entire studio environment.
+
+No blue lighting.
+No warm yellow lighting.
+No colored light.
+No dramatic cinematic lighting.
+No colored ambient light bouncing onto the floor.
+
+The lighting must remain identical for white, black,
+silver, grey, red, blue and every other vehicle color.
+
+3. FLOOR - WHITE GLOSSY STUDIO FLOOR
+
+Clean, bright white glossy floor.
+The floor must visually blend into the white background.
+
+Keep the floor predominantly white.
+Never generate a dark grey, black, blue or colored floor.
+
+4. REFLECTION - SUBTLE AND CONTROLLED
+
+Create a subtle, realistic floor reflection directly
+beneath the vehicle.
+
+Reflection appearance:
+- Neutral light grey.
+- Soft and semi-transparent.
+- Approximately 15-20% visual opacity.
+- Naturally inverted vehicle silhouette.
+- Correct perspective and alignment.
+- Gradually fading into pure white.
+
+The reflection must be secondary to the vehicle.
+It must never become a strong mirror image.
+
+Do NOT create dark black reflections.
+Do NOT create blue-tinted reflections.
+Do NOT use the vehicle paint color as the reflection tint.
+Do NOT allow reflection colors to determine floor colors.
+
+The reflection must have consistent neutral grey tones
+for every vehicle, regardless of its paint color.
+
+5. SHADOW - SOFT NATURAL CONTACT SHADOW
+
+Create a subtle, soft neutral grey contact shadow
+directly beneath the tires and vehicle.
+
+The shadow should be:
+- Light grey.
+- Soft-edged.
+- Natural and realistic.
+- Close to the vehicle.
+- Gradually fading into the white floor.
+
+No harsh black shadows.
+No oversized dark shadows.
+No colored shadows.
+No dramatic high-contrast shadows.
+
+6. VEHICLE PRESERVATION - CRITICAL
+
+Preserve the exact original vehicle identity.
+
+Maintain:
+- Original body shape and proportions.
+- Original paint color.
+- Original wheels and tires.
+- Original headlights and taillights.
+- Original grille and badges.
+- Original windows and mirrors.
+- Original license plate.
+- All original vehicle details.
+
+Do not redesign, replace, distort or modify the vehicle.
+Do not invent vehicle accessories or details.
+Do not change the vehicle's original paint color.
+
+The vehicle must remain sharp, realistic and photorealistic.
+
+7. CAMERA AND COMPOSITION
+
+Preserve the original camera perspective and viewing angle.
+Maintain a natural front three-quarter automotive view
+when supported by the original photograph.
+
+Keep the vehicle naturally grounded on the floor.
+Preserve realistic proportions and perspective.
+Maintain a clean premium dealership composition.
+
+8. STRICT COLOR CONSISTENCY RULE
+
+This is the MOST IMPORTANT REQUIREMENT.
+
+The studio environment must be independent
+of the vehicle's paint color.
+
+A white vehicle, black vehicle, blue vehicle,
+silver vehicle or red vehicle MUST all receive
+exactly the same white studio background.
+
+Never allow vehicle color to influence:
+- Background color.
+- Floor color.
+- Lighting temperature.
+- Ambient lighting.
+- Reflection color.
+- Shadow color.
+
+Only the vehicle itself may retain its original color.
+
+9. FINAL OUTPUT STYLE
+
+Premium luxury automotive dealership photography.
+Bright, minimal, elegant and sophisticated.
+Clean pure white studio.
+Neutral lighting.
+Soft grey reflection.
+Soft natural contact shadow.
+
+The final result must visually resemble
+a professionally photographed vehicle
+inside one consistent premium white automotive studio.
+
+ABSOLUTELY NO:
+Blue background.
+Grey gradient background.
+Dark background.
+Black reflective floor.
+Colored studio lighting.
+Colored floor reflection.
+Excessive mirror reflection.
+Dark dramatic shadows.
+Visible lighting equipment.
+People, props or additional vehicles.
+Added text or invented logos.
+`;
+
+    // Generate image using Bria AI.
     const briaResponse = await fetch(
       "https://engine.prod.bria-api.com/v1/product/vehicle/shot_by_text",
       {
@@ -91,50 +257,7 @@ export const POST: APIRoute = async ({ params }) => {
         body: JSON.stringify({
           image_url: sourceImageUrl,
           mode: "high_control",
-          
-
-
-
-
-scene_description:
-  "Premium automotive product photography in a seamless pure " +
-  "white infinity studio. The entire background and floor must " +
-  "be bright, clean, pure white (#FFFFFF), blending seamlessly " +
-  "without visible horizon lines, wall edges, seams, gray gradients, " +
-  "dark corners, or vignettes. Use soft, diffused, evenly distributed " +
-  "lighting with all studio lights and equipment completely invisible. " +
-  "Preserve the exact original vehicle identity, body shape, " +
-  "proportions, paint color, wheels, windows, grille, headlights, " +
-  "badges, license plate, and all original vehicle details. " +
-  "Keep the vehicle realistic, sharp, and naturally grounded, " +
-  "with soft contact shadows directly beneath the tires. " +
-  "Create a natural floor reflection directly beneath the vehicle. " +
-  "The reflection must accurately follow the original vehicle's " +
-  "shape, proportions, perspective, silhouette, wheels, grille, " +
-  "headlights, and body contours. The reflected vehicle must not " +
-  "be distorted, stretched, reshaped, duplicated incorrectly, " +
-  "or contain altered vehicle details. Keep the reflection aligned " +
-  "with the vehicle and naturally inverted on the floor. " +
-  "Apply a smooth vertical gradient opacity fade to the reflection. " +
-  "The reflection should remain recognizable close to the vehicle, " +
-  "then gradually fade toward the bottom of the image. Reduce " +
-  "opacity continuously with increasing distance from the vehicle, " +
-  "until the reflection disappears completely into the pure white " +
-  "floor. The fade must be smooth and gradual, with no hard edges, " +
-  "abrupt cutoff, or visible gradient bands. Avoid excessive floor " +
-  "gloss and strong mirror-like reflections. Keep the lower part " +
-  "of the image bright, clean, and predominantly white. " +
-  "No visible ceiling, lamps, spotlights, light fixtures, softboxes, " +
-  "stands, windows, people, props, extra vehicles, added text, " +
-  "or invented logos. Photorealistic, premium automotive " +
-  "e-commerce photography, bright, clean, and minimal."
-
-
-
-
-
-,
-
+          scene_description: sceneDescription,
           placement_type: "custom_coordinates",
           foreground_image_size: [810, 607],
           foreground_image_location: [135, 400],
