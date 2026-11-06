@@ -1,3 +1,4 @@
+
 import type { APIRoute } from "astro";
 import { supabase } from "../lib/supabase";
 
@@ -6,11 +7,8 @@ export const prerender = false;
 const SITE_URL = "https://garage88.site";
 
 /*
- * =====================================================
  * FORCE META IMAGE REFRESH
- * =====================================================
  */
-
 const FORCE_META_IMAGE_VERSION = "force-20260828-2";
 
 type CarImage = {
@@ -40,111 +38,52 @@ type Car = {
 };
 
 /*
- * =====================================================
  * CLEAN TEXT
- * =====================================================
  */
-
 function cleanText(value: unknown): string {
   return String(value ?? "")
     .replace(/<[^>]*>/g, " ")
-    .replace(/&#x20;/g, " ")
-    .replace(/&#x27;/g, "'")
-    .replace(/&nbsp;/g, " ")
+    .replace(/\\r\\n/g, " ")
+    .replace(/\\n/g, " ")
     .replace(/\r?\n/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
 
 /*
- * =====================================================
- * FORMAT PRICE TO JUTA
- * =====================================================
- */
-
-function formatJuta(value: number | null): string {
-  if (value === null || !Number.isFinite(Number(value))) {
-    return "";
-  }
-
-  const juta = Number(value) / 1_000_000;
-
-  return `${new Intl.NumberFormat("id-ID", {
-    maximumFractionDigits: 1,
-  }).format(juta)} JT`;
-}
-
-/*
- * =====================================================
- * PARSE DP FROM DESCRIPTION
- * =====================================================
- */
-
-function parseDpAmount(value: string, suffix?: string): number | null {
-  const normalized = value.trim();
-
-  if (!normalized) return null;
-
-  if (suffix) {
-    const decimalValue = Number(
-      normalized.replace(/\./g, "").replace(",", ".")
-    );
-
-    return Number.isFinite(decimalValue) && decimalValue > 0
-      ? decimalValue * 1_000_000
-      : null;
-  }
-
-  const rawValue = Number(normalized.replace(/[.,]/g, ""));
-
-  return Number.isFinite(rawValue) && rawValue > 0
-    ? rawValue
-    : null;
-}
-
-function getDpMulai(car: Car): number | null {
-  const candidates: number[] = [];
-
-  if (car.dp !== null && Number(car.dp) > 0) {
-    candidates.push(Number(car.dp));
-  }
-
-  const matches = cleanText(car.description).matchAll(
-    /(?:tdp|dp)\s*[:\-]?\s*(?:rp\.?\s*)?([\d.,]+)\s*(jt|juta)?/gi
-  );
-
-  for (const match of matches) {
-    const amount = parseDpAmount(match[1], match[2]);
-
-    if (amount !== null) {
-      candidates.push(amount);
-    }
-  }
-
-  return candidates.length
-    ? Math.min(...candidates)
-    : null;
-}
-
-/*
- * =====================================================
  * CSV CELL
- * =====================================================
  */
-
 function csvCell(value: unknown): string {
   const text = cleanText(value).replace(/"/g, '""');
-
   return `"${text}"`;
 }
 
 /*
- * =====================================================
- * GET FIRST ORIGINAL IMAGE
- * =====================================================
+ * FORMAT RUPIAH TO JUTA
+ * Example: 5000000 => 5 JT
  */
+function formatJuta(value: number | null): string {
+  if (
+    value === null ||
+    !Number.isFinite(Number(value))
+  ) {
+    return "-";
+  }
 
-function getCoverImage(images: CarImage[] | null): string {
+  return `${(
+    Number(value) / 1_000_000
+  ).toLocaleString("id-ID", {
+    maximumFractionDigits: 1,
+  })} JT`;
+}
+
+/*
+ * GET FIRST ORIGINAL IMAGE
+ * Fallback jika meta_image_url kosong.
+ */
+function getCoverImage(
+  images: CarImage[] | null
+): string {
   if (!images?.length) {
     return "";
   }
@@ -161,11 +100,8 @@ function getCoverImage(images: CarImage[] | null): string {
 }
 
 /*
- * =====================================================
  * FORCE IMAGE REFRESH
- * =====================================================
  */
-
 function forceMetaImageRefresh(url: string): string {
   const cleanUrl = String(url ?? "").trim();
 
@@ -176,26 +112,22 @@ function forceMetaImageRefresh(url: string): string {
   const separator = cleanUrl.includes("?") ? "&" : "?";
 
   return (
-    `${cleanUrl}` +
-    `${separator}` +
+    `${cleanUrl}${separator}` +
     `v=${encodeURIComponent(FORCE_META_IMAGE_VERSION)}`
   );
 }
 
 /*
- * =====================================================
  * META CATALOG CSV
- * =====================================================
  */
-
 export const GET: APIRoute = async () => {
   /*
-   * ===================================================
    * GET READY CARS
-   * ===================================================
    */
-
-  const { data, error } = await supabase
+  const {
+    data,
+    error,
+  } = await supabase
     .from("cars")
     .select(`
       id,
@@ -226,11 +158,8 @@ export const GET: APIRoute = async () => {
     });
 
   /*
-   * ===================================================
    * ERROR
-   * ===================================================
    */
-
   if (error) {
     console.error(
       "Gagal mengambil data katalog Meta:",
@@ -251,11 +180,8 @@ export const GET: APIRoute = async () => {
   const cars = (data ?? []) as Car[];
 
   /*
-   * ===================================================
    * CSV HEADER
-   * ===================================================
    */
-
   const headers = [
     "id",
     "image_link",
@@ -269,18 +195,12 @@ export const GET: APIRoute = async () => {
   ];
 
   /*
-   * ===================================================
    * BUILD ROWS
-   * ===================================================
    */
-
   const rows = cars.flatMap((car) => {
     /*
-     * -------------------------------------------------
      * TITLE
-     * -------------------------------------------------
      */
-
     const title = cleanText(
       [
         car.brand,
@@ -293,88 +213,53 @@ export const GET: APIRoute = async () => {
     );
 
     /*
-     * -------------------------------------------------
      * RAW IMAGE
      *
      * PRIORITY:
      * 1. META COVER
      * 2. FOTO ASLI PERTAMA
-     * -------------------------------------------------
      */
-
     const rawImageLink =
       car.meta_image_url ||
       getCoverImage(car.car_images);
 
     /*
-     * -------------------------------------------------
      * FORCE REFRESH IMAGE
-     * -------------------------------------------------
      */
-
-    const imageLink = forceMetaImageRefresh(rawImageLink);
+    const imageLink =
+      forceMetaImageRefresh(rawImageLink);
 
     /*
-     * -------------------------------------------------
      * META PRICE
      *
      * Catalog memakai Harga Kredit.
-     * -------------------------------------------------
      */
-
     const catalogPrice = Number(car.credit_price);
 
     /*
-     * -------------------------------------------------
      * DESCRIPTION
      *
      * FORMAT:
-     * Nama Mobil | DP Mulai | CREDIT | CASH | KM
-     * -------------------------------------------------
+     * DP MULAI 5 JT |
+     * HARGA CREDIT 170 JT / CASH 180 JT |
+     * KM 83.000
+     *
+     * Tidak menggunakan nama mobil,
+     * warna, transmisi, fuel, atau deskripsi panjang.
      */
-
-    const dpMulai = getDpMulai(car);
-
-    const carName = cleanText(
-      [
-        car.brand,
-        car.model,
-        car.variant,
-        car.year,
-        car.color,
-      ]
-        .filter(Boolean)
-        .join(" ")
-    );
-
     const description = [
-      carName,
-
-      dpMulai !== null
-        ? `DP Mulai ${formatJuta(dpMulai)}`
-        : "",
-
-      car.credit_price !== null
-        ? `CREDIT ${formatJuta(car.credit_price)}`
-        : "",
-
-      car.cash_price !== null
-        ? `CASH ${formatJuta(car.cash_price)}`
-        : "",
-
-      car.odometer !== null
-        ? `KM ${Number(car.odometer).toLocaleString("id-ID")}`
-        : "",
-    ]
-      .filter(Boolean)
-      .join(" | ");
+      `DP MULAI ${formatJuta(car.dp)}`,
+      `HARGA CREDIT ${formatJuta(car.credit_price)} / CASH ${formatJuta(car.cash_price)}`,
+      `KM ${
+        car.odometer !== null
+          ? Number(car.odometer).toLocaleString("id-ID")
+          : "-"
+      }`,
+    ].join(" | ");
 
     /*
-     * -------------------------------------------------
      * VALIDATION
-     * -------------------------------------------------
      */
-
     if (
       !car.id ||
       !car.slug ||
@@ -397,15 +282,12 @@ export const GET: APIRoute = async () => {
     }
 
     /*
-     * -------------------------------------------------
      * CSV ROW
-     * -------------------------------------------------
      */
-
     const row = [
       car.id,
       imageLink,
-      description || title,
+      description,
       title,
       `${Math.round(catalogPrice)} IDR`,
       `${SITE_URL}/detail/${car.slug}`,
@@ -415,50 +297,38 @@ export const GET: APIRoute = async () => {
     ];
 
     return [
-      row
-        .map(csvCell)
-        .join(","),
+      row.map(csvCell).join(","),
     ];
   });
 
   /*
-   * ===================================================
    * FINAL CSV
-   * ===================================================
    */
-
   const csv = [
     headers.join(","),
     ...rows,
   ].join("\n");
 
   /*
-   * ===================================================
    * RESPONSE
    *
-   * no-store sementara agar Cloudflare/browser
+   * no-store agar Cloudflare/browser
    * tidak memberikan CSV lama.
-   * ===================================================
    */
+  return new Response(csv, {
+    status: 200,
+    headers: {
+      "Content-Type": "text/csv; charset=utf-8",
 
-  return new Response(
-    csv,
-    {
-      status: 200,
+      "Content-Disposition":
+        'inline; filename="garage88-meta-catalog.csv"',
 
-      headers: {
-        "Content-Type": "text/csv; charset=utf-8",
+      "Cache-Control":
+        "no-store, no-cache, must-revalidate",
 
-        "Content-Disposition":
-          'inline; filename="garage88-meta-catalog.csv"',
+      "Pragma": "no-cache",
 
-        "Cache-Control":
-          "no-store, no-cache, must-revalidate",
-
-        "Pragma": "no-cache",
-
-        "Expires": "0",
-      },
-    }
-  );
+      "Expires": "0",
+    },
+  });
 };
