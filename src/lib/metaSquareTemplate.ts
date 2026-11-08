@@ -1,3 +1,4 @@
+
 type MetaCoverCar = {
   brand?: string | null;
   model?: string | null;
@@ -8,56 +9,28 @@ type MetaCoverCar = {
   credit_price?: number | null;
   cash_price?: number | null;
   dp?: number | null;
-
   cash_only?: boolean | null;
-
-  cover_hero_title?:
-    string | null;
+  cover_hero_title?: string | null;
 };
-
 
 /* =====================================================
    ESCAPE HTML
-   ===================================================== */
+===================================================== */
 
-function esc(
-  value: unknown
-): string {
-
-  return String(
-    value ?? ""
-  )
-    .replaceAll(
-      "&",
-      "&amp;"
-    )
-    .replaceAll(
-      "<",
-      "&lt;"
-    )
-    .replaceAll(
-      ">",
-      "&gt;"
-    )
-    .replaceAll(
-      '"',
-      "&quot;"
-    )
-    .replaceAll(
-      "'",
-      "&#039;"
-    );
+function esc(value: unknown): string {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
-
 
 /* =====================================================
    FORMAT
-   ===================================================== */
+===================================================== */
 
-function formatPriceShort(
-  value?: number | null
-): string {
-
+function formatPriceShort(value?: number | null): string {
   if (
     value === null ||
     value === undefined ||
@@ -66,46 +39,24 @@ function formatPriceShort(
     return "-";
   }
 
+  if (value >= 1_000_000_000) {
+    const miliar = value / 1_000_000_000;
 
-  if (
-    value >=
-    1_000_000_000
-  ) {
-
-    const miliar =
-      value /
-      1_000_000_000;
-
-
-    return `${miliar.toLocaleString(
-      "id-ID",
-      {
-        maximumFractionDigits: 2,
-      }
-    )} M`;
+    return `${miliar.toLocaleString("id-ID", {
+      maximumFractionDigits: 2,
+    })} M`;
   }
 
-
-  const jt =
-    value /
-    1_000_000;
-
+  const jt = value / 1_000_000;
 
   return Number.isInteger(jt)
     ? `${jt}JT`
-    : `${jt.toLocaleString(
-        "id-ID",
-        {
-          maximumFractionDigits: 1,
-        }
-      )}JT`;
+    : `${jt.toLocaleString("id-ID", {
+        maximumFractionDigits: 1,
+      })}JT`;
 }
 
-
-function formatKm(
-  value?: number | null
-): string {
-
+function formatKm(value?: number | null): string {
   if (
     value === null ||
     value === undefined ||
@@ -114,282 +65,136 @@ function formatKm(
     return "-";
   }
 
-
-  return Math.round(
-    value
-  ).toLocaleString(
-    "id-ID"
-  );
+  return Math.round(value).toLocaleString("id-ID");
 }
-
 
 /* =====================================================
    CLEAN VARIANT FOR AUTO HERO
-   ===================================================== */
+===================================================== */
 
-function cleanVariantForHero(
-  variant?: string | null
-): string {
-
-  const raw =
-    String(
-      variant ?? ""
-    )
-      .toUpperCase()
-      .replace(
-        /\s+/g,
-        " "
-      )
-      .trim();
-
+function cleanVariantForHero(variant?: string | null): string {
+  const raw = String(variant ?? "")
+    .toUpperCase()
+    .replace(/\s+/g, " ")
+    .trim();
 
   if (!raw) {
     return "";
   }
 
+  const removeTokens = new Set([
+    "AT",
+    "MT",
+    "CVT",
+    "DCT",
+    "ATPM",
+    "TSS",
+    "FWD",
+    "RWD",
+    "AWD",
+    "4X2",
+    "4X4",
+    "BLACK",
+    "WHITE",
+    "PUTIH",
+    "HITAM",
+    "SILVER",
+    "GREY",
+    "GRAY",
+    "ABU",
+    "MERAH",
+    "BIRU",
+  ]);
 
-  const removeTokens =
-    new Set([
-      "AT",
-      "MT",
-      "CVT",
-      "DCT",
-      "ATPM",
-      "TSS",
-      "FWD",
-      "RWD",
-      "AWD",
-      "4X2",
-      "4X4",
+  const tokens = raw
+    .split(/\s+/)
+    .filter(Boolean)
+    .filter((token) => !removeTokens.has(token))
+    .filter((token) => !/^\d(?:\.\d)?$/.test(token));
 
-      "BLACK",
-      "WHITE",
-      "PUTIH",
-      "HITAM",
-      "SILVER",
-      "GREY",
-      "GRAY",
-      "ABU",
-      "MERAH",
-      "BIRU",
-    ]);
-
-
-  const tokens =
-    raw
-      .split(
-        /\s+/
-      )
-      .filter(Boolean)
-      .filter(
-        (token) =>
-          !removeTokens.has(
-            token
-          )
-      )
-      .filter(
-        (token) =>
-          !/^\d(?:\.\d)?$/.test(
-            token
-          )
-      );
-
-
-  return tokens
-    .join(" ")
-    .trim();
+  return tokens.join(" ").trim();
 }
-
 
 /* =====================================================
    HERO TITLE
-   ===================================================== */
+===================================================== */
 
-function buildHeroTitle(
-  car: MetaCoverCar
-): string {
-
-  const manualHero =
-    String(
-      car.cover_hero_title ??
-      ""
-    )
-      .replace(
-        /\s+/g,
-        " "
-      )
-      .trim();
-
+function buildHeroTitle(car: MetaCoverCar): string {
+  const manualHero = String(car.cover_hero_title ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
 
   if (manualHero) {
-
-    return manualHero
-      .toUpperCase();
-
+    return manualHero.toUpperCase();
   }
 
+  const model = String(car.model ?? "")
+    .trim()
+    .toUpperCase();
 
-  const model =
-    String(
-      car.model ?? ""
-    )
-      .trim()
-      .toUpperCase();
+  const variant = cleanVariantForHero(car.variant);
 
-
-  const variant =
-    cleanVariantForHero(
-      car.variant
-    );
-
-
-  return [
-    model,
-    variant,
-  ]
+  return [model, variant]
     .filter(Boolean)
     .join(" ")
-    .replace(
-      /\s+/g,
-      " "
-    )
+    .replace(/\s+/g, " ")
     .trim();
 }
 
-
 /* =====================================================
    SPLIT HERO
-   ===================================================== */
+===================================================== */
 
-function splitHeroLines(
-  title: string
-) {
+function splitHeroLines(title: string) {
+  const words = title
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
 
-  const words =
-    title
-      .trim()
-      .split(
-        /\s+/
-      )
-      .filter(Boolean);
-
-
-  if (
-    words.length <= 1
-  ) {
-
+  if (words.length <= 1) {
     return {
-      line1:
-        title,
-
-      line2:
-        "",
-
-      lineCount:
-        1,
+      line1: title,
+      line2: "",
+      lineCount: 1,
     };
-
   }
 
-
-  if (
-    title.length <= 11
-  ) {
-
+  if (title.length <= 11) {
     return {
-      line1:
-        title,
-
-      line2:
-        "",
-
-      lineCount:
-        1,
+      line1: title,
+      line2: "",
+      lineCount: 1,
     };
-
   }
 
+  let bestIndex = 1;
+  let bestScore = Infinity;
 
-  let bestIndex =
-    1;
+  for (let i = 1; i < words.length; i++) {
+    const a = words.slice(0, i).join(" ");
+    const b = words.slice(i).join(" ");
 
-  let bestScore =
-    Infinity;
+    const score = Math.abs(a.length - b.length);
 
-
-  for (
-    let i = 1;
-    i < words.length;
-    i++
-  ) {
-
-    const a =
-      words
-        .slice(
-          0,
-          i
-        )
-        .join(" ");
-
-
-    const b =
-      words
-        .slice(i)
-        .join(" ");
-
-
-    const score =
-      Math.abs(
-        a.length -
-        b.length
-      );
-
-
-    if (
-      score <
-      bestScore
-    ) {
-
-      bestScore =
-        score;
-
-      bestIndex =
-        i;
-
+    if (score < bestScore) {
+      bestScore = score;
+      bestIndex = i;
     }
-
   }
 
-
-  const line1 =
-    words
-      .slice(
-        0,
-        bestIndex
-      )
-      .join(" ");
-
-
-  const line2 =
-    words
-      .slice(
-        bestIndex
-      )
-      .join(" ");
-
+  const line1 = words.slice(0, bestIndex).join(" ");
+  const line2 = words.slice(bestIndex).join(" ");
 
   return {
     line1,
     line2,
-    lineCount:
-      2,
+    lineCount: 2,
   };
 }
 
-
 /* =====================================================
    HERO FONT SIZE
-   ===================================================== */
+===================================================== */
 
 function getHeroFontSize(
   heroLines: {
@@ -399,166 +204,92 @@ function getHeroFontSize(
   },
   year: string
 ): number {
-
   const lastLine =
-    heroLines.lineCount ===
-    2
-      ? [
-          heroLines.line2,
-          year,
-        ]
-          .filter(Boolean)
-          .join(" ")
-      : [
-          heroLines.line1,
-          year,
-        ]
-          .filter(Boolean)
-          .join(" ");
+    heroLines.lineCount === 2
+      ? [heroLines.line2, year].filter(Boolean).join(" ")
+      : [heroLines.line1, year].filter(Boolean).join(" ");
 
+  const longest = Math.max(
+    heroLines.line1.length,
+    lastLine.length
+  );
 
-  const longest =
-    Math.max(
-      heroLines.line1.length,
-      lastLine.length
-    );
-
-
-  if (
-    longest <= 10
-  ) {
-    return 94;
-  }
-
-
-  if (
-    longest <= 14
-  ) {
-    return 86;
-  }
-
-
-  if (
-    longest <= 18
-  ) {
-    return 78;
-  }
-
-
-  if (
-    longest <= 22
-  ) {
-    return 70;
-  }
-
-
-  if (
-    longest <= 27
-  ) {
-    return 63;
-  }
-
+  if (longest <= 10) return 94;
+  if (longest <= 14) return 86;
+  if (longest <= 18) return 78;
+  if (longest <= 22) return 70;
+  if (longest <= 27) return 63;
 
   return 56;
 }
 
-
 /* =====================================================
    BUILD META COVER
-   ===================================================== */
+===================================================== */
 
 export function buildGarage88MetaSquareHtml(
   car: MetaCoverCar,
   sourceImageUrl: string
 ): string {
+  const heroTitle = buildHeroTitle(car);
+  const heroLines = splitHeroLines(heroTitle);
 
-  const heroTitle =
-    buildHeroTitle(
-      car
-    );
+  const year = car.year ? String(car.year) : "";
 
+  const heroFontSize = getHeroFontSize(
+    heroLines,
+    year
+  );
 
-  const heroLines =
-    splitHeroLines(
-      heroTitle
-    );
+  const cashOnly = car.cash_only === true;
 
+  const priceLabel = cashOnly
+    ? "CASH ONLY"
+    : "OTR";
 
-  const year =
-    car.year
-      ? String(
-          car.year
-        )
+  const mainPrice = formatPriceShort(
+    cashOnly
+      ? car.cash_price
+      : car.credit_price
+  );
+
+  const cashPrice =
+    !cashOnly &&
+    car.cash_price !== null &&
+    car.cash_price !== undefined &&
+    Number.isFinite(car.cash_price)
+      ? formatPriceShort(car.cash_price)
       : "";
 
-
-  const heroFontSize =
-    getHeroFontSize(
-      heroLines,
-      year
-    );
-
-
-  const cashOnly =
-    car.cash_only === true;
-
-
-  const priceLabel =
-    cashOnly
-      ? "CASH ONLY"
-      : "OTR";
-
-
-  const mainPrice =
-    formatPriceShort(
-      cashOnly
-        ? car.cash_price
-        : car.credit_price
-    );
-
-
-  const km =
-    formatKm(
-      car.odometer
-    );
-
+  const km = formatKm(car.odometer);
 
   const headerTop =
-    heroLines.lineCount ===
-    2
+    heroLines.lineCount === 2
       ? 150
       : 180;
 
-
+  // Naik 20px dari posisi sebelumnya
   const specTop =
-    heroLines.lineCount ===
-    2
-      ? 365
-      : 300;
+    heroLines.lineCount === 2
+      ? 345
+      : 280;
 
-
+  // Naik 23px dari posisi sebelumnya
   const dividerTop =
-    heroLines.lineCount ===
-    2
-      ? 420
-      : 355;
-
+    heroLines.lineCount === 2
+      ? 430
+      : 380;
 
   return `
 <!DOCTYPE html>
-
 <html>
-
 <head>
-
 <meta charset="UTF-8" />
 
 <style>
-
   * {
     box-sizing: border-box;
   }
-
 
   html,
   body {
@@ -568,12 +299,8 @@ export function buildGarage88MetaSquareHtml(
     height: 1080px;
     overflow: hidden;
     background: #ffffff;
-    font-family:
-      Arial,
-      Helvetica,
-      sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
   }
-
 
   .cover {
     position: relative;
@@ -583,244 +310,202 @@ export function buildGarage88MetaSquareHtml(
     background: #ffffff;
   }
 
-
   /* ===================================================
      PHOTOROOM SOURCE
-     =================================================== */
+  =================================================== */
 
   .source {
     position: absolute;
     inset: 0;
-
     width: 1080px;
     height: 1080px;
-
     object-fit: cover;
     object-position: center top;
-
     z-index: 1;
   }
 
-
   /* ===================================================
      HEADER
-     =================================================== */
+  =================================================== */
 
   .header-block {
     position: absolute;
-
     z-index: 5;
-
     top: ${headerTop}px;
-
     left: 58px;
     right: 58px;
-
     text-align: center;
   }
-
 
   .hero {
     width: 100%;
-
-    font-family:
-      "Arial Black",
-      Arial,
-      Helvetica,
-      sans-serif;
-
-    font-size:
-      ${heroFontSize}px;
-
+    font-family: "Arial Black", Arial, Helvetica, sans-serif;
+    font-size: ${heroFontSize}px;
     font-weight: 900;
-
     line-height: .88;
-
     letter-spacing: -4px;
-
     color: #000000;
-
     text-transform: uppercase;
   }
 
-
   .hero-line {
     display: block;
-
     width: 100%;
-
     white-space: nowrap;
-
     text-align: center;
   }
 
-
   .hero-line-single {
     display: flex;
-
     align-items: baseline;
     justify-content: center;
-
     gap: 22px;
-
     white-space: nowrap;
   }
-
 
   .hero-line-bottom {
     display: flex;
-
     align-items: baseline;
     justify-content: center;
-
     gap: 22px;
-
     white-space: nowrap;
-
     margin-top: 4px;
   }
 
-
   .year-inline {
     display: inline-block;
-
     flex: 0 0 auto;
-
     font-family: inherit;
-
     font-size: 1em;
-
     font-weight: inherit;
-
     line-height: inherit;
-
     letter-spacing: inherit;
-
     color: #7f8ea3;
-
     white-space: nowrap;
   }
 
-
   /* ===================================================
      PRICE + KM
-     =================================================== */
+  =================================================== */
 
   .spec-row {
     position: absolute;
-
     z-index: 6;
-
     top: ${specTop}px;
-
     left: 110px;
     right: 110px;
-
-    height: 52px;
+    height: 90px;
 
     display: flex;
-
     align-items: center;
     justify-content: center;
-
     gap: 55px;
 
     color: #111111;
   }
 
-
-  .spec-item {
-    display: flex;
-
-    align-items: baseline;
-
-    gap: 10px;
-
-    white-space: nowrap;
-  }
-
-
   .spec-label {
     font-size: 22px;
-
     font-weight: 800;
-
     color: #555555;
-
     line-height: 1;
   }
-
 
   .spec-value {
     font-size: 46px;
-
     font-weight: 900;
-
     line-height: 1;
-
     letter-spacing: -2px;
-
     color: #000000;
   }
 
+  /* ===================================================
+     PRICE STACK
+  =================================================== */
+
+  .price-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+  }
+
+  .price-values {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+  }
+
+  .price-main {
+    font-size: 46px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -2px;
+    color: #000000;
+    white-space: nowrap;
+  }
+
+  .cash-subprice {
+    display: block;
+    width: 100%;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0;
+    margin-top: 1px;
+    color: #555555;
+    white-space: nowrap;
+  }
+
+  /* ===================================================
+     KM
+  =================================================== */
+
+  .km-item {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    white-space: nowrap;
+  }
 
   /* ===================================================
      DIVIDER
-     =================================================== */
+  =================================================== */
 
   .divider {
     position: absolute;
-
     z-index: 5;
-
     top: ${dividerTop}px;
-
     left: 170px;
     right: 170px;
-
     height: 1px;
-
-    background:
-      rgba(
-        0,
-        0,
-        0,
-        .17
-      );
+    background: rgba(0, 0, 0, .17);
   }
-
 </style>
-
 </head>
 
-
 <body>
-
   <div class="cover">
-
 
     <img
       class="source"
       src="${esc(sourceImageUrl)}"
     />
 
-
     <div class="header-block">
-
       <div class="hero">
 
         ${
           heroLines.lineCount === 2
-
             ? `
-
               <div class="hero-line">
                 ${esc(heroLines.line1)}
               </div>
 
-
               <div class="hero-line hero-line-bottom">
-
                 <span>
                   ${esc(heroLines.line2)}
                 </span>
@@ -834,15 +519,10 @@ export function buildGarage88MetaSquareHtml(
                     `
                     : ""
                 }
-
               </div>
-
             `
-
             : `
-
               <div class="hero-line hero-line-single">
-
                 <span>
                   ${esc(heroLines.line1)}
                 </span>
@@ -856,34 +536,42 @@ export function buildGarage88MetaSquareHtml(
                     `
                     : ""
                 }
-
               </div>
-
             `
         }
 
       </div>
-
     </div>
-
-
 
     <div class="spec-row">
 
-      <div class="spec-item">
+      <div class="price-item">
 
         <span class="spec-label">
           ${esc(priceLabel)}
         </span>
 
-        <span class="spec-value">
-          ${esc(mainPrice)}
-        </span>
+        <div class="price-values">
+
+          <span class="price-main">
+            ${esc(mainPrice)}
+          </span>
+
+          ${
+            cashPrice
+              ? `
+                <span class="cash-subprice">
+                  CASH ${esc(cashPrice)}
+                </span>
+              `
+              : ""
+          }
+
+        </div>
 
       </div>
 
-
-      <div class="spec-item">
+      <div class="km-item">
 
         <span class="spec-label">
           KM
@@ -897,15 +585,10 @@ export function buildGarage88MetaSquareHtml(
 
     </div>
 
-
-
     <div class="divider"></div>
 
-
   </div>
-
 </body>
-
 </html>
 `;
 }
