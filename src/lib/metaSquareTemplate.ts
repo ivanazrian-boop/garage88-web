@@ -287,7 +287,8 @@ export function buildGarage88MetaSquareHtml(
 <meta charset="UTF-8" />
 
 <style>
-  * {
+  @import url("https://fonts.googleapis.com/css2?family=Archivo:wght@800&display=swap");
+* {
     box-sizing: border-box;
   }
 
@@ -339,11 +340,11 @@ export function buildGarage88MetaSquareHtml(
 
   .hero {
     width: 100%;
-    font-family: "Arial Black", Arial, Helvetica, sans-serif;
+    font-family: "Archivo", Arial, sans-serif;
     font-size: ${heroFontSize}px;
-    font-weight: 900;
+    font-weight: 800;
     line-height: .88;
-    letter-spacing: -4px;
+    letter-spacing: -2px;
     color: #000000;
     text-transform: uppercase;
   }

@@ -882,6 +882,7 @@ export function buildPremiumCoverHtml(
 
 
 <style>
+  @import url("https://fonts.googleapis.com/css2?family=Archivo+Black&display=swap");
 
 
 /* ==========================================================
@@ -1013,28 +1014,31 @@ body {
    ========================================================== */
 
 .top-gallery {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1080px;
+  height: ${TOP_PHOTO_HEIGHT}px;
+  z-index: 10;
+  overflow: hidden;
 
-  position:
-    absolute;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 45%,
+    rgba(0,0,0,0.85) 60%,
+    rgba(0,0,0,0.45) 78%,
+    transparent 100%
+  );
 
-  left:
-    0;
-
-  top:
-    0;
-
-  width:
-    1080px;
-
-  height:
-    ${TOP_PHOTO_HEIGHT}px;
-
-  z-index:
-    10;
-
-  overflow:
-    hidden;
-
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 45%,
+    rgba(0,0,0,0.85) 60%,
+    rgba(0,0,0,0.45) 78%,
+    transparent 100%
+  );
 }
 
 
@@ -1086,57 +1090,7 @@ body {
    ========================================================== */
 
 .top-photo::after {
-
-  content:
-    "";
-
-  position:
-    absolute;
-
-  left:
-    0;
-
-  right:
-    0;
-
-  bottom:
-    0;
-
-  height:
-    155px;
-
-  background:
-    linear-gradient(
-      to bottom,
-
-      rgba(255,255,255,0)
-        0%,
-
-      rgba(255,255,255,0.025)
-        15%,
-
-      rgba(255,255,255,0.08)
-        30%,
-
-      rgba(255,255,255,0.20)
-        48%,
-
-      rgba(255,255,255,0.42)
-        66%,
-
-      rgba(255,255,255,0.72)
-        82%,
-
-      rgba(255,255,255,0.93)
-        94%,
-
-      rgba(255,255,255,1)
-        100%
-    );
-
-  pointer-events:
-    none;
-
+  content: none;
 }
 
 
@@ -1233,24 +1187,25 @@ body {
   z-index:
     20;
 
-  background:
-    linear-gradient(
-      to bottom,
+  background: #ffffff;
 
-      rgba(255,255,255,1)
-        0%,
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0,0,0,1) 0%,
+    rgba(0,0,0,0.8) 30%,
+    rgba(0,0,0,0.35) 60%,
+    rgba(0,0,0,0) 100%
+  );
 
-      rgba(255,255,255,0.99)
-        42%,
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0,0,0,1) 0%,
+    rgba(0,0,0,0.8) 30%,
+    rgba(0,0,0,0.35) 60%,
+    rgba(0,0,0,0) 100%
+  );
 
-      rgba(255,255,255,0.90)
-        65%,
-
-      rgba(255,255,255,0.30)
-        100%
-    );
-
-  transform-origin:
+transform-origin:
     center;
 
   pointer-events:
@@ -1292,48 +1247,7 @@ body {
  */
 
 .top-haze {
-
-  position:
-    absolute;
-
-  left:
-    0;
-
-  right:
-    0;
-
-  top:
-    330px;
-
-  height:
-    95px;
-
-  z-index:
-    25;
-
-  pointer-events:
-    none;
-
-  background:
-    linear-gradient(
-      to bottom,
-
-      rgba(255,255,255,0)
-        0%,
-
-      rgba(255,255,255,0.08)
-        25%,
-
-      rgba(255,255,255,0.30)
-        52%,
-
-      rgba(255,255,255,0.70)
-        78%,
-
-      rgba(255,255,255,1)
-        100%
-    );
-
+  display: none;
 }
 
 
@@ -1429,6 +1343,8 @@ body {
 
 .title {
 
+  transform: skewX(-8deg);
+
   display:
     inline-block;
 
@@ -1444,12 +1360,7 @@ body {
   color:
     #080808;
 
-  font-family:
-    Impact,
-    "Arial Black",
-    Arial,
-    Helvetica,
-    sans-serif;
+  font-family: "Archivo Black", sans-serif;
 
   font-size:
     ${titleSize}px;
@@ -1457,11 +1368,9 @@ body {
   line-height:
     0.98;
 
-  font-weight:
-    900;
+  font-weight: 400;
 
-  font-style:
-    italic;
+  font-style: normal;
 
   letter-spacing:
     -1.5px;
@@ -1479,12 +1388,7 @@ body {
     stroke fill;
 
   /* Bayangan luar hitam saja; tanpa highlight putih atau lapisan stroke hitam di dalam. */
-  text-shadow:
-    0 5px 10px
-      rgba(0,0,0,0.38),
-
-    0 10px 20px
-      rgba(0,0,0,0.16);
+  text-shadow: none;
 
 }
 
