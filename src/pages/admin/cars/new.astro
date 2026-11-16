@@ -135,23 +135,17 @@ if (Astro.request.method === "POST") {
       .single();
 
     if (error) {
-      console.error("Tambah mobil gagal:", error.code, error.message);
+      console.error(
+        "Tambah mobil gagal:",
+        error.code,
+        error.message
+      );
       message = error.message;
     } else {
       return Astro.redirect(
         `/admin/cars/upload?id=${data.id}&key=${ADMIN_KEY}`
       );
     }
-  }
-
-  if (error) {
-    console.error(error);
-
-    message = error.message;
-  } else {
-    return Astro.redirect(
-      `/admin/cars/upload?id=${data.id}&key=${ADMIN_KEY}`
-    );
   }
 }
 ---
@@ -573,7 +567,7 @@ if (Astro.request.method === "POST") {
 
       return String(value || "")
         .toLowerCase()
-        .replace(/[._\-–—]+/g, " ")
+        .replace(/[._\\-–—]+/g, " ")
         .replace(/\s+/g, " ")
         .trim();
 
@@ -615,9 +609,7 @@ if (Astro.request.method === "POST") {
     function extractBranchFromTitle(title) {
 
       const matches = [
-        ...title.matchAll(
-          /\(([^)]+?)\)/g
-        )
+        ...title.matchAll(/\(([^)]+?)\)/g)
       ];
 
       for (const match of matches) {
@@ -709,9 +701,331 @@ if (Astro.request.method === "POST") {
     }
 
 
-    /* =========================================================
-       TELEGRAM PARSER
-       ========================================================= */
+    // =========================================================
+    // PLAT NOMOR
+    // =========================================================
+
+    function normalizePlateNumber(value) {
+
+      if (!value) {
+        return "";
+      }
+
+      return String(value)
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, "")
+        .trim();
+
+    }
+
+
+    function extractPlateNumber(text) {
+
+      if (!text) {
+
+        return {
+          plate: "",
+          cleanedText: text || ""
+        };
+
+      }
+
+      let plate = "";
+      let cleanedText = String(text);
+
+
+      /*
+       * PRIORITAS 1
+       *
+       * PLAT B 2881 FLO
+       * PLATE B 2881 FLO
+       * NOPOL B 2881 FLO
+       * NO POL B 2881 FLO
+       * NOMOR POLISI B 2881 FLO
+       */
+
+      const keywordPatterns = [
+
+        /\b(?:plat|plate|nopol|no[\s.-]*pol|nomor[\s.-]*polisi)\s*[:.-]?\s*([A-Z]{1,2})\s*[- ]?\s*(\d{1,4})\s*[- ]?\s*([A-Z]{1,3})\b/i,
+
+        /\b(?:plat|plate|nopol|no[\s.-]*pol|nomor[\s.-]*polisi)\s*[:.-]?\s*([A-Z]{1,2})\s*(\d{1,4})\s*([A-Z]{1,3})\b/i
+
+      ];
+
+
+      for (const pattern of keywordPatterns) {
+
+        const match =
+          cleanedText.match(pattern);
+
+        if (match) {
+
+          plate =
+            normalizePlateNumber(
+              `${match[1]}${match[2]}${match[3]}`
+            );
+
+          if (plate) {
+
+            cleanedText =
+              cleanedText.replace(
+                match[0],
+                ""
+              );
+
+            break;
+
+          }
+
+        }
+
+      }
+
+
+      /*
+       * PRIORITAS 2
+       *
+       * (B 2846 PZB)
+       * (B2846PZB)
+       * [B 2846 PZB]
+       */
+
+      if (!plate) {
+
+        const parenthesisPatterns = [
+
+          /\(\s*([A-Z]{1,2})\s*(\d{1,4})\s*([A-Z]{1,3})\s*\)/i,
+
+          /\[\s*([A-Z]{1,2})\s*(\d{1,4})\s*([A-Z]{1,3})\s*\]/i
+
+        ];
+
+
+        for (const pattern of parenthesisPatterns) {
+
+          const match =
+            cleanedText.match(pattern);
+
+          if (match) {
+
+            plate =
+              normalizePlateNumber(
+                `${match[1]}${match[2]}${match[3]}`
+              );
+
+            if (plate) {
+
+              cleanedText =
+                cleanedText.replace(
+                  match[0],
+                  ""
+                );
+
+              break;
+
+            }
+
+          }
+
+        }
+
+      }
+
+
+      /*
+       * PRIORITAS 3
+       *
+       * 2016 - B1362NIC
+       * 2016 - B 1362 NIC
+       */
+
+      if (!plate) {
+
+        const dashPattern =
+          /\b20\d{2}\s*[-–—]\s*([A-Z]{1,2})\s*(\d{1,4})\s*([A-Z]{1,3})\b/i;
+
+        const match =
+          cleanedText.match(
+            dashPattern
+          );
+
+        if (match) {
+
+          plate =
+            normalizePlateNumber(
+              `${match[1]}${match[2]}${match[3]}`
+            );
+
+          if (plate) {
+
+            cleanedText =
+              cleanedText.replace(
+                match[0],
+                ""
+              );
+
+          }
+
+        }
+
+      }
+
+
+      /*
+       * PRIORITAS COMPACT
+       *
+       * Format plat tanpa spasi:
+       *
+       * B2225SGW
+       * B1362NIC
+       * F1467FAX
+       */
+
+      if (!plate) {
+
+        const compactPattern =
+          /\\b([A-Z]{1,2})(\\d{1,4})([A-Z]{1,3})\\b/i;
+
+        const compactMatch =
+          cleanedText.match(
+            compactPattern
+          );
+
+        if (compactMatch) {
+
+          const numberPart =
+            compactMatch[2];
+
+          /*
+           * Jangan mengambil tahun seperti:
+           * 2020
+           * 2021
+           * 2022
+           */
+
+          if (
+            !(
+              numberPart.length === 4 &&
+              Number(numberPart) >= 1900 &&
+              Number(numberPart) <= 2099
+            )
+          ) {
+
+            plate =
+              normalizePlateNumber(
+                `${compactMatch[1]}${compactMatch[2]}${compactMatch[3]}`
+              );
+
+            if (plate) {
+
+              cleanedText =
+                cleanedText.replace(
+                  compactMatch[0],
+                  ""
+                );
+
+            }
+
+          }
+
+        }
+
+      }
+
+
+      /*
+       * PRIORITAS 4
+       *
+       * Plat langsung di title:
+       *
+       * CAMRY ... B 1368 UAI
+       * ERTIGA ... B 2347 PZM
+       *
+       * Kita batasi agar tidak mengambil
+       * tahun / angka KM / harga.
+       */
+
+      if (!plate) {
+
+        const directPattern =
+          /\b([A-Z]{1,2})\s*(\d{1,4})\s*([A-Z]{1,3})\b/i;
+
+        const matches =
+          [...cleanedText.matchAll(directPattern)];
+
+
+        for (const match of matches) {
+
+          const candidate =
+            normalizePlateNumber(
+              `${match[1]}${match[2]}${match[3]}`
+            );
+
+          if (!candidate) {
+            continue;
+          }
+
+
+          const numberPart =
+            match[2];
+
+
+          /*
+           * Hindari angka tahun.
+           */
+
+          if (
+            numberPart.length === 4 &&
+            Number(numberPart) >= 1900 &&
+            Number(numberPart) <= 2099
+          ) {
+            continue;
+          }
+
+
+          plate = candidate;
+
+          cleanedText =
+            cleanedText.replace(
+              match[0],
+              ""
+            );
+
+          break;
+
+        }
+
+      }
+
+
+      /*
+       * Bersihkan sisa tanda baca /
+       * spasi akibat plat dihapus.
+       */
+
+      cleanedText =
+        cleanedText
+          .replace(/\(\s*\)/g, "")
+          .replace(/\[\s*\]/g, "")
+          .replace(/[ \t]{2,}/g, " ")
+          .replace(/[ \t]+\n/g, "\n")
+          .replace(/\n{3,}/g, "\n\n")
+          .trim();
+
+
+      return {
+        plate,
+        cleanedText
+      };
+
+    }
+
+
+    /*
+     * =========================================================
+     * TELEGRAM PARSER
+     * =========================================================
+     */
 
     function parseTelegram() {
 
@@ -721,6 +1035,7 @@ if (Astro.request.method === "POST") {
           .value
           .trim();
 
+
       if (!text) {
 
         alert("Paste Telegram dulu");
@@ -729,18 +1044,22 @@ if (Astro.request.method === "POST") {
 
       }
 
+
       const firstLine =
         text
           .split("\n")[0]
           .trim();
 
 
+      // =========================================================
       // CABANG
+      // =========================================================
 
       const branchResult =
         extractBranchFromTitle(
           firstLine
         );
+
 
       document
         .getElementById("branch")
@@ -748,10 +1067,27 @@ if (Astro.request.method === "POST") {
           branchResult.branch || "";
 
 
+      // =========================================================
+      // PLAT NOMOR
+      // =========================================================
+
+      const plateResult =
+        extractPlateNumber(text);
+
+
+      document
+        .getElementById("plate_number")
+        .value =
+          plateResult.plate || "";
+
+
+      // =========================================================
       // CLEAN FIRST LINE
+      // =========================================================
 
       let cleanFirstLine =
         firstLine;
+
 
       if (branchResult.matchedText) {
 
@@ -763,6 +1099,7 @@ if (Astro.request.method === "POST") {
 
       }
 
+
       cleanFirstLine =
         removeGroupInfo(
           cleanFirstLine
@@ -771,12 +1108,15 @@ if (Astro.request.method === "POST") {
           .trim();
 
 
+      // =========================================================
       // YEAR
+      // =========================================================
 
       const year =
         cleanFirstLine.match(
           /\b20\d{2}\b/
         );
+
 
       if (year) {
 
@@ -788,9 +1128,12 @@ if (Astro.request.method === "POST") {
       }
 
 
+      // =========================================================
       // BRAND
+      // =========================================================
 
       const brands = [
+
         "Toyota",
         "Honda",
         "Hyundai",
@@ -802,9 +1145,12 @@ if (Astro.request.method === "POST") {
         "Mitsubishi",
         "Nissan",
         "BYD"
+
       ];
 
+
       let brand = "";
+
 
       for (const b of brands) {
 
@@ -824,15 +1170,19 @@ if (Astro.request.method === "POST") {
 
       }
 
+
       document
         .getElementById("brand")
         .value =
           brand;
 
 
+      // =========================================================
       // COLOR
+      // =========================================================
 
       const colors = [
+
         "Putih",
         "Hitam",
         "Silver",
@@ -843,7 +1193,9 @@ if (Astro.request.method === "POST") {
         "Hijau",
         "Coklat",
         "Metallic"
+
       ];
+
 
       for (const c of colors) {
 
@@ -867,7 +1219,9 @@ if (Astro.request.method === "POST") {
       }
 
 
+      // =========================================================
       // FUEL
+      // =========================================================
 
       if (
         text
@@ -905,7 +1259,9 @@ if (Astro.request.method === "POST") {
       }
 
 
+      // =========================================================
       // TRANSMISSION
+      // =========================================================
 
       if (
         cleanFirstLine.match(
@@ -934,7 +1290,9 @@ if (Astro.request.method === "POST") {
       }
 
 
+      // =========================================================
       // MODEL + VARIANT
+      // =========================================================
 
       let cleanTitle =
         cleanFirstLine
@@ -947,6 +1305,7 @@ if (Astro.request.method === "POST") {
             ""
           )
           .trim();
+
 
       if (brand) {
 
@@ -963,10 +1322,12 @@ if (Astro.request.method === "POST") {
 
       }
 
+
       const words =
         cleanTitle
           .split(/\s+/)
           .filter(Boolean);
+
 
       if (words.length) {
 
@@ -976,6 +1337,7 @@ if (Astro.request.method === "POST") {
             words[0];
 
       }
+
 
       if (words.length > 1) {
 
@@ -989,12 +1351,15 @@ if (Astro.request.method === "POST") {
       }
 
 
+      // =========================================================
       // KM
+      // =========================================================
 
       let km =
         text.match(
           /(?:odometer|km)\s*[:\-]?\s*(\d+)\s*rb/i
         );
+
 
       if (!km) {
 
@@ -1004,6 +1369,7 @@ if (Astro.request.method === "POST") {
           );
 
       }
+
 
       if (km) {
 
@@ -1015,12 +1381,15 @@ if (Astro.request.method === "POST") {
       }
 
 
+      // =========================================================
       // CASH
+      // =========================================================
 
       const cash =
         text.match(
           /cash\s+(\d+)\s*(jt|juta)/i
         );
+
 
       if (cash) {
 
@@ -1034,12 +1403,15 @@ if (Astro.request.method === "POST") {
       }
 
 
+      // =========================================================
       // OTR CREDIT
+      // =========================================================
 
       const otr =
         text.match(
           /(?:otr|harga kredit)\s+(\d+)\s*(jt|juta)/i
         );
+
 
       if (otr) {
 
@@ -1053,7 +1425,9 @@ if (Astro.request.method === "POST") {
       }
 
 
+      // =========================================================
       // DP TERKECIL
+      // =========================================================
 
       const dpMatches = [
         ...text.matchAll(
@@ -1061,7 +1435,9 @@ if (Astro.request.method === "POST") {
         )
       ];
 
+
       const dpValues = [];
+
 
       dpMatches.forEach(
         item => {
@@ -1075,6 +1451,7 @@ if (Astro.request.method === "POST") {
         }
       );
 
+
       if (dpValues.length) {
 
         document
@@ -1087,15 +1464,21 @@ if (Astro.request.method === "POST") {
       }
 
 
+      // =========================================================
       // DESCRIPTION
+      // =========================================================
 
       document
         .getElementById("description")
         .value =
           cleanDescription(
-            text
+            plateResult.cleanedText
           );
 
+
+      // =========================================================
+      // RESULT
+      // =========================================================
 
       alert(
 
