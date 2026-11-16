@@ -972,7 +972,7 @@ if (Astro.request.method === "POST") {
       // PLAT B 2881 FLO
       // PLATE B 1234 ABC
       const keywordPattern =
-        /\\b(?:plat|plate|nopol|no[\\s.-]*pol|nomor[\\s.-]*polisi)\\s*[:.-]?\\s*([A-Z]{1,2})\\s*(\\d{1,4})\\s*([A-Z]{1,3})\\b/i;
+        /\b(?:plat|plate|nopol|no[\s.-]*pol|nomor[\s.-]*polisi)\s*[:.-]?\s*([A-Z]{1,2})\s*(\d{1,4})\s*([A-Z]{1,3})\b/i;
 
       const keywordMatch =
         cleanedText.match(
@@ -999,7 +999,7 @@ if (Astro.request.method === "POST") {
       if (!plate) {
 
         const bracketPattern =
-          /\\(\\s*([A-Z]{1,2})\\s*(\\d{1,4})\\s*([A-Z]{1,3})\\s*\\)/i;
+          /\(\s*([A-Z]{1,2})\s*(\d{1,4})\s*([A-Z]{1,3})\s*\)/i;
 
         const bracketMatch =
           cleanedText.match(
@@ -1028,7 +1028,7 @@ if (Astro.request.method === "POST") {
       if (!plate) {
 
         const dashPattern =
-          /\\b20\\d{2}\\s*[-–—]\\s*([A-Z]{1,2})\\s*(\\d{1,4})\\s*([A-Z]{1,3})\\b/i;
+          /\b20\d{2}\s*[-–—]\s*([A-Z]{1,2})\s*(\d{1,4})\s*([A-Z]{1,3})\b/i;
 
         const dashMatch =
           cleanedText.match(
@@ -1057,7 +1057,7 @@ if (Astro.request.method === "POST") {
       if (!plate) {
 
         const directPattern =
-          /\\b([A-Z]{1,2})\\s*(\\d{1,4})\\s*([A-Z]{1,3})\\b/i;
+          /\b([A-Z]{1,2})\s*(\d{1,4})\s*([A-Z]{1,3})\b/i;
 
         const matches =
           [...cleanedText.matchAll(
@@ -1098,10 +1098,10 @@ if (Astro.request.method === "POST") {
 
       cleanedText =
         cleanedText
-          .replace(/\\(\\s*\\)/g, "")
-          .replace(/\\s{2,}/g, " ")
-          .replace(/[ \\t]+\\n/g, "\\n")
-          .replace(/\\n{3,}/g, "\\n\\n")
+          .replace(/\(\s*\)/g, "")
+          .replace(/\s{2,}/g, " ")
+          .replace(/[ \t]+\n/g, "\n")
+          .replace(/\n{3,}/g, "\n\n")
           .trim();
 
 
