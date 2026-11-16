@@ -944,6 +944,175 @@ if (Astro.request.method === "POST") {
        PARSE MONEY
        ===================================================== */
 
+    function normalizePlateNumber(value) {
+
+      if (!value) return "";
+
+      return String(value)
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, "")
+        .trim();
+
+    }
+
+
+    function extractPlateNumber(text) {
+
+      if (!text) {
+        return {
+          plate: "",
+          cleanedText: text || "",
+        };
+      }
+
+      let plate = "";
+      let cleanedText = String(text);
+
+
+      // PLAT B 2881 FLO
+      // PLATE B 1234 ABC
+      const keywordPattern =
+        /\\b(?:plat|plate|nopol|no[\\s.-]*pol|nomor[\\s.-]*polisi)\\s*[:.-]?\\s*([A-Z]{1,2})\\s*(\\d{1,4})\\s*([A-Z]{1,3})\\b/i;
+
+      const keywordMatch =
+        cleanedText.match(
+          keywordPattern
+        );
+
+      if (keywordMatch) {
+
+        plate =
+          normalizePlateNumber(
+            `${keywordMatch[1]}${keywordMatch[2]}${keywordMatch[3]}`
+          );
+
+        cleanedText =
+          cleanedText.replace(
+            keywordMatch[0],
+            ""
+          );
+
+      }
+
+
+      // (B 2846 PZB)
+      if (!plate) {
+
+        const bracketPattern =
+          /\\(\\s*([A-Z]{1,2})\\s*(\\d{1,4})\\s*([A-Z]{1,3})\\s*\\)/i;
+
+        const bracketMatch =
+          cleanedText.match(
+            bracketPattern
+          );
+
+        if (bracketMatch) {
+
+          plate =
+            normalizePlateNumber(
+              `${bracketMatch[1]}${bracketMatch[2]}${bracketMatch[3]}`
+            );
+
+          cleanedText =
+            cleanedText.replace(
+              bracketMatch[0],
+              ""
+            );
+
+        }
+
+      }
+
+
+      // 2022 - B1362NIC
+      if (!plate) {
+
+        const dashPattern =
+          /\\b20\\d{2}\\s*[-–—]\\s*([A-Z]{1,2})\\s*(\\d{1,4})\\s*([A-Z]{1,3})\\b/i;
+
+        const dashMatch =
+          cleanedText.match(
+            dashPattern
+          );
+
+        if (dashMatch) {
+
+          plate =
+            normalizePlateNumber(
+              `${dashMatch[1]}${dashMatch[2]}${dashMatch[3]}`
+            );
+
+          cleanedText =
+            cleanedText.replace(
+              dashMatch[0],
+              ""
+            );
+
+        }
+
+      }
+
+
+      // B 2846 PZB / B2846PZB
+      if (!plate) {
+
+        const directPattern =
+          /\\b([A-Z]{1,2})\\s*(\\d{1,4})\\s*([A-Z]{1,3})\\b/i;
+
+        const matches =
+          [...cleanedText.matchAll(
+            directPattern
+          )];
+
+        for (const match of matches) {
+
+          const numberPart =
+            match[2];
+
+          // Jangan membaca tahun sebagai plat
+          if (
+            numberPart.length === 4 &&
+            Number(numberPart) >= 1900 &&
+            Number(numberPart) <= 2099
+          ) {
+            continue;
+          }
+
+          plate =
+            normalizePlateNumber(
+              `${match[1]}${match[2]}${match[3]}`
+            );
+
+          cleanedText =
+            cleanedText.replace(
+              match[0],
+              ""
+            );
+
+          break;
+
+        }
+
+      }
+
+
+      cleanedText =
+        cleanedText
+          .replace(/\\(\\s*\\)/g, "")
+          .replace(/\\s{2,}/g, " ")
+          .replace(/[ \\t]+\\n/g, "\\n")
+          .replace(/\\n{3,}/g, "\\n\\n")
+          .trim();
+
+
+      return {
+        plate,
+        cleanedText,
+      };
+
+    }
+
+
     function parseMoney(
       raw,
       unit = ""
@@ -1267,6 +1436,9 @@ if (Astro.request.method === "POST") {
 
       }
 
+      const plateResult =
+        extractPlateNumber(raw);
+
       const credit =
         findCreditPrice(
           raw
@@ -1291,7 +1463,7 @@ if (Astro.request.method === "POST") {
 
       const cleanedDescription =
         cleanTelegramDescription(
-          raw
+          plateResult.cleanedText
         );
 
 
@@ -1331,6 +1503,23 @@ if (Astro.request.method === "POST") {
           );
 
       }
+
+
+      const plateInput =
+        document.querySelector(
+          'input[name="plate_number"]'
+        );
+
+      if (
+        plateResult.plate &&
+        plateInput
+      ) {
+
+        plateInput.value =
+          plateResult.plate;
+
+      }
+
 
       descriptionInput.value =
         cleanedDescription;
