@@ -1,709 +1,1416 @@
 ---
+
 import MainLayout from "../../../layouts/MainLayout.astro";
+
 import { env } from "cloudflare:workers";
+
 import { createClient } from "@supabase/supabase-js";
 
+
+
 const key = Astro.url.searchParams.get("key");
+
 const ADMIN_KEY = "garage88";
 
+
+
 if (key !== ADMIN_KEY) {
+
   return Astro.redirect("/");
+
 }
+
+
 
 let message = "";
 
+
+
 if (Astro.request.method === "POST") {
+
   const formData = await Astro.request.formData();
 
+
+
   const brand =
+
     formData.get("brand")?.toString().trim() || "";
 
+
+
   const model =
+
     formData.get("model")?.toString().trim() || "";
 
+
+
   const variant =
+
     formData.get("variant")?.toString().trim() || null;
 
+
+
   const year =
+
     Number(formData.get("year")) || null;
 
+
+
   // =========================================================
+
   // PLAT NOMOR
+
   // =========================================================
+
+
 
   const plateNumber =
+
     formData.get("plate_number")?.toString().trim() || "";
 
+
+
   // =========================================================
+
   // SLUG
+
   //
+
   // Jika ada plat:
+
   // toyota-alphard-g-2022-b-1234-abc
+
   //
+
   // Jika tidak ada plat:
+
   // toyota-alphard-g-2022
+
   //
+
   // TIDAK ADA AUTO -2 / -3
+
   // =========================================================
+
+
 
   const slugSource =
+
     `${brand}-${model}-${variant || ""}-${year}` +
+
     `${plateNumber ? `-${plateNumber}` : ""}`;
 
+
+
   const slug = slugSource
+
     .toLowerCase()
+
     .replace(/[^a-z0-9]+/g, "-")
+
     .replace(/^-|-$/g, "");
 
+
+
   const car = {
+
     slug,
+
+
 
     brand,
 
+
+
     model,
+
+
 
     variant,
 
+
+
     year,
 
+
+
     branch:
+
       formData.get("branch")?.toString().trim() || null,
 
+
+
     color:
+
       formData.get("color")?.toString() || null,
 
+
+
     fuel:
+
       formData.get("fuel")?.toString() || null,
 
+
+
     transmission:
+
       formData.get("transmission")?.toString() || null,
 
+
+
     odometer:
+
       Number(formData.get("odometer")) || 0,
 
+
+
     credit_price:
+
       Number(formData.get("credit_price")) || null,
 
+
+
     cash_price:
+
       Number(formData.get("cash_price")) || null,
 
+
+
     dp:
+
       Number(formData.get("dp")) || null,
 
+
+
     cash_only:
+
       formData.get("cash_only") === "on",
 
+
+
     plate_number:
+
       plateNumber || null,
 
+
+
     tax_valid_until:
+
       null,
 
+
+
     description:
+
       formData.get("description")?.toString() || null,
 
+
+
     status:
+
       "READY",
 
+
+
     featured:
+
       formData.get("featured") === "on",
+
   };
 
+
+
   const runtimeEnv = env as unknown as Record<string, unknown>;
+
   const supabaseUrl = runtimeEnv.SUPABASE_URL;
+
   const serviceKey = runtimeEnv.SUPABASE_SERVICE_KEY;
 
+
+
   if (
+
     typeof supabaseUrl !== "string" ||
+
     !supabaseUrl.trim() ||
+
     typeof serviceKey !== "string" ||
+
     !serviceKey.trim()
+
   ) {
+
     message = "Konfigurasi Supabase server belum lengkap.";
+
   } else {
+
     const adminSupabase = createClient(supabaseUrl, serviceKey, {
+
       auth: {
+
         persistSession: false,
+
         autoRefreshToken: false,
+
       },
+
     });
 
+
+
     const { data, error } = await adminSupabase
+
       .from("cars")
+
       .insert(car)
+
       .select()
+
       .single();
 
+
+
     if (error) {
+
       console.error(
+
         "Tambah mobil gagal:",
+
         error.code,
+
         error.message
+
       );
+
       message = error.message;
+
     } else {
+
       return Astro.redirect(
+
         `/admin/cars/upload?id=${data.id}&key=${ADMIN_KEY}`
+
       );
+
     }
+
   }
+
 }
+
 ---
+
+
 
 <MainLayout title="Tambah Mobil | Garage88 Admin">
 
+
+
   <section class="min-h-screen bg-slate-100 py-12">
+
+
 
     <div class="mx-auto max-w-5xl px-6">
 
+
+
       <h1 class="text-3xl font-bold">
+
         Tambah Mobil
+
       </h1>
 
+
+
       {
+
         message && (
+
           <div class="mt-5 rounded-xl bg-red-100 p-4 text-red-700">
+
             {message}
+
           </div>
+
         )
+
       }
+
+
 
       <div class="mt-8 rounded-2xl bg-white p-6 shadow">
 
+
+
         <h2 class="text-xl font-bold">
+
           📋 Paste Deskripsi Telegram
+
         </h2>
 
+
+
         <textarea
+
           id="telegramInput"
+
           rows="10"
+
           placeholder="Paste deskripsi mobil dari Telegram..."
+
           class="mt-4 w-full rounded-xl border p-4"
+
         ></textarea>
 
+
+
         <button
+
           type="button"
+
           onclick="parseTelegram()"
+
           class="mt-4 rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white"
+
         >
+
           🚀 Convert Data
+
         </button>
+
+
 
       </div>
 
+
+
       <form
+
         method="POST"
+
         class="mt-8 grid gap-6 rounded-2xl bg-white p-8 shadow"
+
       >
+
+
 
         <div class="grid gap-5 md:grid-cols-2">
 
+
+
           <input
+
             id="brand"
+
             name="brand"
+
             placeholder="Brand"
+
             required
+
             class="rounded-xl border p-4"
+
           />
 
+
+
           <input
+
             id="model"
+
             name="model"
+
             placeholder="Model"
+
             required
+
             class="rounded-xl border p-4"
+
           />
 
+
+
           <input
+
             id="variant"
+
             name="variant"
+
             placeholder="Variant"
+
             class="rounded-xl border p-4"
+
           />
 
+
+
           <input
+
             id="year"
+
             name="year"
+
             type="number"
+
             placeholder="Tahun"
+
             class="rounded-xl border p-4"
+
           />
 
+
+
           <input
+
             id="color"
+
             name="color"
+
             placeholder="Warna"
+
             class="rounded-xl border p-4"
+
           />
+
+
 
           <select
+
             id="branch"
+
             name="branch"
+
             class="rounded-xl border p-4"
+
           >
+
             <option value="">
+
               Cabang
+
             </option>
+
+
 
             <option value="AHA Gallery">
+
               AHA Gallery
+
             </option>
+
+
 
             <option value="AHA Nusantara">
+
               AHA Nusantara
+
             </option>
+
+
 
             <option value="AHA Gajah Mada Cipondoh">
+
               AHA Gajah Mada Cipondoh
+
             </option>
+
+
 
             <option value="AHA Gajah Mada Cipete">
+
               AHA Gajah Mada Cipete
+
             </option>
+
+
 
             <option value="AHA Royal">
+
               AHA Royal
+
             </option>
+
+
 
             <option value="Garage88 Kebayoran">
+
               Garage88 Kebayoran
+
             </option>
+
+
 
             <option value="Garage88 Basura">
+
               Garage88 Basura
+
             </option>
+
+
 
             <option value="Garage88 Joglo">
+
               Garage88 Joglo
+
             </option>
+
+
 
             <option value="Garage88 Ciater">
+
               Garage88 Ciater
+
             </option>
+
+
 
             <option value="AHA ADEX">
+
               AHA ADEX
+
             </option>
+
           </select>
 
+
+
           <select
+
             id="fuel"
+
             name="fuel"
+
             class="rounded-xl border p-4"
+
           >
+
             <option value="">
+
               Fuel
+
             </option>
+
+
 
             <option value="Bensin">
+
               Bensin
+
             </option>
+
+
 
             <option value="Diesel">
+
               Diesel
+
             </option>
+
+
 
             <option value="Hybrid">
+
               Hybrid
+
             </option>
+
+
 
             <option value="Electric Vehicle">
+
               Electric Vehicle
+
             </option>
+
           </select>
+
+
 
           <select
+
             id="transmission"
+
             name="transmission"
+
             class="rounded-xl border p-4"
+
           >
+
             <option value="">
+
               Transmisi
+
             </option>
+
+
 
             <option value="AT">
+
               AT
+
             </option>
+
+
 
             <option value="MT">
+
               MT
+
             </option>
+
           </select>
 
+
+
           <input
+
             id="odometer"
+
             name="odometer"
+
             type="number"
+
             placeholder="KM"
+
             class="rounded-xl border p-4"
+
           />
 
+
+
           <input
+
             id="credit_price"
+
             name="credit_price"
+
             type="number"
+
             placeholder="Harga Kredit"
+
             class="rounded-xl border p-4"
+
           />
 
+
+
           <input
+
             id="cash_price"
+
             name="cash_price"
+
             type="number"
+
             placeholder="Harga Cash"
+
             class="rounded-xl border p-4"
+
           />
 
+
+
           <input
+
             id="dp"
+
             name="dp"
+
             type="number"
+
             placeholder="DP"
+
             class="rounded-xl border p-4"
+
           />
 
+
+
           <input
+
             id="plate_number"
+
             name="plate_number"
+
             placeholder="Plat Nomor"
+
             class="rounded-xl border p-4"
+
           />
+
+
 
         </div>
+
+
 
         <!-- CASH ONLY -->
 
+
+
         <div
+
           class="
+
             rounded-xl
+
             border
+
             border-amber-200
+
             bg-amber-50
+
             p-4
+
           "
+
         >
+
+
 
           <label class="flex cursor-pointer items-center gap-3">
 
+
+
             <input
+
               type="checkbox"
+
               name="cash_only"
+
               class="
+
                 h-5
+
                 w-5
+
                 rounded
+
                 border-slate-300
+
               "
+
             />
+
+
 
             <div>
 
+
+
               <p class="font-bold text-slate-900">
+
                 Cash Only
+
               </p>
 
+
+
               <p class="text-sm text-slate-500">
+
                 Centang jika unit hanya dijual cash
+
               </p>
+
+
 
             </div>
 
+
+
           </label>
+
+
 
         </div>
 
+
+
         <textarea
+
           id="description"
+
           name="description"
+
           placeholder="Deskripsi mobil"
+
           rows="10"
+
           class="rounded-xl border p-4"
+
         ></textarea>
+
+
 
         <label class="flex items-center gap-3">
 
+
+
           <input
+
             type="checkbox"
+
             name="featured"
+
           />
 
+
+
           <span>
+
             Featured
+
           </span>
+
+
 
         </label>
 
+
+
         <button
+
           class="rounded-xl bg-red-600 px-8 py-4 font-semibold text-white hover:bg-red-700"
+
         >
+
           Simpan Mobil
+
         </button>
+
+
 
       </form>
 
+
+
     </div>
+
+
 
   </section>
 
+
+
   <script is:inline>
 
+
+
     function jtToNumber(value) {
+
       return Number(value) * 1000000;
+
     }
 
 
+
+
+
     /* =========================================================
+
        CABANG
+
        ========================================================= */
+
+
 
     const BRANCH_ALIASES = [
 
+
+
       {
+
         name: "AHA Gajah Mada Cipondoh",
 
+
+
         aliases: [
+
           "aha gajah mada cipondoh",
+
           "gajah mada cipondoh",
+
           "aha gm cipondoh",
+
           "gm cipondoh"
+
         ]
+
       },
 
+
+
       {
+
         name: "AHA Gajah Mada Cipete",
 
+
+
         aliases: [
+
           "aha gajah mada cipete",
+
           "gajah mada cipete",
+
           "aha gm cipete",
+
           "gm cipete"
+
         ]
+
       },
 
+
+
       {
+
         name: "AHA Royal",
 
+
+
         aliases: [
+
           "aha royal",
+
           "royal"
+
         ]
+
       },
 
+
+
       {
+
         name: "Garage88 Kebayoran",
 
+
+
         aliases: [
+
           "garage88 kebayoran",
+
           "garage 88 kebayoran",
+
           "g88 kebayoran",
+
           "kebayoran"
+
         ]
+
       },
 
+
+
       {
+
         name: "Garage88 Basura",
 
+
+
         aliases: [
+
           "garage88 basura",
+
           "garage 88 basura",
+
           "g88 basura",
+
           "basura"
+
         ]
+
       },
 
+
+
       {
+
         name: "Garage88 Joglo",
 
+
+
         aliases: [
+
           "garage88 joglo",
+
           "garage 88 joglo",
+
           "g88 joglo",
+
           "joglo"
+
         ]
+
       },
 
+
+
       {
+
         name: "Garage88 Ciater",
 
+
+
         aliases: [
+
           "garage88 ciater",
+
           "garage 88 ciater",
+
           "g88 ciater",
+
           "ciater"
+
         ]
+
       },
 
+
+
       {
+
         name: "AHA Nusantara",
 
+
+
         aliases: [
+
           "aha nusantara",
+
           "nusantara"
+
         ]
+
       },
 
+
+
       {
+
         name: "AHA Gallery",
 
+
+
         aliases: [
+
           "aha gallery",
+
           "gallery"
+
         ]
+
       },
 
+
+
       {
+
         name: "AHA ADEX",
 
+
+
         aliases: [
+
           "aha adex",
+
           "adex"
+
         ]
+
       }
+
+
 
     ];
 
 
+
+
+
     function normalizeBranchText(value) {
 
+
+
       return String(value || "")
+
         .toLowerCase()
-        .replace(/[._\\-–—]+/g, " ")
+
+        .replace(/[._-–—]+/g, " ")
+
         .replace(/\s+/g, " ")
+
         .trim();
 
+
+
     }
+
+
+
 
 
     function findCanonicalBranch(value) {
 
+
+
       const normalized =
+
         normalizeBranchText(value);
 
+
+
       if (!normalized) {
+
         return "";
+
       }
+
+
 
       for (const branch of BRANCH_ALIASES) {
 
+
+
         for (const alias of branch.aliases) {
 
+
+
           const normalizedAlias =
+
             normalizeBranchText(alias);
 
+
+
           if (
+
             normalized === normalizedAlias ||
+
             normalized.includes(normalizedAlias)
+
           ) {
+
             return branch.name;
+
           }
+
+
 
         }
 
+
+
       }
+
+
 
       return "";
 
+
+
     }
+
+
+
 
 
     function extractBranchFromTitle(title) {
 
+
+
       const matches = [
+
         ...title.matchAll(/\(([^)]+?)\)/g)
+
       ];
+
+
 
       for (const match of matches) {
 
+
+
         const branch =
+
           findCanonicalBranch(
+
             match[1]
+
           );
+
+
 
         if (branch) {
 
+
+
           return {
+
             branch,
+
             matchedText: match[0]
+
           };
+
+
 
         }
 
+
+
       }
 
+
+
       return {
+
         branch: "",
+
         matchedText: ""
+
       };
 
+
+
     }
+
+
+
 
 
     function removeGroupInfo(value) {
 
+
+
       return String(value || "")
+
         .replace(
+
           /\s*[-–—]?\s*(?:group|grup|grub)\s+[a-z0-9]+\b/gi,
+
           ""
+
         );
 
+
+
     }
+
+
+
 
 
     function removeBranchParentheses(value) {
 
+
+
       return String(value || "")
+
         .replace(
-          /\(([^)]+?)\)/g,
+
+        /\(([^)]+?)\)/g,
+
           function(fullMatch, inside) {
 
+
+
             const branch =
+
               findCanonicalBranch(
+
                 inside
+
               );
 
+
+
             if (branch) {
+
               return "";
+
             }
+
+
 
             return fullMatch;
 
+
+
           }
+
         );
 
+
+
     }
+
+
+
 
 
     function cleanDescription(value) {
 
+
+
       let result =
+
         removeBranchParentheses(value);
 
+
+
       result =
+
         removeGroupInfo(result);
 
+
+
       result =
+
         result
+
           .split("\n")
+
           .map(function(line) {
 
+
+
             return line
+
               .replace(/\s+$/g, "")
+
               .trimEnd();
 
+
+
           })
+
           .join("\n")
+
           .replace(/[ \t]+\n/g, "\n")
+
           .replace(/\n{3,}/g, "\n\n")
+
           .trim();
 
+
+
       return result;
+
+
 
     }
 
 
+
+
+
     // =========================================================
+
     // PLAT NOMOR
+
     // =========================================================
+
+
 
     function normalizePlateNumber(value) {
 
@@ -722,89 +1429,75 @@ if (Astro.request.method === "POST") {
     function extractPlateNumber(text) {
 
       if (!text) {
-
         return {
           plate: "",
-          cleanedText: text || ""
+          cleanedText: text || "",
         };
-
       }
 
       let plate = "";
       let cleanedText = String(text);
 
 
-      /*
-       * PRIORITAS 1
-       *
-       * PLAT B 2881 FLO
-       * PLATE B 2881 FLO
-       * NOPOL B 2881 FLO
-       * NO POL B 2881 FLO
-       * NOMOR POLISI B 2881 FLO
-       */
+      // =========================================================
+      // PRIORITAS 1
+      // PLAT B 2881 FLO
+      // PLATE B 2881 FLO
+      // NOPOL B 2881 FLO
+      // NO POL B 2881 FLO
+      // NOMOR POLISI B 2881 FLO
+      // =========================================================
 
-      const keywordPatterns = [
+      const keywordPattern =
+        /\b(?:plat|plate|nopol|no[\s.-]*pol|nomor[\s.-]*polisi)\s*[:.-]?\s*([A-Z]{1,2})\s*(\d{1,4})\s*([A-Z]{1,3})\b/i;
 
-        /\b(?:plat|plate|nopol|no[\s.-]*pol|nomor[\s.-]*polisi)\s*[:.-]?\s*([A-Z]{1,2})\s*[- ]?\s*(\d{1,4})\s*[- ]?\s*([A-Z]{1,3})\b/i,
+      const keywordMatch =
+        cleanedText.match(
+          keywordPattern
+        );
 
-        /\b(?:plat|plate|nopol|no[\s.-]*pol|nomor[\s.-]*polisi)\s*[:.-]?\s*([A-Z]{1,2})\s*(\d{1,4})\s*([A-Z]{1,3})\b/i
+      if (keywordMatch) {
 
-      ];
+        plate =
+          normalizePlateNumber(
+            `${keywordMatch[1]}${keywordMatch[2]}${keywordMatch[3]}`
+          );
 
+        if (plate) {
 
-      for (const pattern of keywordPatterns) {
-
-        const match =
-          cleanedText.match(pattern);
-
-        if (match) {
-
-          plate =
-            normalizePlateNumber(
-              `${match[1]}${match[2]}${match[3]}`
+          cleanedText =
+            cleanedText.replace(
+              keywordMatch[0],
+              ""
             );
-
-          if (plate) {
-
-            cleanedText =
-              cleanedText.replace(
-                match[0],
-                ""
-              );
-
-            break;
-
-          }
 
         }
 
       }
 
 
-      /*
-       * PRIORITAS 2
-       *
-       * (B 2846 PZB)
-       * (B2846PZB)
-       * [B 2846 PZB]
-       */
+      // =========================================================
+      // PRIORITAS 2
+      // (B 2846 PZB)
+      // (B2846PZB)
+      // [B 2846 PZB]
+      // =========================================================
 
       if (!plate) {
 
         const parenthesisPatterns = [
-
           /\(\s*([A-Z]{1,2})\s*(\d{1,4})\s*([A-Z]{1,3})\s*\)/i,
-
-          /\[\s*([A-Z]{1,2})\s*(\d{1,4})\s*([A-Z]{1,3})\s*\]/i
-
+          /\[\s*([A-Z]{1,2})\s*(\d{1,4})\s*([A-Z]{1,3})\s*\]/i,
         ];
 
-
-        for (const pattern of parenthesisPatterns) {
+        for (
+          const pattern of parenthesisPatterns
+        ) {
 
           const match =
-            cleanedText.match(pattern);
+            cleanedText.match(
+              pattern
+            );
 
           if (match) {
 
@@ -832,12 +1525,11 @@ if (Astro.request.method === "POST") {
       }
 
 
-      /*
-       * PRIORITAS 3
-       *
-       * 2016 - B1362NIC
-       * 2016 - B 1362 NIC
-       */
+      // =========================================================
+      // PRIORITAS 3
+      // 2016 - B1362NIC
+      // 2016 - B 1362 NIC
+      // =========================================================
 
       if (!plate) {
 
@@ -871,90 +1563,40 @@ if (Astro.request.method === "POST") {
       }
 
 
-      /*
-       * PRIORITAS COMPACT
-       *
-       * Format plat tanpa spasi:
-       *
-       * B2225SGW
-       * B1362NIC
-       * F1467FAX
-       */
+      // =========================================================
+      // PRIORITAS 4
+      // PLAT COMPACT TANPA SPASI
+      //
+      // B2225SGW
+      // B1362NIC
+      // F1467FAX
+      // =========================================================
 
       if (!plate) {
 
         const compactPattern =
-          /\\b([A-Z]{1,2})(\\d{1,4})([A-Z]{1,3})\\b/i;
-
-        const compactMatch =
-          cleanedText.match(
-            compactPattern
-          );
-
-        if (compactMatch) {
-
-          const numberPart =
-            compactMatch[2];
-
-          /*
-           * Jangan mengambil tahun seperti:
-           * 2020
-           * 2021
-           * 2022
-           */
-
-          if (
-            !(
-              numberPart.length === 4 &&
-              Number(numberPart) >= 1900 &&
-              Number(numberPart) <= 2099
-            )
-          ) {
-
-            plate =
-              normalizePlateNumber(
-                `${compactMatch[1]}${compactMatch[2]}${compactMatch[3]}`
-              );
-
-            if (plate) {
-
-              cleanedText =
-                cleanedText.replace(
-                  compactMatch[0],
-                  ""
-                );
-
-            }
-
-          }
-
-        }
-
-      }
-
-
-      /*
-       * PRIORITAS 4
-       *
-       * Plat langsung di title:
-       *
-       * CAMRY ... B 1368 UAI
-       * ERTIGA ... B 2347 PZM
-       *
-       * Kita batasi agar tidak mengambil
-       * tahun / angka KM / harga.
-       */
-
-      if (!plate) {
-
-        const directPattern =
-          /\b([A-Z]{1,2})\s*(\d{1,4})\s*([A-Z]{1,3})\b/i;
+          /\b([A-Z]{1,2})(\d{1,4})([A-Z]{1,3})\b/i;
 
         const matches =
-          [...cleanedText.matchAll(directPattern)];
+          [...cleanedText.matchAll(
+            compactPattern
+          )];
 
+        for (
+          const match of matches
+        ) {
 
-        for (const match of matches) {
+          const numberPart =
+            match[2];
+
+          // Jangan membaca tahun seperti 2020 / 2021 / 2022.
+          if (
+            numberPart.length === 4 &&
+            Number(numberPart) >= 1900 &&
+            Number(numberPart) <= 2099
+          ) {
+            continue;
+          }
 
           const candidate =
             normalizePlateNumber(
@@ -964,24 +1606,6 @@ if (Astro.request.method === "POST") {
           if (!candidate) {
             continue;
           }
-
-
-          const numberPart =
-            match[2];
-
-
-          /*
-           * Hindari angka tahun.
-           */
-
-          if (
-            numberPart.length === 4 &&
-            Number(numberPart) >= 1900 &&
-            Number(numberPart) <= 2099
-          ) {
-            continue;
-          }
-
 
           plate = candidate;
 
@@ -998,10 +1622,67 @@ if (Astro.request.method === "POST") {
       }
 
 
-      /*
-       * Bersihkan sisa tanda baca /
-       * spasi akibat plat dihapus.
-       */
+      // =========================================================
+      // PRIORITAS 5
+      // PLAT DENGAN SPASI
+      //
+      // B 1368 UAI
+      // B 2347 PZM
+      // =========================================================
+
+      if (!plate) {
+
+        const directPattern =
+          /\b([A-Z]{1,2})\s+(\d{1,4})\s+([A-Z]{1,3})\b/i;
+
+        const matches =
+          [...cleanedText.matchAll(
+            directPattern
+          )];
+
+        for (
+          const match of matches
+        ) {
+
+          const numberPart =
+            match[2];
+
+          // Jangan membaca tahun seperti 2020 / 2021 / 2022.
+          if (
+            numberPart.length === 4 &&
+            Number(numberPart) >= 1900 &&
+            Number(numberPart) <= 2099
+          ) {
+            continue;
+          }
+
+          const candidate =
+            normalizePlateNumber(
+              `${match[1]}${match[2]}${match[3]}`
+            );
+
+          if (!candidate) {
+            continue;
+          }
+
+          plate = candidate;
+
+          cleanedText =
+            cleanedText.replace(
+              match[0],
+              ""
+            );
+
+          break;
+
+        }
+
+      }
+
+
+      // =========================================================
+      // CLEAN SISA
+      // =========================================================
 
       cleanedText =
         cleanedText
@@ -1021,475 +1702,934 @@ if (Astro.request.method === "POST") {
     }
 
 
-    /*
-     * =========================================================
-     * TELEGRAM PARSER
-     * =========================================================
-     */
-
     function parseTelegram() {
 
+
+
       const text =
+
         document
+
           .getElementById("telegramInput")
+
           .value
+
           .trim();
+
+
+
 
 
       if (!text) {
 
+
+
         alert("Paste Telegram dulu");
 
+
+
         return;
+
+
 
       }
 
 
+
+
+
       const firstLine =
+
         text
+
           .split("\n")[0]
+
           .trim();
 
 
-      // =========================================================
-      // CABANG
+
+
+
       // =========================================================
 
+      // CABANG
+
+      // =========================================================
+
+
+
       const branchResult =
+
         extractBranchFromTitle(
+
           firstLine
+
         );
 
 
+
+
+
       document
+
         .getElementById("branch")
+
         .value =
+
           branchResult.branch || "";
 
 
-      // =========================================================
-      // PLAT NOMOR
+
+
+
       // =========================================================
 
+      // PLAT NOMOR
+
+      // =========================================================
+
+
+
       const plateResult =
+
         extractPlateNumber(text);
 
 
+
+
+
       document
+
         .getElementById("plate_number")
+
         .value =
+
           plateResult.plate || "";
 
 
-      // =========================================================
-      // CLEAN FIRST LINE
+
+
+
       // =========================================================
 
+      // CLEAN FIRST LINE
+
+      // =========================================================
+
+
+
       let cleanFirstLine =
+
         firstLine;
+
+
+
 
 
       if (branchResult.matchedText) {
 
+
+
         cleanFirstLine =
+
           cleanFirstLine.replace(
+
             branchResult.matchedText,
+
             ""
+
           );
+
+
 
       }
 
 
+
+
+
       cleanFirstLine =
+
         removeGroupInfo(
+
           cleanFirstLine
+
         )
+
           .replace(/\s+/g, " ")
+
           .trim();
 
 
-      // =========================================================
-      // YEAR
+
+
+
       // =========================================================
 
+      // YEAR
+
+      // =========================================================
+
+
+
       const year =
+
         cleanFirstLine.match(
+
           /\b20\d{2}\b/
+
         );
+
+
+
 
 
       if (year) {
 
+
+
         document
+
           .getElementById("year")
+
           .value =
+
             year[0];
+
+
 
       }
 
 
+
+
+
       // =========================================================
+
       // BRAND
+
       // =========================================================
+
+
 
       const brands = [
 
+
+
         "Toyota",
+
         "Honda",
+
         "Hyundai",
+
         "Mazda",
+
         "BMW",
+
         "Mercedes",
+
         "Audi",
+
         "Wuling",
+
         "Mitsubishi",
+
         "Nissan",
+
         "BYD"
 
+
+
       ];
+
+
+
 
 
       let brand = "";
 
 
+
+
+
       for (const b of brands) {
 
+
+
         if (
+
           cleanFirstLine
+
             .toLowerCase()
+
             .includes(
+
               b.toLowerCase()
+
             )
+
         ) {
+
+
 
           brand = b;
 
+
+
           break;
 
+
+
         }
+
+
 
       }
 
 
+
+
+
       document
+
         .getElementById("brand")
+
         .value =
+
           brand;
 
 
+
+
+
       // =========================================================
+
       // COLOR
+
       // =========================================================
+
+
 
       const colors = [
 
+
+
         "Putih",
+
         "Hitam",
+
         "Silver",
+
         "Grey",
+
         "Abu",
+
         "Merah",
+
         "Biru",
+
         "Hijau",
+
         "Coklat",
+
         "Metallic"
 
+
+
       ];
+
+
+
 
 
       for (const c of colors) {
 
+
+
         if (
+
           cleanFirstLine
+
             .toLowerCase()
+
             .includes(
+
               c.toLowerCase()
+
             )
+
         ) {
 
+
+
           document
+
             .getElementById("color")
+
             .value =
+
               c;
+
+
 
           break;
 
+
+
         }
 
+
+
       }
 
 
+
+
+
       // =========================================================
+
       // FUEL
+
       // =========================================================
+
+
 
       if (
+
         text
+
           .toLowerCase()
+
           .includes("hybrid")
+
       ) {
 
+
+
         document
+
           .getElementById("fuel")
+
           .value =
+
             "Hybrid";
 
+
+
       }
+
+
 
       else if (
+
         text
+
           .toLowerCase()
+
           .includes("diesel")
+
       ) {
 
+
+
         document
+
           .getElementById("fuel")
+
           .value =
+
             "Diesel";
 
+
+
       }
+
+
 
       else {
 
+
+
         document
+
           .getElementById("fuel")
+
           .value =
+
             "Bensin";
 
+
+
       }
 
 
+
+
+
       // =========================================================
+
       // TRANSMISSION
+
       // =========================================================
+
+
 
       if (
+
         cleanFirstLine.match(
+
           /\bAT\b/i
+
         )
+
       ) {
 
+
+
         document
+
           .getElementById("transmission")
+
           .value =
+
             "AT";
 
+
+
       }
+
+
 
       else if (
+
         cleanFirstLine.match(
+
           /\bMT\b/i
+
         )
+
       ) {
 
+
+
         document
+
           .getElementById("transmission")
+
           .value =
+
             "MT";
+
+
 
       }
 
 
-      // =========================================================
-      // MODEL + VARIANT
+
+
+
       // =========================================================
 
+      // MODEL + VARIANT
+
+      // =========================================================
+
+
+
       let cleanTitle =
+
         cleanFirstLine
+
           .replace(
-            /\([^)]*?\)/g,
+
+          /\([^)]*?\)/g,
+
             ""
+
           )
+
           .replace(
+
             year?.[0] || "",
+
             ""
+
           )
+
           .trim();
+
+
+
 
 
       if (brand) {
 
+
+
         cleanTitle =
+
           cleanTitle
+
             .replace(
+
               new RegExp(
+
                 brand,
+
                 "i"
+
               ),
+
               ""
+
             )
+
             .trim();
+
+
 
       }
 
 
+
+
+
       const words =
+
         cleanTitle
+
           .split(/\s+/)
+
           .filter(Boolean);
+
+
+
 
 
       if (words.length) {
 
+
+
         document
+
           .getElementById("model")
+
           .value =
+
             words[0];
 
+
+
       }
+
+
+
 
 
       if (words.length > 1) {
 
+
+
         document
+
           .getElementById("variant")
+
           .value =
+
             words
+
               .slice(1)
+
               .join(" ");
+
+
 
       }
 
 
-      // =========================================================
-      // KM
+
+
+
       // =========================================================
 
+      // KM
+
+      // =========================================================
+
+
+
       let km =
+
         text.match(
-          /(?:odometer|km)\s*[:\-]?\s*(\d+)\s*rb/i
+
+          /(?:odometer|km)\s*[:\-]?(\d+)\s*rb/i
+
         );
+
+
+
 
 
       if (!km) {
 
+
+
         km =
+
           text.match(
+
             /low km\s*(\d+)\s*rb/i
+
           );
 
+
+
       }
+
+
+
 
 
       if (km) {
 
+
+
         document
+
           .getElementById("odometer")
+
           .value =
+
             Number(km[1]) * 1000;
+
+
 
       }
 
 
-      // =========================================================
-      // CASH
+
+
+
       // =========================================================
 
+      // CASH
+
+      // =========================================================
+
+
+
       const cash =
+
         text.match(
+
           /cash\s+(\d+)\s*(jt|juta)/i
+
         );
+
+
+
 
 
       if (cash) {
 
+
+
         document
+
           .getElementById("cash_price")
+
           .value =
+
             jtToNumber(
+
               cash[1]
+
             );
+
+
 
       }
 
 
-      // =========================================================
-      // OTR CREDIT
+
+
+
       // =========================================================
 
+      // OTR CREDIT
+
+      // =========================================================
+
+
+
       const otr =
+
         text.match(
+
           /(?:otr|harga kredit)\s+(\d+)\s*(jt|juta)/i
+
         );
+
+
+
 
 
       if (otr) {
 
+
+
         document
+
           .getElementById("credit_price")
+
           .value =
+
             jtToNumber(
+
               otr[1]
+
             );
+
+
 
       }
 
 
-      // =========================================================
-      // DP TERKECIL
+
+
+
       // =========================================================
 
+      // DP TERKECIL
+
+      // =========================================================
+
+
+
       const dpMatches = [
+
         ...text.matchAll(
+
           /(?:tdp|dp)\s*(\d+)\s*(jt|juta)/gi
+
         )
+
       ];
+
+
+
 
 
       const dpValues = [];
 
 
+
+
+
       dpMatches.forEach(
+
         item => {
 
+
+
           dpValues.push(
+
             jtToNumber(
+
               item[1]
+
             )
+
           );
 
+
+
         }
+
       );
+
+
+
 
 
       if (dpValues.length) {
 
+
+
         document
+
           .getElementById("dp")
+
           .value =
+
             Math.min(
+
               ...dpValues
+
             );
+
+
 
       }
 
 
-      // =========================================================
-      // DESCRIPTION
+
+
+
       // =========================================================
 
+      // DESCRIPTION
+
+      // =========================================================
+
+
+
       document
+
         .getElementById("description")
+
         .value =
+
           cleanDescription(
+
             plateResult.cleanedText
+
           );
 
 
+
+
+
       // =========================================================
+
       // RESULT
+
       // =========================================================
+
+
 
       alert(
 
+
+
         branchResult.branch
+
           ? `Data berhasil dikonversi\nCabang: ${branchResult.branch}`
+
           : "Data berhasil dikonversi\nCabang belum dikenali, pilih manual."
+
+
 
       );
 
+
+
     }
 
+
+
   </script>
+
+
 
 </MainLayout>
