@@ -1,3 +1,4 @@
+
 import type { APIRoute } from "astro";
 import { supabase } from "../lib/supabase";
 
@@ -11,6 +12,7 @@ type Car = {
   variant: string | null;
   year: number | null;
   odometer: number | null;
+  plate_number: string | null;
   status: string | null;
   credit_price: number | null;
   created_at: string | null;
@@ -43,17 +45,11 @@ function getMileageStatus(car: Car): string {
   const age = Math.max(1, currentYear - car.year);
   const averagePerYear = car.odometer / age;
 
-  if (
-    averagePerYear < 10_000 &&
-    car.odometer < 100_000
-  ) {
+  if (averagePerYear < 10_000 && car.odometer < 100_000) {
     return "LOW KM";
   }
 
-  if (
-    averagePerYear < 10_000 &&
-    car.odometer >= 100_000
-  ) {
+  if (averagePerYear < 10_000 && car.odometer >= 100_000) {
     return "LOW USAGE KM";
   }
 
@@ -87,6 +83,7 @@ export const GET: APIRoute = async () => {
       variant,
       year,
       odometer,
+      plate_number,
       status,
       credit_price,
       created_at
@@ -107,8 +104,7 @@ export const GET: APIRoute = async () => {
       {
         status: 500,
         headers: {
-          "Content-Type":
-            "text/plain; charset=utf-8",
+          "Content-Type": "text/plain; charset=utf-8",
         },
       }
     );
@@ -127,16 +123,14 @@ export const GET: APIRoute = async () => {
     "average_km_per_year",
     "mileage_status",
     "credit_price",
+    "plate_number",
     "status",
     "created_at",
   ];
 
   const rows = cars.map((car) => {
-    const averageKmPerYear =
-      getAverageKmPerYear(car);
-
-    const mileageStatus =
-      getMileageStatus(car);
+    const averageKmPerYear = getAverageKmPerYear(car);
+    const mileageStatus = getMileageStatus(car);
 
     return [
       car.id,
@@ -149,6 +143,7 @@ export const GET: APIRoute = async () => {
       averageKmPerYear ?? "",
       mileageStatus,
       car.credit_price ?? "",
+      car.plate_number ?? "",
       car.status ?? "",
       car.created_at ?? "",
     ]
@@ -164,14 +159,9 @@ export const GET: APIRoute = async () => {
   return new Response(csv, {
     status: 200,
     headers: {
-      "Content-Type":
-        "text/csv; charset=utf-8",
-
-      "Content-Disposition":
-        'inline; filename="garage88-stock-analysis.csv"',
-
-      "Cache-Control":
-        "no-store, no-cache, must-revalidate",
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": 'inline; filename="garage88-stock-analysis.csv"',
+      "Cache-Control": "no-store, no-cache, must-revalidate",
     },
   });
 };
