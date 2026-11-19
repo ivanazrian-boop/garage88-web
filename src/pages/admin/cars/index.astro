@@ -88,8 +88,10 @@ const filteredCars =
 
     if (
       cover === "PHOTOROOM_BLANK" &&
-      car.cover_source_image_url &&
-      car.cover_source_image_url.trim() !== ""
+      (
+        (car.cover_source_image_url && car.cover_source_image_url.trim() !== "") ||
+        (car.cover_source_image_url_2 && car.cover_source_image_url_2.trim() !== "")
+      )
     ) {
       return false;
     }
@@ -585,121 +587,60 @@ const cacheVersion =
                       class="
                         mt-5
                         grid
-                        grid-cols-3
+                        grid-cols-4
                         gap-3
                       "
                     >
 
 
                       <!-- ================================== -->
-                      <!-- PHOTOROOM POLOS -->
+                      <!-- PHOTOROOM SOURCE 1 -->
                       <!-- ================================== -->
 
                       <div class="min-w-0">
 
-                        <p
-                          class="
-                            mb-2
-                            whitespace-nowrap
-                            text-[10px]
-                            font-bold
-                            text-slate-500
-                          "
-                        >
-                          PHOTOROOM POLOS
+                        <p class="mb-2 whitespace-nowrap text-[10px] font-bold text-slate-500">
+                          PHOTOROOM 1
                         </p>
 
-
-                        <label
-                          class="
-                            group
-                            relative
-                            block
-                            h-28
-                            w-20
-                            cursor-pointer
-                          "
-                        >
+                        <label class="group relative block h-28 w-20 cursor-pointer">
 
                           {
                             car.cover_source_image_url ? (
-
                               <img
                                 src={`${car.cover_source_image_url}?v=${cacheVersion}`}
-                                alt="PhotoRoom Polos"
-                                class="
-                                  h-28
-                                  w-20
-                                  rounded-lg
-                                  border
-                                  border-slate-200
-                                  object-cover
-                                  transition
-                                  group-hover:opacity-70
-                                "
+                                alt="PhotoRoom 1"
+                                class="h-28 w-20 rounded-lg border border-slate-200 object-cover transition group-hover:opacity-70"
                               />
-
                             ) : (
-
-                              <div
-                                class="
-                                  flex
-                                  h-28
-                                  w-20
-                                  items-center
-                                  justify-center
-                                  rounded-lg
-                                  border-2
-                                  border-dashed
-                                  border-slate-300
-                                  bg-slate-50
-                                  px-1
-                                  text-center
-                                  text-[9px]
-                                  font-semibold
-                                  leading-tight
-                                  text-slate-400
-                                "
-                              >
+                              <div class="flex h-28 w-20 items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 px-1 text-center text-[9px] font-semibold leading-tight text-slate-400">
                                 UPLOAD
                                 <br />
-                                PHOTOROOM
+                                PHOTOROOM 1
                               </div>
-
                             )
                           }
-
 
                           <input
                             type="file"
                             accept="image/*"
                             data-cover-source-upload={car.id}
+                            data-cover-source-slot="1"
                             class="hidden"
                           />
 
                         </label>
 
-
                         {
                           car.cover_source_image_url && (
-
                             <a
                               href={`${car.cover_source_image_url}?v=${cacheVersion}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              class="
-                                mt-1
-                                inline-block
-                                text-[10px]
-                                font-semibold
-                                text-slate-500
-                                hover:text-slate-900
-                                hover:underline
-                              "
+                              class="mt-1 inline-block text-[10px] font-semibold text-slate-500 hover:text-slate-900 hover:underline"
                             >
                               View Image
                             </a>
-
                           )
                         }
 
@@ -710,6 +651,60 @@ const cacheVersion =
                         >
                           GENERATE ADIGSI-AI
                         </button>
+
+                      </div>
+
+
+                      <!-- ================================== -->
+                      <!-- PHOTOROOM SOURCE 2 -->
+                      <!-- ================================== -->
+
+                      <div class="min-w-0">
+
+                        <p class="mb-2 whitespace-nowrap text-[10px] font-bold text-slate-500">
+                          PHOTOROOM 2
+                        </p>
+
+                        <label class="group relative block h-28 w-20 cursor-pointer">
+
+                          {
+                            car.cover_source_image_url_2 ? (
+                              <img
+                                src={`${car.cover_source_image_url_2}?v=${cacheVersion}`}
+                                alt="PhotoRoom 2"
+                                class="h-28 w-20 rounded-lg border border-slate-200 object-cover transition group-hover:opacity-70"
+                              />
+                            ) : (
+                              <div class="flex h-28 w-20 items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 px-1 text-center text-[9px] font-semibold leading-tight text-slate-400">
+                                UPLOAD
+                                <br />
+                                PHOTOROOM 2
+                              </div>
+                            )
+                          }
+
+                          <input
+                            type="file"
+                            accept="image/*"
+                            data-cover-source-upload={car.id}
+                            data-cover-source-slot="2"
+                            class="hidden"
+                          />
+
+                        </label>
+
+                        {
+                          car.cover_source_image_url_2 && (
+                            <a
+                              href={`${car.cover_source_image_url_2}?v=${cacheVersion}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              class="mt-1 inline-block text-[10px] font-semibold text-slate-500 hover:text-slate-900 hover:underline"
+                            >
+                              View Image
+                            </a>
+                          )
+                        }
 
                       </div>
 
@@ -1124,6 +1119,48 @@ const cacheVersion =
                         Kosongkan untuk kembali ke Hero otomatis.
                       </p>
 
+                      <div class="mt-4 grid grid-cols-2 gap-3">
+
+                        <label class="block min-w-0">
+                          <span class="mb-1 block text-[10px] font-bold text-slate-500">
+                            SUMBER GAMBAR
+                          </span>
+                          <select
+                            data-cover-source-choice={car.id}
+                            class="w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-semibold text-slate-700"
+                          >
+                            <option
+                              value="1"
+                              selected={Boolean(car.cover_source_image_url) || !car.cover_source_image_url_2}
+                              disabled={!car.cover_source_image_url}
+                            >
+                              PhotoRoom 1
+                            </option>
+                            <option
+                              value="2"
+                              selected={!car.cover_source_image_url && Boolean(car.cover_source_image_url_2)}
+                              disabled={!car.cover_source_image_url_2}
+                            >
+                              PhotoRoom 2
+                            </option>
+                          </select>
+                        </label>
+
+                        <label class="block min-w-0">
+                          <span class="mb-1 block text-[10px] font-bold text-slate-500">
+                            WARNA FONT
+                          </span>
+                          <select
+                            data-cover-font-choice={car.id}
+                            class="w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-semibold text-slate-700"
+                          >
+                            <option value="black" selected>Black Font</option>
+                            <option value="white">White Font</option>
+                          </select>
+                        </label>
+
+                      </div>
+
                     </div>
 
 
@@ -1327,6 +1364,11 @@ const cacheVersion =
               file
             );
 
+            const slot =
+              input.dataset.coverSourceSlot ?? "1";
+
+            formData.append("slot", slot);
+
 
             try {
 
@@ -1353,7 +1395,7 @@ const cacheVersion =
               if (response.ok) {
 
                 alert(
-                  "PhotoRoom polos berhasil diupload"
+                  `PhotoRoom ${slot} berhasil diupload`
                 );
 
 
@@ -1688,6 +1730,22 @@ const cacheVersion =
               heroInput?.value ??
               "";
 
+            const sourceChoice =
+              document.querySelector<HTMLSelectElement>(
+                `[data-cover-source-choice="${id}"]`
+              );
+
+            const fontChoice =
+              document.querySelector<HTMLSelectElement>(
+                `[data-cover-font-choice="${id}"]`
+              );
+
+            const sourceSlot =
+              sourceChoice?.value ?? "1";
+
+            const fontMode =
+              fontChoice?.value ?? "black";
+
 
             button.innerText =
               "Generating...";
@@ -1714,8 +1772,9 @@ const cacheVersion =
 
                     body:
                       JSON.stringify({
-                        hero_title:
-                          heroTitle,
+                        hero_title: heroTitle,
+                        source_slot: sourceSlot,
+                        font_mode: fontMode,
                       }),
 
                   }

@@ -1,14 +1,6 @@
-import type {
-  APIRoute,
-} from "astro";
-
-import {
-  env,
-} from "cloudflare:workers";
-
-import {
-  createClient,
-} from "@supabase/supabase-js";
+import type { APIRoute } from "astro";
+import { env } from "cloudflare:workers";
+import { createClient } from "@supabase/supabase-js";
 
 import {
   buildGarage88IgCoverHtml,
@@ -19,10 +11,7 @@ import {
   buildGarage88MetaSquareHtml,
 } from "../../../lib/metaSquareTemplate";
 
-
-export const prerender =
-  false;
-
+export const prerender = false;
 
 type BrowserBinding = {
   quickAction: (
@@ -31,46 +20,22 @@ type BrowserBinding = {
   ) => Promise<Response>;
 };
 
+type CoverSourceSlot = "1" | "2";
+type CoverFontMode = "black" | "white";
 
-function getRequiredEnv(
-  name: string
-): string {
+function getRequiredEnv(name: string): string {
+  const value = (env as Record<string, unknown>)[name];
 
-  const value =
-    (
-      env as Record<
-        string,
-        unknown
-      >
-    )[name];
-
-
-  if (
-    !value ||
-    typeof value !== "string"
-  ) {
-    throw new Error(
-      `Missing Cloudflare env: ${name}`
-    );
+  if (!value || typeof value !== "string") {
+    throw new Error(`Missing Cloudflare env: ${name}`);
   }
-
 
   return value;
 }
 
-
-function sleep(
-  ms: number
-) {
-  return new Promise(
-    (resolve) =>
-      setTimeout(
-        resolve,
-        ms
-      )
-  );
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
-
 
 async function renderJpeg(
   browser: BrowserBinding,
@@ -78,419 +43,254 @@ async function renderJpeg(
   width: number,
   height: number
 ): Promise<Uint8Array> {
-
   const maxAttempts = 3;
 
-
-  for (
-    let attempt = 1;
-    attempt <= maxAttempts;
-    attempt++
-  ) {
-
-    const response =
-      await browser.quickAction(
-        "screenshot",
-        {
-          html,
-
-          viewport: {
-            width,
-            height,
-            deviceScaleFactor: 1,
-          },
-
-          screenshotOptions: {
-            type: "jpeg",
-            quality: 92,
-            fullPage: false,
-          },
-
-          gotoOptions: {
-            waitUntil:
-              "networkidle0",
-
-            timeout:
-              30000,
-          },
-        }
-      );
-
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const response = await browser.quickAction("screenshot", {
+      html,
+      viewport: {
+        width,
+        height,
+        deviceScaleFactor: 1,
+      },
+      screenshotOptions: {
+        type: "jpeg",
+        quality: 92,
+        fullPage: false,
+      },
+      gotoOptions: {
+        waitUntil: "networkidle0",
+        timeout: 30000,
+      },
+    });
 
     if (response.ok) {
-
-      return new Uint8Array(
-        await response.arrayBuffer()
-      );
-
+      return new Uint8Array(await response.arrayBuffer());
     }
 
-
-    if (
-      response.status === 429 &&
-      attempt < maxAttempts
-    ) {
-
+    if (response.status === 429 && attempt < maxAttempts) {
       console.log(
         `Browser rate limit. Retry ${attempt}/${maxAttempts}`
       );
 
-
-      await sleep(
-        11_000
-      );
-
-
+      await sleep(11_000);
       continue;
     }
-
 
     throw new Error(
       `Browser screenshot failed (${response.status}): ${await response.text()}`
     );
   }
 
-
-  throw new Error(
-    "Browser screenshot failed after retries"
-  );
+  throw new Error("Browser screenshot failed after retries");
 }
 
-
-export const POST:
-  APIRoute =
-  async ({
-    params,
-    request,
-  }) => {
-
+export const POST: APIRoute = async ({ params, request }) => {
   try {
-
-    const id =
-      params.id;
-
+    const id = params.id;
 
     if (!id) {
-
-      return new Response(
-        "Missing car id",
-        {
-          status: 400,
-        }
-      );
-
+      return new Response("Missing car id", {
+        status: 400,
+      });
     }
-
 
     /* =================================
-       READ HERO FROM ADMIN
+       READ OPTIONS FROM ADMIN
        ================================= */
 
-    let heroFromAdmin:
-      string | null =
-      null;
+    let heroFromAdmin: string | null = null;
+    let sourceSlot: CoverSourceSlot = "1";
+    let fontMode: CoverFontMode = "black";
 
+    const contentType = request.headers.get("content-type") ?? "";
 
-    const contentType =
-      request.headers.get(
-        "content-type"
-      ) ?? "";
-
-
-    if (
-      contentType.includes(
-        "application/json"
-      )
-    ) {
-
+    if (contentType.includes("application/json")) {
       try {
-
-        const body =
-          await request.json() as {
-            hero_title?: unknown;
-          };
-
+        const body = (await request.json()) as {
+          hero_title?: unknown;
+          source_slot?: unknown;
+          font_mode?: unknown;
+        };
 
         /*
-         * null = field tidak dikirim.
-         *
-         * "" = user mengosongkan field,
-         * berarti kembali ke AUTO.
+         * null = hero_title field tidak dikirim.
+         * ""   = user mengosongkan field, kembali ke AUTO.
          */
-
         if (
-          Object.prototype.hasOwnProperty.call(
-            body,
-            "hero_title"
-          )
+          Object.prototype.hasOwnProperty.call(body, "hero_title")
         ) {
-
           heroFromAdmin =
-            typeof body.hero_title ===
-            "string"
+            typeof body.hero_title === "string"
               ? body.hero_title.trim()
               : "";
-
         }
 
+        // Backward compatible: request lama otomatis memakai PhotoRoom 1.
+        if (body.source_slot === "1" || body.source_slot === "2") {
+          sourceSlot = body.source_slot;
+        }
+
+        // Backward compatible: request lama otomatis memakai Black Font.
+        if (body.font_mode === "black" || body.font_mode === "white") {
+          fontMode = body.font_mode;
+        }
       } catch {
-
-        heroFromAdmin =
-          null;
-
+        heroFromAdmin = null;
+        sourceSlot = "1";
+        fontMode = "black";
       }
-
     }
-
 
     /* =================================
        ENV
        ================================= */
 
-    const supabaseUrl =
-      getRequiredEnv(
-        "SUPABASE_URL"
-      );
+    const supabaseUrl = getRequiredEnv("SUPABASE_URL");
+    const serviceKey = getRequiredEnv("SUPABASE_SERVICE_KEY");
 
-
-    const serviceKey =
-      getRequiredEnv(
-        "SUPABASE_SERVICE_KEY"
-      );
-
-
-    const browser =
-      (
-        env as Record<
-          string,
-          unknown
-        >
-      ).BROWSER as
-        BrowserBinding |
-        undefined;
-
+    const browser = (env as Record<string, unknown>).BROWSER as
+      | BrowserBinding
+      | undefined;
 
     if (!browser) {
-
-      throw new Error(
-        "Missing Cloudflare BROWSER binding"
-      );
-
+      throw new Error("Missing Cloudflare BROWSER binding");
     }
 
-
-    const supabase =
-      createClient(
-        supabaseUrl,
-        serviceKey,
-        {
-          auth: {
-            persistSession:
-              false,
-          },
-        }
-      );
-
+    const supabase = createClient(supabaseUrl, serviceKey, {
+      auth: {
+        persistSession: false,
+      },
+    });
 
     /* =================================
        GET CAR
        ================================= */
 
-    const {
-      data: car,
-      error: carError,
-    } =
-      await supabase
-        .from("cars")
-        .select("*")
-        .eq(
-          "id",
-          id
-        )
-        .single();
+    const { data: car, error: carError } = await supabase
+      .from("cars")
+      .select("*")
+      .eq("id", id)
+      .single();
 
-
-    if (
-      carError ||
-      !car
-    ) {
-
-      throw new Error(
-        carError?.message ||
-        "Car not found"
-      );
-
+    if (carError || !car) {
+      throw new Error(carError?.message || "Car not found");
     }
 
-
     /* =================================
-       PHOTOROOM
+       SELECT PHOTOROOM SOURCE
        ================================= */
 
-    const sourceImageUrl =
-      String(
-        car.cover_source_image_url ??
-        ""
-      ).trim();
-
+    const sourceImageUrl = String(
+      sourceSlot === "2"
+        ? car.cover_source_image_url_2 ?? ""
+        : car.cover_source_image_url ?? ""
+    ).trim();
 
     if (!sourceImageUrl) {
-
       return new Response(
-        "Upload PHOTOROOM POLOS terlebih dahulu",
+        sourceSlot === "2"
+          ? "PhotoRoom 2 belum diupload. Pilih PhotoRoom 1 atau upload PhotoRoom 2 terlebih dahulu."
+          : "PhotoRoom 1 belum diupload. Upload PHOTOROOM POLOS terlebih dahulu.",
         {
           status: 400,
         }
       );
-
     }
 
+    console.log("Cover source slot:", sourceSlot);
+    console.log("Cover font mode:", fontMode);
 
     /* =================================
        HERO
        ================================= */
 
-    const existingHero =
-      String(
-        car.cover_hero_title ??
-        ""
-      ).trim();
+    const existingHero = String(car.cover_hero_title ?? "").trim();
 
-
-    let resolvedHero =
-      "";
-
+    let resolvedHero = "";
 
     /*
      * Kalau admin mengirim field:
-     *
      * ada isi -> pakai isi admin
      * kosong   -> buat AUTO lagi
      */
-
-    if (
-      heroFromAdmin !== null
-    ) {
-
+    if (heroFromAdmin !== null) {
       resolvedHero =
-        heroFromAdmin ||
-        buildGarage88AutoHeroTitle(
-          car
-        );
-
+        heroFromAdmin || buildGarage88AutoHeroTitle(car);
     }
-
     /*
      * Kalau request lama / script lain:
-     *
      * gunakan yang sudah tersimpan.
      */
-
     else if (existingHero) {
-
-      resolvedHero =
-        existingHero;
-
+      resolvedHero = existingHero;
     }
-
     /*
      * Belum pernah punya Hero:
      * generate otomatis.
      */
-
     else {
-
-      resolvedHero =
-        buildGarage88AutoHeroTitle(
-          car
-        );
-
+      resolvedHero = buildGarage88AutoHeroTitle(car);
     }
 
+    resolvedHero = resolvedHero
+      .replace(/\s+/g, " ")
+      .trim()
+      .toUpperCase();
 
-    resolvedHero =
-      resolvedHero
-        .replace(/\s+/g, " ")
-        .trim()
-        .toUpperCase();
-
-
-    console.log(
-      "Cover Hero:",
-      resolvedHero
-    );
-
+    console.log("Cover Hero:", resolvedHero);
 
     /*
-     * Yang diberikan ke kedua template.
+     * Data yang diberikan ke kedua template.
      */
-
     const carForCover = {
       ...car,
-
-      cover_hero_title:
-        resolvedHero,
+      cover_hero_title: resolvedHero,
     };
-
 
     /* =================================
        BUILD HTML
        ================================= */
 
-    const igHtml =
-      buildGarage88IgCoverHtml(
-        carForCover,
-        sourceImageUrl
-      );
+    const igHtml = buildGarage88IgCoverHtml(
+      carForCover,
+      sourceImageUrl,
+      fontMode
+    );
 
-
-    const metaHtml =
-      buildGarage88MetaSquareHtml(
-        carForCover,
-        sourceImageUrl
-      );
-
+    const metaHtml = buildGarage88MetaSquareHtml(
+      carForCover,
+      sourceImageUrl,
+      fontMode
+    );
 
     /* =================================
        IG
        ================================= */
 
-    console.log(
-      "Render IG Cover..."
+    console.log("Render IG Cover...");
+
+    const igJpeg = await renderJpeg(
+      browser,
+      igHtml,
+      1080,
+      1350
     );
 
-
-    const igJpeg =
-      await renderJpeg(
-        browser,
-        igHtml,
-        1080,
-        1350
-      );
-
-
-    await sleep(
-      11_000
-    );
-
+    await sleep(11_000);
 
     /* =================================
        META
        ================================= */
 
-    console.log(
-      "Render Meta Cover..."
+    console.log("Render Meta Cover...");
+
+    const metaJpeg = await renderJpeg(
+      browser,
+      metaHtml,
+      1080,
+      1080
     );
-
-
-    const metaJpeg =
-      await renderJpeg(
-        browser,
-        metaHtml,
-        1080,
-        1080
-      );
-
 
     /* =================================
        CLOUDFLARE R2 STORAGE
@@ -498,25 +298,31 @@ export const POST:
 
     const bindings = env as Record<string, unknown>;
 
-    const bucket = bindings.R2_BUCKET as {
-      put: (
-        key: string,
-        value: Uint8Array,
-        options?: {
-          httpMetadata?: {
-            contentType?: string;
-            cacheControl?: string;
-          };
+    const bucket = bindings.R2_BUCKET as
+      | {
+          put: (
+            key: string,
+            value: Uint8Array,
+            options?: {
+              httpMetadata?: {
+                contentType?: string;
+                cacheControl?: string;
+              };
+            }
+          ) => Promise<unknown>;
         }
-      ) => Promise<unknown>;
-    } | undefined;
+      | undefined;
 
     if (!bucket) {
       throw new Error("R2_BUCKET binding tidak tersedia");
     }
 
-    const publicBase = getRequiredEnv("R2_PUBLIC_URL").replace(/\/+$/, "");
+    const publicBase = getRequiredEnv("R2_PUBLIC_URL").replace(
+      /\/+$/,
+      ""
+    );
 
+    // Pertahankan path R2 lama agar hasil tetap overwrite.
     const igPath = `cars/${id}/generated/ig-cover.jpg`;
     const metaPath = `cars/${id}/generated/meta-cover.jpg`;
 
@@ -546,77 +352,36 @@ export const POST:
        SAVE EVERYTHING
        ================================= */
 
-    const {
-      error: updateError,
-    } =
-      await supabase
-        .from("cars")
-        .update({
+    const { error: updateError } = await supabase
+      .from("cars")
+      .update({
+        cover_hero_title: resolvedHero,
+        cover_needs_regenerate: false,
+        ig_image_url: igUrl,
+        meta_image_url: metaUrl,
+      })
+      .eq("id", id);
 
-          cover_hero_title:
-            resolvedHero,
-
-          cover_needs_regenerate:
-            false,
-
-          ig_image_url:
-            igUrl,
-
-          meta_image_url:
-            metaUrl,
-
-        })
-        .eq(
-          "id",
-          id
-        );
-
-
-    if (
-      updateError
-    ) {
-
-      throw new Error(
-        `DB update: ${updateError.message}`
-      );
-
+    if (updateError) {
+      throw new Error(`DB update: ${updateError.message}`);
     }
 
-
     return Response.json({
-
       ok: true,
-
-      car_id:
-        id,
-
-      cover_hero_title:
-        resolvedHero,
-
-      source_image_url:
-        sourceImageUrl,
-
-      ig_image_url:
-        igUrl,
-
-      meta_image_url:
-        metaUrl,
-
+      car_id: id,
+      cover_hero_title: resolvedHero,
+      source_slot: sourceSlot,
+      font_mode: fontMode,
+      source_image_url: sourceImageUrl,
+      ig_image_url: igUrl,
+      meta_image_url: metaUrl,
     });
-
-
   } catch (error) {
-
-    console.error(
-      "generate-covers:",
-      error
-    );
-
+    console.error("generate-covers:", error);
 
     return Response.json(
       {
         ok: false,
-
         error:
           error instanceof Error
             ? error.message
@@ -626,7 +391,5 @@ export const POST:
         status: 500,
       }
     );
-
   }
-
 };
