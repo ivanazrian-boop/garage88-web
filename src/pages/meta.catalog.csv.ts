@@ -9,7 +9,7 @@ const SITE_URL = "https://garage88.site";
 /*
  * FORCE META IMAGE REFRESH
  */
-const FORCE_META_IMAGE_VERSION = "force-20260828-2";
+const FORCE_META_IMAGE_VERSION = "force-20261120-1";
 
 type CarImage = {
   image_url: string | null;
