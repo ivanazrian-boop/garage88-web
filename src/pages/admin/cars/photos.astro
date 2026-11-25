@@ -173,31 +173,35 @@ if (deleteId) {
 // DELETE SEMUA FOTO GALERI
 // ========================
 
-if (Astro.url.searchParams.get("deleteAll") === "1") {
-  try {
-    const { data: gallery, error } = await supabaseAdmin
-      .from("car_images")
-      .select("id, car_id, image_url")
-      .eq("car_id", carId);
-
-    if (error) {
-      throw new Error(`Gagal mengambil daftar foto: ${error.message}`);
-    }
-
-    if (!gallery || gallery.length === 0) {
-      notice = "Tidak ada foto galeri untuk dihapus.";
-    } else {
-      const count = await deleteGalleryImages(gallery);
-      notice = `${count} foto galeri berhasil dihapus. Cover mobil tidak diubah.`;
-    }
-  } catch (error) {
-    console.error("DELETE ALL GALLERY ERROR:", error);
-    notice = error instanceof Error
-      ? error.message
-      : "Gagal menghapus semua foto galeri.";
-    noticeType = "error";
-  }
-}
+// DISABLED SEMENTARA.
+// Jangan hapus gallery melalui GET ?deleteAll=1.
+// Fungsi akan kita ubah menjadi POST setelah proses recovery selesai.
+//
+// if (Astro.url.searchParams.get("deleteAll") === "1") {
+//   try {
+//     const { data: gallery, error } = await supabaseAdmin
+//       .from("car_images")
+//       .select("id, car_id, image_url")
+//       .eq("car_id", carId);
+//
+//     if (error) {
+//       throw new Error(`Gagal mengambil daftar foto: ${error.message}`);
+//     }
+//
+//     if (!gallery || gallery.length === 0) {
+//       notice = "Tidak ada foto galeri untuk dihapus.";
+//     } else {
+//       const count = await deleteGalleryImages(gallery);
+//       notice = `${count} foto galeri berhasil dihapus. Cover mobil tidak diubah.`;
+//     }
+//   } catch (error) {
+//     console.error("DELETE ALL GALLERY ERROR:", error);
+//     notice = error instanceof Error
+//       ? error.message
+//       : "Gagal menghapus semua foto galeri.";
+//     noticeType = "error";
+//   }
+// }
 
 if (Astro.url.searchParams.get("notice") === "deleted" && !notice) {
   notice = "Foto berhasil dihapus.";
@@ -236,6 +240,7 @@ if (imagesError) {
       <div class="flex items-center justify-between gap-4">
         <div>
           <h1 class="text-3xl font-bold">Kelola Foto</h1>
+
           <p class="mt-2 text-slate-500">
             {car?.brand} {car?.model}
           </p>
@@ -366,23 +371,10 @@ if (imagesError) {
 
     if (deleteAllButton) {
       deleteAllButton.addEventListener("click", function () {
-        const confirmed = confirm(
-          "PERINGATAN: Semua foto galeri mobil ini akan dihapus dari R2 dan database. Cover IG, Meta, dan premium tidak akan dihapus. Lanjutkan?"
+        alert(
+          "Fitur Hapus Semua Foto sementara dinonaktifkan untuk keamanan recovery data."
         );
-
-        if (!confirmed) return;
-
-        const secondConfirmation = confirm(
-          "Konfirmasi sekali lagi: hapus SEMUA foto galeri untuk mobil ini?"
-        );
-
-        if (!secondConfirmation) return;
-
-        const currentUrl = new URL(window.location.href);
-        currentUrl.searchParams.set("deleteAll", "1");
-        currentUrl.searchParams.set("refresh", String(Date.now()));
-
-        window.location.href = currentUrl.toString();
+        return;
       });
     }
   </script>

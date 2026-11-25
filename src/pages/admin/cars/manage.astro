@@ -1,10 +1,59 @@
 ---
 import MainLayout from "../../../layouts/MainLayout.astro";
+import { env } from "cloudflare:workers";
 import {
   createSupabaseServerClient,
 } from "../../../lib/supabaseServer";
 
 const supabase = createSupabaseServerClient();
+
+const bindings = env as unknown as Record<string, unknown>;
+
+const r2Bucket = bindings.R2_BUCKET as
+  | {
+      delete: (keys: string[]) => Promise<unknown>;
+    }
+  | undefined;
+
+function getR2KeyFromUrl(
+  imageUrl: string,
+  expectedPrefix: string
+): string {
+  const base = new URL(
+    String(bindings.R2_PUBLIC_URL || "")
+  );
+
+  const url = new URL(imageUrl);
+
+  if (url.origin !== base.origin) {
+    throw new Error(`URL foto bukan dari R2: ${imageUrl}`);
+  }
+
+  const basePath = base.pathname.replace(/\/+$/, "");
+  const pathname = decodeURIComponent(url.pathname);
+
+  if (
+    basePath &&
+    !pathname.startsWith(`${basePath}/`)
+  ) {
+    throw new Error(`Path foto tidak sesuai R2: ${imageUrl}`);
+  }
+
+  const key = pathname
+    .slice(basePath.length)
+    .replace(/^\/+/, "");
+
+  if (
+    !key.startsWith(expectedPrefix) ||
+    key.split("/").some((part) => part === ".." || part === ".") ||
+    key.includes("\\")
+  ) {
+    throw new Error(`R2 key tidak valid: ${key}`);
+  }
+
+  return key;
+}
+
 
 const key = Astro.url.searchParams.get("key");
 const ADMIN_KEY = "garage88";
@@ -232,39 +281,141 @@ if (Astro.request.method === "POST") {
     }
 
 
-    /* ===============================================
-       DELETE SELECTED
+        /* ===============================================
+       DELETE SELECTED + R2 PHOTOS
        =============================================== */
 
     else if (
       action ===
       "delete_selected"
     ) {
-      const { error } =
-        await supabase
-          .from("cars")
-          .delete()
-          .in(
-            "id",
-            selectedIds
+      try {
+        if (!r2Bucket) {
+          throw new Error("R2_BUCKET binding tidak tersedia.");
+        }
+
+        // 1. Ambil data mobil
+        const { data: selectedCars, error: carsFetchError } =
+          await supabase
+            .from("cars")
+            .select(`
+              id,
+              cover_source_image_url,
+              cover_source_image_url_2
+            `)
+            .in("id", selectedIds);
+
+        if (carsFetchError) {
+          throw new Error(carsFetchError.message);
+        }
+
+        if (!selectedCars || selectedCars.length === 0) {
+          throw new Error("Unit tidak ditemukan.");
+        }
+
+        // 2. Ambil foto gallery
+        const { data: galleryImages, error: galleryError } =
+          await supabase
+            .from("car_images")
+            .select("id, car_id, image_url")
+            .in("car_id", selectedIds);
+
+        if (galleryError) {
+          throw new Error(galleryError.message);
+        }
+
+        // 3. Susun daftar object R2
+        const r2Keys = new Set<string>();
+
+        for (const car of selectedCars) {
+          const id = String(car.id);
+
+          // Cover IG dan Meta
+          r2Keys.add(`cars/${id}/generated/ig-cover.jpg`);
+          r2Keys.add(`cars/${id}/generated/meta-cover.jpg`);
+
+          // PhotoRoom source 1 dan 2
+          for (const sourceUrl of [
+            car.cover_source_image_url,
+            car.cover_source_image_url_2,
+          ]) {
+            if (sourceUrl) {
+              r2Keys.add(
+                getR2KeyFromUrl(
+                  sourceUrl,
+                  `cars/${id}/cover-source/`
+                )
+              );
+            }
+          }
+        }
+
+        // Gallery
+        for (const photo of galleryImages ?? []) {
+          if (!photo.image_url) {
+            throw new Error(
+              `URL gallery kosong untuk foto ${photo.id}`
+            );
+          }
+
+          r2Keys.add(
+            getR2KeyFromUrl(
+              photo.image_url,
+              `cars/${photo.car_id}/`
+            )
           );
+        }
 
-      if (error) {
-        console.error(error);
+        // 4. Hapus foto dari R2
+        const keys = Array.from(r2Keys);
+
+        for (let i = 0; i < keys.length; i += 500) {
+          await r2Bucket.delete(keys.slice(i, i + 500));
+        }
+
+        // 5. Hapus data gallery
+        const { error: galleryDeleteError } =
+          await supabase
+            .from("car_images")
+            .delete()
+            .in("car_id", selectedIds);
+
+        if (galleryDeleteError) {
+          throw new Error(
+            `R2 sudah dihapus, tetapi gallery gagal dihapus: ${galleryDeleteError.message}`
+          );
+        }
+
+        // 6. Hapus data mobil
+        const { error: carDeleteError } =
+          await supabase
+            .from("cars")
+            .delete()
+            .in("id", selectedIds);
+
+        if (carDeleteError) {
+          throw new Error(
+            `R2 dan gallery sudah dihapus, tetapi mobil gagal dihapus: ${carDeleteError.message}`
+          );
+        }
 
         message =
-          error.message;
+          `${selectedCars.length} unit dan ${keys.length} foto R2 berhasil dihapus.`;
 
-        messageType =
-          "error";
-      } else {
+      } catch (deleteError) {
+        console.error("DELETE SELECTED ERROR:", deleteError);
+
         message =
-          `${selectedIds.length} unit berhasil dihapus.`;
+          deleteError instanceof Error
+            ? deleteError.message
+            : String(deleteError);
+
+         messageType = "error";
       }
     }
+
   }
 }
-
 
 /* =====================================================
    GET CARS
