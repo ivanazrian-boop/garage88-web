@@ -84,7 +84,7 @@ PREMIUM DARK CHARCOAL AND BLACK AUTOMOTIVE STUDIO.
 The vehicle must be slightly smaller than a typical close-up
 automotive advertising composition.
 
-Reduce the vehicle visual scale by approximately 5%.
+Keep the vehicle at a controlled medium-large scale.
 
 Keep the complete vehicle clearly visible.
 Do not crop the vehicle.
@@ -99,7 +99,7 @@ Do not create an oversized vehicle.
 Do not create an extreme close-up.
 
 The vehicle should remain naturally grounded
-on the glossy studio floor.
+on the studio floor.
 
 2. VEHICLE IDENTITY - ABSOLUTELY CRITICAL
 
@@ -252,68 +252,91 @@ No purple lighting.
 No neon lighting.
 No artificial glowing edges.
 
-6. FLOOR - DARK GLOSSY AUTOMOTIVE FLOOR
+6. FLOOR - DARK SATIN-GLOSS AUTOMOTIVE FLOOR
 
-Create a dark charcoal/black glossy studio floor.
+Create a premium dark charcoal/black automotive studio floor.
 
-The floor must remain visible.
+The floor should remain predominantly dark.
 
-Use subtle realistic studio reflections.
+Use a controlled satin-gloss finish,
+not an extremely mirror-like surface.
 
-The floor should have slightly lighter tonal variation
-than the darkest parts of the background.
+The floor may show a very faint natural reflection
+directly underneath the vehicle,
+but the floor must NOT behave like a mirror.
 
-Do NOT make the entire floor pure black.
+Keep the foreground floor dark,
+clean and visually simple.
+
+Do not create strong reflected objects
+in the foreground.
+
+Do not create large reflected headlights
+or a large reflected vehicle.
 
 The floor should visually connect naturally
-with the background.
+with the dark studio background.
 
-7. REFLECTION - SHORT AND SUBTLE
+7. REFLECTION - VERY SHORT AND MINIMAL
 
-Create a subtle realistic floor reflection
+Create only a very subtle realistic floor reflection
 directly beneath the vehicle.
 
-The reflection must be SHORT and LIMITED.
+The reflection must be VERY SHORT and VERY LIMITED.
 
 The visible reflection should extend only approximately
-30-40% of the vehicle's visual height.
+10-15% of the vehicle's visual height.
 
-DO NOT create a full-length reflection.
+The reflection must stay immediately underneath
+the vehicle and wheels.
 
-DO NOT create a complete mirrored vehicle.
+DO NOT create a full vehicle reflection.
 
-The reflection should fade out quickly
-as it extends away from the vehicle.
+DO NOT create a half vehicle reflection.
 
-The reflection should:
-- remain directly underneath the vehicle
-- follow the vehicle perspective
-- be slightly blurred
-- have reduced opacity
-- gradually fade into the glossy floor
-- remain secondary to the actual vehicle
+DO NOT create a mirrored vehicle.
 
-The reflection should primarily show
-a soft impression of the lower body,
-wheels and headlights.
+DO NOT reflect the entire front bumper,
+hood, windshield, roof or upper body.
 
-Do NOT reflect the entire vehicle body.
+The reflection should primarily show:
+- subtle wheel reflection
+- subtle lower tire reflection
+- very faint lower body reflection
+- soft light reflection directly beneath the vehicle
 
-Do NOT extend the reflection far into
-the foreground.
+The reflection must:
+- have very low opacity
+- be heavily softened
+- fade out immediately
+- remain directly below the vehicle
+- never extend far into the foreground
 
-DO NOT create a large mirror reflection.
+The floor should remain mostly dark and clean.
 
-DO NOT create a duplicated vehicle.
+The actual vehicle must remain completely dominant.
 
-DO NOT create a second vehicle.
+The reflection should be barely noticeable
+at first glance.
 
-The actual vehicle must remain clearly dominant.
+It should look like a natural glossy studio floor
+with a faint contact reflection,
+NOT like a mirror floor.
 
-The reflection should look like
-a natural short studio-floor reflection,
-approximately 30-40% of the vehicle height,
-not a full mirror.
+ABSOLUTELY NO:
+Full-length reflection.
+Large reflection.
+Half-car reflection.
+Full vehicle mirror.
+Duplicated vehicle.
+Second vehicle.
+Large reflected headlights.
+Large reflected grille.
+Large reflected bumper.
+Reflection extending into the foreground.
+Strong reflection.
+Bright reflection.
+Sharp reflection.
 
 8. CONTACT SHADOW
 
@@ -362,8 +385,8 @@ Realistic glass.
 Realistic chrome.
 Realistic headlights.
 Professional soft studio lighting.
-Premium glossy floor.
-Short subtle realistic reflection.
+Premium satin-gloss floor.
+Very short subtle realistic reflection.
 Elegant dark background.
 Soft atmospheric smoke behind the vehicle.
 Clean commercial automotive advertising.
@@ -371,8 +394,8 @@ Clean commercial automotive advertising.
 The smoke should remain subtle,
 transparent and secondary to the vehicle.
 
-The reflection should remain short,
-controlled and secondary to the vehicle.
+The reflection should remain extremely short,
+controlled, soft and secondary to the vehicle.
 
 The final image should have a dark luxury
 automotive mood with soft atmospheric depth.
@@ -399,10 +422,10 @@ Blue glow.
 White glow.
 Colored lighting.
 Neon lighting.
-Excessive reflection.
 Full-length reflection.
 Full vehicle mirror reflection.
 Giant mirror reflection.
+Large reflection.
 Duplicated vehicle.
 Second vehicle.
 People.
