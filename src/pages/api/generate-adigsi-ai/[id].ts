@@ -82,167 +82,231 @@ export const POST: APIRoute = async ({ params }) => {
     // lighting, floor, reflection, maupun shadow.
 
     const sceneDescription = `
-PREMIUM AUTOMOTIVE PHOTOGRAPHY.
-STRICT AND CONSISTENT WHITE STUDIO ENVIRONMENT.
+PREMIUM AUTOMOTIVE ADVERTISING PHOTOGRAPHY.
+STRICT AND CONSISTENT BLACK LUXURY STUDIO ENVIRONMENT.
 
 MASTER VISUAL REFERENCE:
-A premium luxury automotive dealership product photograph
-inside a bright, clean, seamless white photography studio.
+A high-end luxury automotive advertising photograph
+inside a dark, seamless black automotive photography studio.
 
-1. BACKGROUND - ABSOLUTELY CONSISTENT
+1. BACKGROUND - PURE BLACK
 
-Pure clean white background (#FFFFFF).
-Seamless white infinity cyclorama studio.
-Bright, evenly illuminated white environment.
-No visible horizon line, wall edges, corners or seams.
+Pure deep black background.
+Seamless black studio environment.
+Clean, minimal and completely uncluttered.
 
-The background MUST ALWAYS remain neutral white,
+The background must remain deep black
 regardless of the vehicle's original paint color.
 
-Do not sample, derive, or adapt background colors
-from the vehicle paint, body panels, windows or reflections.
+No white background.
+No grey background.
+No gradient background.
+No visible walls.
+No corners.
+No horizon line.
+No studio equipment.
+No scenery.
 
-2. LIGHTING - NEUTRAL WHITE
+Leave generous clean black negative space
+above the vehicle for a premium advertising composition.
 
-Professional softbox-style diffused studio lighting.
-Neutral white light, approximately 5500K.
-Soft, balanced illumination from multiple directions.
-Even exposure across the entire studio environment.
+2. LIGHTING - PREMIUM DRAMATIC STUDIO LIGHTING
 
-No blue lighting.
-No warm yellow lighting.
-No colored light.
-No dramatic cinematic lighting.
-No colored ambient light bouncing onto the floor.
+Professional high-end automotive studio lighting.
 
-The lighting must remain identical for white, black,
-silver, grey, red, blue and every other vehicle color.
+Use controlled softbox lighting from the upper front
+and subtle directional lighting from the sides.
 
-3. FLOOR - WHITE GLOSSY STUDIO FLOOR
+Create elegant highlights across:
+- hood
+- roof
+- windshield
+- grille
+- headlights
+- side body panels
 
-Clean, bright white glossy floor.
-The floor must visually blend into the white background.
+Create subtle rim lighting around the vehicle silhouette
+to separate the vehicle from the black background.
 
-Keep the floor predominantly white.
-Never generate a dark grey, black, blue or colored floor.
+Lighting should be dramatic and cinematic
+but remain realistic and commercially photographed.
 
-4. REFLECTION - SUBTLE AND CONTROLLED
+Maintain accurate original vehicle paint color.
 
-Create a subtle, realistic floor reflection directly
-beneath the vehicle.
+Do NOT use colored lighting.
+Do NOT use blue lighting.
+Do NOT use red lighting.
+Do NOT use purple lighting.
+Do NOT use neon lighting.
+Do NOT create artificial glowing edges.
 
-Reflection appearance:
-- Neutral light grey.
-- Soft and semi-transparent.
-- Approximately 15-20% visual opacity.
-- Naturally inverted vehicle silhouette.
-- Correct perspective and alignment.
-- Gradually fading into pure white.
+3. FLOOR - BLACK GLOSSY AUTOMOTIVE STUDIO FLOOR
 
-The reflection must be secondary to the vehicle.
-It must never become a strong mirror image.
+Use a deep black glossy studio floor.
 
-Do NOT create dark black reflections.
-Do NOT create blue-tinted reflections.
-Do NOT use the vehicle paint color as the reflection tint.
-Do NOT allow reflection colors to determine floor colors.
+The floor must visually blend seamlessly
+with the black background.
 
-The reflection must have consistent neutral grey tones
-for every vehicle, regardless of its paint color.
+Create a premium polished automotive photography floor
+with realistic controlled reflections.
 
-5. SHADOW - SOFT NATURAL CONTACT SHADOW
+The floor must remain black
+regardless of the vehicle paint color.
 
-Create a subtle, soft neutral grey contact shadow
+4. VEHICLE REFLECTION - REALISTIC AND CONTROLLED
+
+Create a realistic reflection of the vehicle
+directly underneath it on the glossy black floor.
+
+Reflection characteristics:
+- realistic
+- subtle but clearly visible
+- horizontally aligned with the vehicle
+- correct perspective
+- naturally fading into darkness
+- slightly softer than the actual vehicle
+
+The reflection should look like
+a real polished automotive studio floor.
+
+Do NOT create an exaggerated mirror reflection.
+Do NOT duplicate the vehicle.
+Do NOT create a second vehicle.
+Do NOT make the reflection brighter than the vehicle.
+
+5. CONTACT SHADOW
+
+Create a natural soft contact shadow
 directly beneath the tires and vehicle.
 
 The shadow should be:
-- Light grey.
-- Soft-edged.
-- Natural and realistic.
-- Close to the vehicle.
-- Gradually fading into the white floor.
+- realistic
+- soft-edged
+- dark but controlled
+- close to the vehicle
+- naturally blending into the black floor
 
-No harsh black shadows.
-No oversized dark shadows.
-No colored shadows.
-No dramatic high-contrast shadows.
+No oversized shadow.
+No artificial black blob.
+No colored shadow.
 
 6. VEHICLE PRESERVATION - CRITICAL
 
 Preserve the exact original vehicle identity.
 
 Maintain:
-- Original body shape and proportions.
-- Original paint color.
-- Original wheels and tires.
-- Original headlights and taillights.
-- Original grille and badges.
-- Original windows and mirrors.
-- Original license plate.
-- All original vehicle details.
+- original body shape and proportions
+- original paint color
+- original wheels and tires
+- original headlights and taillights
+- original grille and badges
+- original windows and mirrors
+- original license plate
+- all original vehicle details
 
-Do not redesign, replace, distort or modify the vehicle.
-Do not invent vehicle accessories or details.
-Do not change the vehicle's original paint color.
+Do not redesign the vehicle.
+Do not replace the vehicle.
+Do not change the vehicle model.
+Do not change the wheels.
+Do not change the headlights.
+Do not change the grille.
+Do not add accessories.
+Do not remove original details.
+Do not change the original paint color.
 
-The vehicle must remain sharp, realistic and photorealistic.
+The vehicle must remain photorealistic
+and highly detailed.
 
 7. CAMERA AND COMPOSITION
 
-Preserve the original camera perspective and viewing angle.
-Maintain a natural front three-quarter automotive view
-when supported by the original photograph.
+Premium automotive advertising composition.
 
-Keep the vehicle naturally grounded on the floor.
-Preserve realistic proportions and perspective.
-Maintain a clean premium dealership composition.
+Maintain a natural front three-quarter view
+when supported by the source image.
 
-8. STRICT COLOR CONSISTENCY RULE
+The vehicle should be positioned
+in the lower-middle portion of the composition.
 
-This is the MOST IMPORTANT REQUIREMENT.
+The complete vehicle must remain clearly visible.
 
-The studio environment must be independent
-of the vehicle's paint color.
+Keep generous black negative space
+above the vehicle.
 
-A white vehicle, black vehicle, blue vehicle,
-silver vehicle or red vehicle MUST all receive
-exactly the same white studio background.
+The vehicle should feel powerful,
+premium and visually dominant.
 
-Never allow vehicle color to influence:
-- Background color.
-- Floor color.
-- Lighting temperature.
-- Ambient lighting.
-- Reflection color.
-- Shadow color.
+Use realistic automotive photography perspective.
 
-Only the vehicle itself may retain its original color.
+Do not crop important parts of the vehicle.
+
+8. COLOR CONSISTENCY
+
+The studio environment must remain identical
+for every vehicle.
+
+A white vehicle, black vehicle, silver vehicle,
+grey vehicle, red vehicle or blue vehicle
+must all receive the same black luxury studio.
+
+Only the vehicle itself retains its original color.
+
+Vehicle paint color must NOT influence:
+- background color
+- floor color
+- lighting color
+- ambient light color
+- reflection color
+- shadow color
 
 9. FINAL OUTPUT STYLE
 
-Premium luxury automotive dealership photography.
-Bright, minimal, elegant and sophisticated.
-Clean pure white studio.
-Neutral lighting.
-Soft grey reflection.
-Soft natural contact shadow.
+High-end luxury automotive advertising photography.
 
-The final result must visually resemble
-a professionally photographed vehicle
-inside one consistent premium white automotive studio.
+Premium dealership campaign.
+Black-on-black luxury aesthetic.
+Photorealistic.
+Sharp vehicle details.
+Realistic paint reflections.
+Realistic glass.
+Realistic chrome.
+Professional studio lighting.
+Elegant cinematic contrast.
+Clean commercial automotive photography.
+
+The final image should look like
+a professionally photographed luxury vehicle
+inside an expensive black automotive photography studio.
 
 ABSOLUTELY NO:
+White background.
+Grey background.
+Grey gradient.
 Blue background.
-Grey gradient background.
-Dark background.
-Black reflective floor.
+Colored background.
+White floor.
+Grey floor.
+Blue floor.
+Colored floor.
 Colored studio lighting.
-Colored floor reflection.
+Neon lighting.
 Excessive mirror reflection.
-Dark dramatic shadows.
+Duplicated vehicle.
+Second vehicle.
+People.
+Props.
+Showroom.
+Road.
+Outdoor scenery.
 Visible lighting equipment.
-People, props or additional vehicles.
-Added text or invented logos.
+Text.
+Price.
+Specifications.
+Watermark.
+Invented logos.
+Modified vehicle.
+Changed vehicle color.
+Changed wheels.
+Changed vehicle model.
 `;
 
     // Generate image using Bria AI.
