@@ -153,74 +153,66 @@ or farther away than necessary.
 The vehicle must look like a professionally
 photographed real vehicle.
 
-4. BACKGROUND - DARK BLACK STUDIO WITH MINIMAL ATMOSPHERIC DEPTH
+4. BACKGROUND - DARK AUTOMOTIVE STUDIO WITH SOFT SMOKE
 
 Create a premium dark automotive photography studio.
 
-The background must remain predominantly:
-- deep black
+The background should be:
 - very dark charcoal
-- subtle
+- near black
 - elegant
-- low contrast
+- cinematic
+- smooth
+- premium
 
-Keep the background dark and understated.
+Keep the overall background dark.
 
-There must be NO obvious smoke,
-NO visible smoke clouds,
-NO fog,
-NO dramatic atmosphere.
+Add soft atmospheric smoke behind the vehicle
+to create depth and separation.
 
-Add only an extremely subtle atmospheric diffusion
-behind the vehicle.
+The smoke should be approximately 40% LESS DENSE
+than a strong cinematic smoke effect.
 
-The atmospheric diffusion should be barely visible
-and function only as soft tonal separation
-between the vehicle and the black background.
+The smoke should remain clearly visible,
+but soft, transparent and naturally diffused.
 
-It should appear as a very faint dark-grey
-softness immediately behind the vehicle.
+Smoke should appear primarily:
+- behind the roof
+- behind the upper body
+- around the left and right sides of the vehicle
 
-The effect must be extremely restrained,
-approximately 2-5% visual intensity.
+Keep the center area behind the vehicle
+slightly illuminated by soft atmospheric diffusion,
+but maintain a predominantly dark background.
 
-Most of the background must remain deep black.
+The smoke should have:
+- soft edges
+- low opacity
+- natural diffusion
+- subtle grey-charcoal tones
+- realistic studio atmosphere
 
-The atmospheric effect must:
-- remain behind the vehicle
-- stay soft and diffuse
-- have no defined shape
-- have no visible smoke trails
-- have no curling smoke
-- have no clouds
-- have no fog banks
-- have no bright areas
+The smoke must remain BEHIND the vehicle.
 
-The vehicle must remain the dominant
-and brightest subject.
+Do not cover the vehicle with smoke.
 
-The background must NEVER become brighter
-than the vehicle.
+Do not place smoke in front of the vehicle.
 
-Do not create a light source behind the vehicle.
+Do not create thick dense smoke clouds.
 
-Do not create a spotlight behind the vehicle.
+Do not create dramatic fog.
 
-Do not create a white glow.
+Do not create a bright white background.
 
-Do not create a blue glow.
+Do not create a bright blue background.
 
-Do not create a grey glowing background.
+Do not create a large spotlight behind the vehicle.
 
-Do not create cinematic fog.
+Do not make the smoke brighter than the vehicle.
 
-Do not create visible smoke.
-
-Do not create atmospheric clouds.
-
-The final background should look almost black
-at first glance, with only a very subtle
-soft tonal separation behind the vehicle.
+The smoke should feel like a subtle premium
+automotive studio atmosphere,
+not a smoke scene.
 
 No visible wall.
 No corner.
@@ -354,18 +346,14 @@ Professional soft studio lighting.
 Premium glossy floor.
 Subtle realistic reflection.
 Elegant dark background.
-Barely visible atmospheric depth.
+Soft atmospheric smoke behind the vehicle.
 Clean commercial automotive advertising.
 
-The background must remain dark and understated.
-
-The atmospheric effect is only a subtle
-tonal separation and must never become
-a visible smoke effect.
+The smoke should remain subtle,
+transparent and secondary to the vehicle.
 
 The final image should have a dark luxury
-automotive mood with an almost imperceptible
-atmospheric softness behind the vehicle.
+automotive mood with soft atmospheric depth.
 
 The result should look like
 a professionally photographed vehicle
@@ -389,14 +377,6 @@ Blue glow.
 White glow.
 Colored lighting.
 Neon lighting.
-Visible smoke.
-Smoke clouds.
-Thick smoke.
-Fog.
-Fog banks.
-Curling smoke.
-Smoke trails.
-Atmospheric clouds.
 Excessive reflection.
 Giant mirror reflection.
 Duplicated vehicle.
