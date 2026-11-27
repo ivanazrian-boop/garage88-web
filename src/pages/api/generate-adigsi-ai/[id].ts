@@ -82,7 +82,7 @@ export const POST: APIRoute = async ({ params }) => {
 
     const sceneDescription = `
 PREMIUM AUTOMOTIVE ADVERTISING PHOTOGRAPHY.
-PREMIUM DARK CHARCOAL AUTOMOTIVE STUDIO.
+PREMIUM DARK CHARCOAL AND BLACK AUTOMOTIVE STUDIO.
 
 1. VEHICLE SCALE AND POSITION - CRITICAL
 
@@ -144,9 +144,7 @@ Use the same natural front three-quarter
 automotive viewing angle as the source vehicle.
 
 Do not create a different camera angle.
-
 Do not rotate the vehicle.
-
 Do not dramatically change perspective.
 
 Do not make the vehicle appear closer
@@ -155,48 +153,79 @@ or farther away than necessary.
 The vehicle must look like a professionally
 photographed real vehicle.
 
-4. BACKGROUND - DARK CHARCOAL WITH SOFT ATMOSPHERIC DEPTH
+4. BACKGROUND - DARK BLACK STUDIO WITH VERY SUBTLE SMOKE
 
-Create a premium dark charcoal automotive studio.
+Create a premium dark automotive photography studio.
 
-The background should be:
-- dark charcoal
+The background must remain predominantly:
+- very dark charcoal
 - near black
-- smooth
+- subtle
 - elegant
-- minimal
-- seamless
+- low contrast
 
-Do NOT make the background completely crushed black.
+The overall background must remain approximately
+90% dark charcoal/black.
 
-Maintain subtle tonal separation in the background.
+DO NOT make the background bright.
 
-Add a very subtle soft atmospheric studio haze
-behind the vehicle.
+DO NOT create a large bright gradient.
 
-The haze should appear primarily:
-- behind the roof
-- behind the upper body
-- around the sides of the vehicle
+DO NOT create a bright spotlight behind the vehicle.
+
+Add ONLY a very subtle amount of soft atmospheric smoke
+directly behind the vehicle.
+
+The smoke should be:
+- thin
+- soft
+- dark grey
+- slightly translucent
+- subtle
+- naturally diffused
+
+The smoke should appear mainly:
+- immediately behind the roof
+- slightly behind the upper body
+- lightly around the left and right sides of the vehicle
 
 Use soft dark-grey to charcoal atmospheric diffusion.
 
-The haze should gently brighten and separate
-the background from the vehicle.
+The smoke should gently separate
+the vehicle from the background.
 
-It should look like subtle professional studio atmosphere,
+The smoke must NOT create a bright light source.
+
+The smoke must NOT create a white glow.
+
+The smoke must NOT create a blue glow.
+
+The smoke must NOT create a large bright gradient.
+
+The smoke should look like a very subtle
+professional automotive studio atmosphere,
 NOT visible smoke from a fire.
 
-No smoke clouds covering the vehicle.
-No thick fog.
-No dramatic smoke.
-No smoke in front of the vehicle.
-No visible smoke trails.
+Keep smoke density extremely low,
+approximately 5-10% visual intensity.
 
-The vehicle must remain sharp and unobstructed.
+The vehicle must remain the brightest
+and most visually important subject.
 
-The background should have subtle depth,
-similar to an expensive automotive photography studio.
+The area directly behind the vehicle
+may be slightly lighter than the outer background,
+but it must still remain dark charcoal.
+
+NO bright spotlight behind the vehicle.
+NO large circular light.
+NO blue illumination.
+NO white illumination.
+NO bright grey background.
+NO dramatic fog.
+NO thick smoke.
+NO smoke covering the vehicle.
+NO smoke in front of the vehicle.
+NO visible smoke trails.
 
 No visible wall.
 No corner.
@@ -330,7 +359,16 @@ Professional soft studio lighting.
 Premium glossy floor.
 Subtle realistic reflection.
 Elegant dark background.
+Very subtle atmospheric smoke behind the vehicle.
 Clean commercial automotive advertising.
+
+The background must remain dark and understated.
+
+The smoke is only a subtle atmospheric detail
+and must never dominate the image.
+
+The final image should have a dark luxury automotive mood,
+with only a faint hint of smoke behind the vehicle.
 
 The result should look like
 a professionally photographed vehicle
@@ -343,10 +381,15 @@ Vehicle filling the entire frame.
 Vehicle cropped.
 Pure crushed-black background.
 Flat black background with no tonal separation.
-White background.
+Bright background.
 Bright grey background.
+White background.
 Blue background.
 Colored background.
+Large bright gradient.
+Bright spotlight behind vehicle.
+Blue glow.
+White glow.
 Colored lighting.
 Neon lighting.
 Excessive reflection.
