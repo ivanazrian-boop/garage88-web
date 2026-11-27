@@ -75,11 +75,6 @@ export const POST: APIRoute = async ({ params }) => {
       );
     }
 
-    // MASTER STUDIO STYLE:
-    // Semua kendaraan harus memiliki environment studio yang sama.
-    // Warna mobil tidak boleh memengaruhi warna background,
-    // lighting, floor, reflection, maupun shadow.
-
     const sceneDescription = `
 PREMIUM AUTOMOTIVE ADVERTISING PHOTOGRAPHY.
 PREMIUM DARK CHARCOAL AND BLACK AUTOMOTIVE STUDIO.
@@ -273,28 +268,52 @@ Do NOT make the entire floor pure black.
 The floor should visually connect naturally
 with the background.
 
-7. REFLECTION - SUBTLE AND REALISTIC
+7. REFLECTION - SHORT AND SUBTLE
 
-Create a controlled realistic reflection
+Create a subtle realistic floor reflection
 directly beneath the vehicle.
 
+The reflection must be SHORT and LIMITED.
+
+The visible reflection should extend only approximately
+30-40% of the vehicle's visual height.
+
+DO NOT create a full-length reflection.
+
+DO NOT create a complete mirrored vehicle.
+
+The reflection should fade out quickly
+as it extends away from the vehicle.
+
 The reflection should:
-- follow the vehicle position
+- remain directly underneath the vehicle
 - follow the vehicle perspective
 - be slightly blurred
-- be darker than the actual vehicle
-- gradually fade into the floor
+- have reduced opacity
+- gradually fade into the glossy floor
+- remain secondary to the actual vehicle
 
-The reflection must remain secondary.
+The reflection should primarily show
+a soft impression of the lower body,
+wheels and headlights.
 
-DO NOT create a giant mirror reflection.
+Do NOT reflect the entire vehicle body.
+
+Do NOT extend the reflection far into
+the foreground.
+
+DO NOT create a large mirror reflection.
 
 DO NOT create a duplicated vehicle.
 
 DO NOT create a second vehicle.
 
-DO NOT let the reflection become larger
-or more visually dominant than the actual vehicle.
+The actual vehicle must remain clearly dominant.
+
+The reflection should look like
+a natural short studio-floor reflection,
+approximately 30-40% of the vehicle height,
+not a full mirror.
 
 8. CONTACT SHADOW
 
@@ -344,13 +363,16 @@ Realistic chrome.
 Realistic headlights.
 Professional soft studio lighting.
 Premium glossy floor.
-Subtle realistic reflection.
+Short subtle realistic reflection.
 Elegant dark background.
 Soft atmospheric smoke behind the vehicle.
 Clean commercial automotive advertising.
 
 The smoke should remain subtle,
 transparent and secondary to the vehicle.
+
+The reflection should remain short,
+controlled and secondary to the vehicle.
 
 The final image should have a dark luxury
 automotive mood with soft atmospheric depth.
@@ -378,6 +400,8 @@ White glow.
 Colored lighting.
 Neon lighting.
 Excessive reflection.
+Full-length reflection.
+Full vehicle mirror reflection.
 Giant mirror reflection.
 Duplicated vehicle.
 Second vehicle.
@@ -412,7 +436,7 @@ Changed vehicle model.
           mode: "high_control",
           scene_description: sceneDescription,
           placement_type: "custom_coordinates",
-          foreground_image_size: [760, 570],
+          foreground_image_size: [720, 540],
           foreground_image_location: [155, 390],
           shot_size: [1080, 1350],
           num_results: 1,
