@@ -1,4 +1,3 @@
-
 import type { APIRoute } from "astro";
 import { env } from "cloudflare:workers";
 import { createClient } from "@supabase/supabase-js";
@@ -83,58 +82,46 @@ export const POST: APIRoute = async ({ params }) => {
 
     const sceneDescription = `
 PREMIUM AUTOMOTIVE ADVERTISING PHOTOGRAPHY.
-STRICT VEHICLE PRESERVATION WITH A PREMIUM DARK AUTOMOTIVE STUDIO.
+PREMIUM DARK CHARCOAL AUTOMOTIVE STUDIO.
 
-MASTER VISUAL REFERENCE:
-A high-end luxury automotive advertising photograph
-inside a premium dark charcoal and black automotive photography studio.
+1. VEHICLE SCALE AND POSITION - CRITICAL
 
-1. VEHICLE SCALE AND COMPOSITION - ABSOLUTELY CRITICAL
+The vehicle must be slightly smaller than a typical close-up
+automotive advertising composition.
 
-The original vehicle image is the PRIMARY COMPOSITION REFERENCE.
+Reduce the vehicle visual scale by approximately 5%.
 
-PRESERVE THE EXACT ORIGINAL VEHICLE SCALE, SIZE, POSITION,
-CAMERA DISTANCE, FRAMING AND PROPORTIONS FROM THE SOURCE IMAGE.
+Keep the complete vehicle clearly visible.
+Do not crop the vehicle.
 
-DO NOT zoom in.
-DO NOT zoom out.
-DO NOT enlarge the vehicle.
-DO NOT shrink the vehicle.
-DO NOT move the vehicle significantly.
-DO NOT change the camera distance.
-DO NOT change the camera perspective.
-DO NOT crop the vehicle differently.
+Position the vehicle slightly higher
+within the portrait composition.
 
-The generated vehicle must occupy approximately
-THE SAME PIXEL AREA AND VISUAL SIZE as the original source vehicle.
+Maintain generous negative space above the vehicle.
 
-The vehicle's:
-- overall width
-- overall height
-- wheel position
-- roof position
-- front bumper position
-- rear position
-- distance from image edges
+Do not enlarge the vehicle.
+Do not create an oversized vehicle.
+Do not create an extreme close-up.
 
-must remain consistent with the source image.
+The vehicle should remain naturally grounded
+on the glossy studio floor.
 
-The source photograph already has the correct automotive composition.
-ONLY replace the surrounding environment.
+2. VEHICLE IDENTITY - ABSOLUTELY CRITICAL
 
-Do NOT reinterpret the composition.
-
-2. VEHICLE PRESERVATION - CRITICAL
-
-Preserve the exact original vehicle identity.
+Preserve the exact original vehicle.
 
 Maintain:
-- original body shape and proportions
+- original body shape
+- original proportions
 - original paint color
-- original wheels and tires
-- original headlights and taillights
-- original grille and badges
-- original windows and mirrors
+- original wheels
+- original tires
+- original headlights
+- original taillights
+- original grille
+- original badges
+- original windows
+- original mirrors
 - original license plate
 - all original vehicle details
 
@@ -151,173 +138,219 @@ Do not change the original paint color.
 The vehicle must remain photorealistic
 and highly detailed.
 
-3. BACKGROUND - PREMIUM DARK CHARCOAL STUDIO
+3. CAMERA AND VIEW
 
-Create a premium dark automotive photography studio.
+Use the same natural front three-quarter
+automotive viewing angle as the source vehicle.
+
+Do not create a different camera angle.
+
+Do not rotate the vehicle.
+
+Do not dramatically change perspective.
+
+Do not make the vehicle appear closer
+or farther away than necessary.
+
+The vehicle must look like a professionally
+photographed real vehicle.
+
+4. BACKGROUND - DARK CHARCOAL WITH SOFT ATMOSPHERIC DEPTH
+
+Create a premium dark charcoal automotive studio.
 
 The background should be:
-- very dark charcoal
+- dark charcoal
 - near black
-- clean
-- seamless
+- smooth
 - elegant
 - minimal
-- slightly brighter than pure black
+- seamless
 
-Use a subtle natural studio gradient.
+Do NOT make the background completely crushed black.
 
-The upper background should be dark charcoal/black,
-with a soft gradual transition toward the floor.
+Maintain subtle tonal separation in the background.
 
-DO NOT make the entire background completely crushed black.
+Add a very subtle soft atmospheric studio haze
+behind the vehicle.
 
-The background should retain subtle tonal separation
-so the studio environment remains visible.
+The haze should appear primarily:
+- behind the roof
+- behind the upper body
+- around the sides of the vehicle
 
-No visible walls.
-No corners.
+Use soft dark-grey to charcoal atmospheric diffusion.
+
+The haze should gently brighten and separate
+the background from the vehicle.
+
+It should look like subtle professional studio atmosphere,
+NOT visible smoke from a fire.
+
+No smoke clouds covering the vehicle.
+No thick fog.
+No dramatic smoke.
+No smoke in front of the vehicle.
+No visible smoke trails.
+
+The vehicle must remain sharp and unobstructed.
+
+The background should have subtle depth,
+similar to an expensive automotive photography studio.
+
+No visible wall.
+No corner.
 No horizon line.
 No showroom.
 No outdoor scenery.
-No props.
+No road.
 No people.
+No props.
 No additional vehicles.
 
-4. LIGHTING - PREMIUM SOFT AUTOMOTIVE LIGHTING
+5. LIGHTING - PREMIUM SOFT STUDIO LIGHTING
 
-Use realistic professional automotive studio lighting.
+Use professional automotive studio lighting.
 
-Soft diffused lighting from above and from the front,
-with subtle directional highlights from the sides.
+Soft large diffused light from above and slightly in front.
 
-Create realistic highlights on:
+Create controlled highlights on:
 - hood
 - roof
 - windshield
 - grille
 - headlights
-- side body panels
+- side panels
 
-The lighting should create elegant separation
-between the vehicle and the dark background.
+Use subtle rim lighting to separate
+the vehicle from the dark background.
 
-Use soft highlights rather than harsh dramatic spotlights.
+Lighting must remain realistic and commercial.
 
-No colored lighting.
+The vehicle should be well exposed and clearly visible.
+
+Do not make the vehicle disappear into the black background.
+
+Do not create extreme cinematic darkness.
+
+Do not use colored lighting.
+
 No blue lighting.
 No red lighting.
 No purple lighting.
 No neon lighting.
+No artificial glowing edges.
 
-5. FLOOR - DARK GLOSSY STUDIO FLOOR
+6. FLOOR - DARK GLOSSY AUTOMOTIVE FLOOR
 
-Create a dark charcoal to black glossy automotive studio floor.
+Create a dark charcoal/black glossy studio floor.
 
-The floor should be clearly visible,
-similar to a premium professional automotive photography studio.
+The floor must remain visible.
 
-The floor should have:
-- subtle dark grey/black tonal variation
-- realistic polished texture
-- soft studio light falloff
-- natural reflections
+Use subtle realistic studio reflections.
 
-Do not make the floor completely black.
+The floor should have slightly lighter tonal variation
+than the darkest parts of the background.
 
-The floor should visually transition naturally
-into the dark background.
+Do NOT make the entire floor pure black.
 
-6. VEHICLE REFLECTION - CONTROLLED
+The floor should visually connect naturally
+with the background.
 
-Create a realistic subtle reflection
-directly underneath the vehicle.
+7. REFLECTION - SUBTLE AND REALISTIC
 
-The reflection must follow the exact vehicle position,
-scale and perspective.
+Create a controlled realistic reflection
+directly beneath the vehicle.
 
-Reflection should be:
-- subtle
-- realistic
-- slightly blurred
-- darker than the actual vehicle
-- naturally fading into the floor
+The reflection should:
+- follow the vehicle position
+- follow the vehicle perspective
+- be slightly blurred
+- be darker than the actual vehicle
+- gradually fade into the floor
+
+The reflection must remain secondary.
 
 DO NOT create a giant mirror reflection.
 
-DO NOT duplicate the vehicle.
+DO NOT create a duplicated vehicle.
 
 DO NOT create a second vehicle.
 
-The reflection must not visually change
-the perceived size or position of the actual vehicle.
+DO NOT let the reflection become larger
+or more visually dominant than the actual vehicle.
 
-7. CONTACT SHADOW
+8. CONTACT SHADOW
 
-Create a natural soft contact shadow
+Create a soft natural contact shadow
 directly beneath the tires.
 
 The shadow should be:
 - realistic
-- soft-edged
+- soft
 - subtle
 - close to the vehicle
-- naturally blending into the glossy floor
+- naturally blended into the floor
 
-8. CAMERA AND FRAMING
+No oversized dark blob.
+No artificial shadow.
+No colored shadow.
 
-The camera perspective MUST remain consistent
-with the original source image.
+9. COMPOSITION
 
-Preserve the original:
-- camera angle
-- focal perspective
-- vehicle scale
-- vehicle position
-- framing
-- proportions
+Use a clean premium portrait automotive composition.
 
-The vehicle should remain at the same approximate
-vertical and horizontal position as the source.
+The vehicle should sit in the lower-middle
+portion of the 1080x1350 frame.
 
-DO NOT recompose the photograph.
+Keep generous negative space above the vehicle.
 
-DO NOT create a different camera shot.
+Do not place the roof too close to the top edge.
 
-DO NOT move the vehicle toward the camera.
+Do not push the vehicle against the left or right edges.
 
-DO NOT make the vehicle larger than the source.
+Keep the entire vehicle comfortably inside the frame.
 
-9. FINAL OUTPUT STYLE
+The composition should feel balanced,
+luxurious and commercially photographed.
 
-High-end luxury automotive advertising photography.
+10. FINAL VISUAL STYLE
 
-Premium dealership campaign.
+High-end luxury automotive dealership photography.
+
 Dark charcoal and black luxury aesthetic.
+
 Photorealistic.
 Sharp vehicle details.
-Realistic paint reflections.
+Realistic paint.
 Realistic glass.
 Realistic chrome.
+Realistic headlights.
 Professional soft studio lighting.
-Elegant contrast.
-Dark but clearly visible studio environment.
-Premium glossy automotive floor.
+Premium glossy floor.
+Subtle realistic reflection.
+Elegant dark background.
+Clean commercial automotive advertising.
 
-The final image should look like
-the SAME VEHICLE PHOTOGRAPH
-with the original vehicle scale and composition preserved,
-while replacing the original environment
-with a premium dark automotive studio.
+The result should look like
+a professionally photographed vehicle
+inside a premium dark automotive studio.
 
 ABSOLUTELY NO:
+Oversized vehicle.
+Extreme close-up.
+Vehicle filling the entire frame.
+Vehicle cropped.
+Pure crushed-black background.
+Flat black background with no tonal separation.
 White background.
-Bright background.
-Pure crushed-black background with no tonal separation.
-Grey gradient that looks artificial.
+Bright grey background.
+Blue background.
 Colored background.
 Colored lighting.
 Neon lighting.
-Excessive mirror reflection.
+Excessive reflection.
+Giant mirror reflection.
 Duplicated vehicle.
 Second vehicle.
 People.
@@ -335,11 +368,6 @@ Modified vehicle.
 Changed vehicle color.
 Changed wheels.
 Changed vehicle model.
-Zoomed vehicle.
-Shrunken vehicle.
-Reframed vehicle.
-Different camera distance.
-Different vehicle position.
 `;
 
     // Generate image using Bria AI.
@@ -356,8 +384,8 @@ Different vehicle position.
           mode: "high_control",
           scene_description: sceneDescription,
           placement_type: "custom_coordinates",
-          foreground_image_size: [810, 607],
-          foreground_image_location: [135, 400],
+          foreground_image_size: [770, 577],
+          foreground_image_location: [155, 390],
           shot_size: [1080, 1350],
           num_results: 1,
           original_quality: true,
