@@ -1,3 +1,4 @@
+
 import { supabase } from "../lib/supabase";
 import type { Car } from "../types/car";
 
@@ -28,6 +29,12 @@ export async function getCars(): Promise<Car[]> {
           "READY",
           "BOOKED"
         ]
+      )
+      .order(
+        "status",
+        {
+          ascending:false
+        }
       )
       .order(
         "created_at",
@@ -93,6 +100,12 @@ export async function getCarsPaginated(
           "READY",
           "BOOKED"
         ]
+      )
+      .order(
+        "status",
+        {
+          ascending:false
+        }
       )
       .order(
         "featured",
@@ -178,6 +191,24 @@ export async function searchCars(
           "READY",
           "BOOKED"
         ]
+      )
+      .order(
+        "status",
+        {
+          ascending:false
+        }
+      )
+      .order(
+        "featured",
+        {
+          ascending:false
+        }
+      )
+      .order(
+        "created_at",
+        {
+          ascending:false
+        }
       );
 
 
@@ -263,6 +294,12 @@ export async function searchCarsPaginated(
           "READY",
           "BOOKED"
         ]
+      )
+      .order(
+        "status",
+        {
+          ascending:false
+        }
       )
       .order(
         "featured",
@@ -394,6 +431,22 @@ export async function filterCarsPaginated(
       break;
 
 
+    case "0-200":
+
+      min = 0;
+      max = 200000000;
+
+      break;
+
+
+    case "0-300":
+
+      min = 0;
+      max = 300000000;
+
+      break;
+
+
 
     case "150-250":
 
@@ -451,6 +504,12 @@ export async function filterCarsPaginated(
       .lte(
         "credit_price",
         max
+      )
+      .order(
+        "status",
+        {
+          ascending:false
+        }
       )
       .order(
         "featured",
@@ -526,6 +585,12 @@ export async function getFeaturedCars():Promise<Car[]> {
       .eq(
         "featured",
         true
+      )
+      .order(
+        "status",
+        {
+          ascending:false
+        }
       )
       .order(
         "created_at",
@@ -665,6 +730,12 @@ export async function getNonFeaturedCars(): Promise<Car[]> {
       .eq(
         "featured",
         false
+      )
+      .order(
+        "status",
+        {
+          ascending:false
+        }
       )
       .order(
         "created_at",
